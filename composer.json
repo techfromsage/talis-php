@@ -1,5 +1,5 @@
 {
-  "name": "talis/php-client",
+  "name": "talis/talis-php",
   "description": "This is a php client library for talis api's",
   "version": "0.0.1",
   "keywords": [
