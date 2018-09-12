@@ -10,7 +10,7 @@ changes.
 Before releasing for general usage there will be major changes to the API. The library will move 
 away from the use of internal Talis project names like Persona, Critic, Babel and Echo etc.
 Instead it will use more externally relavant names like ```ListReviews``` and ```Files```.
-The API will also move to a more domain driven design rather than the service driven deign
+The API will also move to a more domain driven design rather than the service driven design
 of the individual libraries
 
 See issue: https://github.com/talis/talis-php/issues/2 and Milestone: https://github.com/talis/talis-php/milestone/1
