@@ -1,10 +1,13 @@
 <?php
+namespace Talis\Babel;
 if (!defined('APPROOT'))
 {
     define('APPROOT', dirname(dirname(dirname(__DIR__))));
 }
 
 require_once APPROOT.'/vendor/autoload.php';
+
+/* require_once 'PHPUnit/Autoload.php'; */
 
 use Guzzle\Http\Client;
 use Guzzle\Plugin\Mock\MockPlugin;
@@ -16,7 +19,7 @@ use Guzzle\Http\Message\Response;
  * You should run the integration tests locally, with a running local Babel server setup, as the
  * integration tests actually prove that this client library can read/write to Babel correctly.
  */
-class BabelClientTest extends PHPUnit_Framework_TestCase
+class ClientTest extends \PHPUnit_Framework_TestCase
 {
     private $babelClient;
     private $baseCreateAnnotationData;

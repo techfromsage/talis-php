@@ -1,4 +1,5 @@
 <?php
+namespace Talis\Critic;
 
 if (!defined('APPROOT'))
 {
@@ -8,7 +9,7 @@ if (!defined('APPROOT'))
 /**
  * Unit tests for CriticClient
  */
-class CriticClientTest extends PHPUnit_Framework_TestCase
+class ClientTest extends \PHPUnit_Framework_TestCase
 {
     private $criticBaseUrl;
     private $criticClient;
@@ -41,9 +42,9 @@ class CriticClientTest extends PHPUnit_Framework_TestCase
     {
         $this->setUp();
 
-        $plugin = new Guzzle\Plugin\Mock\MockPlugin();
-        $plugin->addResponse(new Guzzle\Http\Message\Response(200, null, json_encode(array())));
-        $client = new Guzzle\Http\Client();
+        $plugin = new \Guzzle\Plugin\Mock\MockPlugin();
+        $plugin->addResponse(new \Guzzle\Http\Message\Response(200, null, json_encode(array())));
+        $client = new \Guzzle\Http\Client();
         $client->addSubscriber($plugin);
 
         /** @var \Talis\Critic\Client | PHPUnit_Framework_MockObject_MockObject $criticClient */
@@ -64,9 +65,9 @@ class CriticClientTest extends PHPUnit_Framework_TestCase
     {
         $this->setUp();
 
-        $plugin = new Guzzle\Plugin\Mock\MockPlugin();
-        $plugin->addResponse(new Guzzle\Http\Message\Response(401, null, json_encode(array())));
-        $client = new Guzzle\Http\Client();
+        $plugin = new \Guzzle\Plugin\Mock\MockPlugin();
+        $plugin->addResponse(new \Guzzle\Http\Message\Response(401, null, json_encode(array())));
+        $client = new \Guzzle\Http\Client();
         $client->addSubscriber($plugin);
 
         /** @var \Talis\Critic\Client | PHPUnit_Framework_MockObject_MockObject $criticClient */
@@ -86,9 +87,9 @@ class CriticClientTest extends PHPUnit_Framework_TestCase
     {
         $this->setUp();
 
-        $plugin = new Guzzle\Plugin\Mock\MockPlugin();
-        $plugin->addResponse(new Guzzle\Http\Message\Response(201, null, json_encode(array())));
-        $client = new Guzzle\Http\Client();
+        $plugin = new \Guzzle\Plugin\Mock\MockPlugin();
+        $plugin->addResponse(new \Guzzle\Http\Message\Response(201, null, json_encode(array())));
+        $client = new \Guzzle\Http\Client();
         $client->addSubscriber($plugin);
 
         /** @var \Talis\Critic\Client | PHPUnit_Framework_MockObject_MockObject $criticClient */

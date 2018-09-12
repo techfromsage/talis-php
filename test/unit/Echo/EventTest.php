@@ -1,5 +1,6 @@
-
 <?php
+namespace Talis\EchoClient;
+
 if (!defined('APPROOT'))
 {
     define('APPROOT', dirname(dirname(dirname(__DIR__))));
@@ -11,7 +12,7 @@ date_default_timezone_set('Europe/London');
  * Unit tests for EchoClient.
  * @runTestsInSeparateProcesses
  */
-class EchoEventTest extends PHPUnit_Framework_TestCase
+class EventTest extends \PHPUnit_Framework_TestCase
 {
     public function setUp()
     {
