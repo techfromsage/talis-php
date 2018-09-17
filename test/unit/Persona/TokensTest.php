@@ -5,7 +5,7 @@ use Talis\Persona\Client\Tokens;
 use Talis\Persona\Client\ValidationResults;
 use Talis\Persona\Client\ScopesNotDefinedException;
 
-$appRoot = dirname(dirname(__DIR__));
+$appRoot = dirname(dirname(dirname(__DIR__)));
 if (!defined('APPROOT')) {
     define('APPROOT', $appRoot);
 }
