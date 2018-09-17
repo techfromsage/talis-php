@@ -16,27 +16,23 @@ of the individual libraries
 
 See issue: https://github.com/talis/talis-php/issues/2 and Milestone: https://github.com/talis/talis-php/milestone/1
 
-
 ## Contributing
 
 A Dockerfile is provided to make it easy to get a local development environment
 up and running to develop and test changes. Follow these steps:
 
-```bash
-
 # Build the development image
 
+```bash
 git clone https://github.com/talis/talis-php.git
 cd talis-php
-docker build -t "talis-php:dev" --build-arg git_oauth_token=<your github oauth token> --build-arg persona_oauth_client=<your oauth client> --build-arg persona_oauth_secret=<your oauth client secret> .
-
-# When the above has built successfully you can run and connect to the container
-docker run -v /path/on/host/machine/to/talis-php:/var/talis-php -i -t echo-php-client:dev /bin/bash
-
-# Then inside the container
-
-service redis-server start
-ant init
-ant test
+ant build
 ```
 
+# When the above has built you can run the tests
+
+```bash
+docker-compose run test
+docker-compose run unittest
+docker-compose run integrationtest
+```

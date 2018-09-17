@@ -8,9 +8,11 @@ ARG git_oauth_token
 ARG persona_oauth_client
 ARG persona_oauth_secret
 
-RUN apt-get update && apt-get upgrade -y
-
-RUN apt-get install -y --force-yes curl apt-transport-https && curl -L http://apt.talis.com:81/public.key | sudo apt-key add - && apt-get update
+RUN apt-get update \
+    && apt-get install -y --force-yes curl apt-transport-https \
+    && curl -L http://apt.talis.com:81/public.key | sudo apt-key add - \
+    && apt-get update \
+    && apt-get upgrade -y
 
 # Install php and ant
 RUN apt-get install --no-install-recommends -y \
