@@ -4,7 +4,7 @@ use Talis\Persona\Client\ValidationResults;
 use Talis\Persona\Client\Tokens;
 use Doctrine\Common\Cache\ArrayCache;
 
-$appRoot = dirname(dirname(dirname(__DIR__)));
+$appRoot = dirname(dirname(__DIR__));
 if (!defined('APPROOT')) {
     define('APPROOT', $appRoot);
 }
@@ -193,5 +193,18 @@ class TokensTest extends TestBase
                 ]
             )
         );
+    }
+
+    function testListScopes()
+    {
+        $meta = $this->personaClient->obtainNewToken(
+            $this->clientId,
+            $this->clientSecret,
+            ['useCache' => false]
+        );
+
+        $scopes = $this->personaClient->listScopes($meta['access_token']);
+        $this->assertNotEmpty($scopes);
+        $this->assertContains($this->clientId, $scopes);
     }
 }
