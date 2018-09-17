@@ -1,4 +1,5 @@
-talis-php ![build status](https://travis-ci.org/talis/talis-php.svg?branch=master)
+talis-php [![build status](https://travis-ci.org/talis/talis-php.svg?branch=master)](https://travis-ci.org/talis/talis-php)
+
 =========
 
 # Development Version - Not For General Use
