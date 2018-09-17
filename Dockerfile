@@ -41,12 +41,13 @@ RUN apt-get -y autoremove && apt-get clean && apt-get autoclean && \
 RUN mkdir -p /var/talis-php
 COPY . /var/talis-php
 
-RUN echo 'export PERSONA_TEST_HOST=https://staging-users.talis.com' >> /root/.bashrc
-RUN echo 'export PERSONA_TEST_OAUTH_CLIENT='$persona_oauth_client >> /root/.bashrc
-RUN echo 'export PERSONA_TEST_OAUTH_SECRET='$persona_oauth_secret >> /root/.bashrc
+RUN echo "export PERSONA_TEST_HOST='https://staging-users.talis.com'" >> /etc/profile.d/test.sh \
+    && echo "export PERSONA_TEST_OAUTH_CLIENT='$persona_oauth_client'" >> /etc/profile.d/test.sh \
+    && echo "export PERSONA_TEST_OAUTH_SECRET='$persona_oauth_secret'" >> /etc/profile.d/test.sh \
+    && chmod 775 /etc/profile.d/test.sh
 
 WORKDIR /var/talis-php
 
 RUN ant init
 
-CMD /bin/bash -c "service redis-server start && ant test"
+CMD /bin/bash -c "service redis-server start && source /etc/profile.d/* && ant test"
