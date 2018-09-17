@@ -4,7 +4,7 @@ use Talis\Persona\Client\ValidationResults;
 use Talis\Persona\Client\Tokens;
 use Doctrine\Common\Cache\ArrayCache;
 
-$appRoot = dirname(dirname(__DIR__));
+$appRoot = dirname(dirname(dirname(__DIR__)));
 if (!defined('APPROOT')) {
     define('APPROOT', $appRoot);
 }

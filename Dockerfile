@@ -1,7 +1,5 @@
 FROM talis/ubuntu:1404-latest
 
-MAINTAINER Malcolm Landon "ml@talis.com"
-
 ENV DEBIAN_FRONTEND noninteractive
 
 ARG git_oauth_token

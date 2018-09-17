@@ -70,6 +70,9 @@
 
     <target name="integrationtest" depends="clean">
         <exec dir="${integration.test.dir}" executable="${vendor.dir}/bin/phpunit" failonerror="true">
+            <env name="PERSONA_TEST_HOST" value="${env.PERSONA_TEST_HOST}" />
+            <env name="PERSONA_TEST_OAUTH_CLIENT" value="${env.PERSONA_TEST_OAUTH_CLIENT}" />
+            <env name="PERSONA_TEST_OAUTH_SECRET" value="${env.PERSONA_TEST_OAUTH_SECRET}" />
             <arg line="--log-junit ${build.dir}/integrationtest-report.xml"/>
         </exec>
     </target>

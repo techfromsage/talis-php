@@ -329,14 +329,15 @@ class Tokens extends Base
     public function listScopes($token, $cacheTTL = 300)
     {
         $publicCert = $this->retrieveJWTCertificate($cacheTTL);
-        $decodedToken = $this->decodeToken($token, $publicCert);
+        $encodedToken = $token['access_token'];
+        $decodedToken = $this->decodeToken($encodedToken, $publicCert);
 
         if (isset($decodedToken['scopes']) && is_array($decodedToken['scopes'])) {
             return $decodedToken['scopes'];
         }
 
         if (isset($decodedToken['scopeCount'])) {
-            $meta = $this->personaRetrieveTokenMetadata($token);
+            $meta = $this->personaRetrieveTokenMetadata($encodedToken);
 
             if (isset($meta['scopes']) && is_string($meta['scopes'])) {
                 return explode(' ', $meta['scopes']);
