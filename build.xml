@@ -73,7 +73,6 @@
             <env key="PERSONA_TEST_HOST" value="${env.PERSONA_TEST_HOST}" />
             <env key="PERSONA_TEST_OAUTH_CLIENT" value="${env.PERSONA_TEST_OAUTH_CLIENT}" />
             <env key="PERSONA_TEST_OAUTH_SECRET" value="${env.PERSONA_TEST_OAUTH_SECRET}" />
-            <arg line="--filter testListScopes" />
             <arg line="--log-junit ${build.dir}/integrationtest-report.xml"/>
         </exec>
     </target>
