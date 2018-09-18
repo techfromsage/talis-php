@@ -3,10 +3,6 @@ namespace Talis\Persona\Client;
 
 use \Firebase\JWT\JWT;
 
-class ScopesNotDefinedException extends \Exception
-{
-}
-
 class Tokens extends Base
 {
     /**
