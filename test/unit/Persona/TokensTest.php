@@ -4,7 +4,7 @@ use \Firebase\JWT\JWT;
 use Talis\Persona\Client\Tokens;
 use Talis\Persona\Client\ValidationResults;
 use Talis\Persona\Client\ScopesNotDefinedException;
-use Talis\Persona\Client\InvalidValidationException;
+use Talis\Persona\Client\TokenValidationException;
 
 $appRoot = dirname(dirname(dirname(__DIR__)));
 if (!defined('APPROOT')) {
@@ -701,7 +701,7 @@ class TokensTest extends TestBase
             ->with($expectedValidationUrl)
             ->will(
                 $this->throwException(
-                    new InvalidValidationException(
+                    new TokenValidationException(
                         'nope',
                         ValidationResults::InvalidToken
                     )
@@ -764,7 +764,7 @@ class TokensTest extends TestBase
             ->with($this->equalTo($expectedValidationUrl))
             ->will(
                 $this->throwException(
-                    new InvalidValidationException(
+                    new TokenValidationException(
                         'nope',
                         ValidationResults::InvalidToken
                     )
@@ -828,7 +828,7 @@ class TokensTest extends TestBase
             ->with($this->equalTo($expectedValidationUrl))
             ->will(
                 $this->throwException(
-                    new InvalidValidationException(
+                    new TokenValidationException(
                         'blah',
                         ValidationResults::InvalidToken
                     )
