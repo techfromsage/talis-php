@@ -437,8 +437,7 @@ class Tokens extends Base
                 case 400:
                 case 401:
                 case 403:
-                    throw new UnauthorisedException();
-                    throw new InvalidValidationException(
+                    throw new UnauthorisedException(
                         "authorisation/authentication issue: {$e->getCode()}"
                     );
                 default:
