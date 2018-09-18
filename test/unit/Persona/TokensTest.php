@@ -5,6 +5,7 @@ use Talis\Persona\Client\Tokens;
 use Talis\Persona\Client\ValidationResults;
 use Talis\Persona\Client\ScopesNotDefinedException;
 use Talis\Persona\Client\TokenValidationException;
+use Talis\Persona\Client\InvalidTokenException;
 
 $appRoot = dirname(dirname(dirname(__DIR__)));
 if (!defined('APPROOT')) {
@@ -1088,7 +1089,7 @@ class TokensTest extends TestBase
             ),
         ];
 
-        $this->setExpectedException(DomainException::class);
+        $this->setExpectedException(InvalidTokenException::class);
         $mockClient->listScopes($accessToken);
     }
 
@@ -1184,7 +1185,7 @@ class TokensTest extends TestBase
                 // missing scopes
             ]);
 
-        $this->setExpectedException(DomainException::class);
+        $this->setExpectedException(InvalidTokenException::class);
         $mockClient->listScopes($accessToken);
     }
 }

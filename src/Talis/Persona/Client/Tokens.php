@@ -105,7 +105,7 @@ class Tokens extends Base
                 return (array) JWT::decode($token, $pubCert, ['RS256']);
             }
 
-            $this->getLogger()->error('Invalid public key', [$exception]);
+            $this->getLogger()->error('Invalid public key');
             throw new InvalidPublicKeyException('invalid key');
         } catch (\DomainException $exception) {
             $this->getLogger()->error('Invalid signature', [$exception]);
