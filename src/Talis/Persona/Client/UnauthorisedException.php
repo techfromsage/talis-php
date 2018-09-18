@@ -1,6 +1,9 @@
 <?php
 namespace Talis\Persona\Client;
 
+/**
+ * Authorisation request failed.
+ */
 class UnauthorisedException extends InvalidValidationException
 {
     public function __construct($msg) {

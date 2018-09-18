@@ -1,6 +1,9 @@
 <?php
 namespace Talis\Persona\Client;
 
+/**
+ * Signature within the JWT does not represent the token.
+ */
 class InvalidSignatureException extends InvalidValidationException
 {
     public function __construct($msg)

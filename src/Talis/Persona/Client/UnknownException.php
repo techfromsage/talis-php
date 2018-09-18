@@ -1,6 +1,9 @@
 <?php
 namespace Talis\Persona\Client;
 
+/**
+ * A unexpected exception occurred.
+ */
 class UnknownException extends InvalidValidationException
 {
     public function __construct($msg) {
