@@ -689,7 +689,11 @@ class TokensTest extends TestBase
         $mockClient
             ->expects($this->once())
             ->method('validateTokenUsingJWT')
-            ->will($this->throwException(new ScopesNotDefinedException()));
+            ->will(
+                $this->throwException(
+                    new ScopesNotDefinedException('too many scopes')
+                )
+            );
 
         $mockClient
             ->expects($this->once())
@@ -748,7 +752,11 @@ class TokensTest extends TestBase
         $mockClient
             ->expects($this->once())
             ->method('validateTokenUsingJWT')
-            ->will($this->throwException(new ScopesNotDefinedException()));
+            ->will(
+                $this->throwException(
+                    new ScopesNotDefinedException('too many scopes')
+                )
+            );
 
         $mockClient
             ->expects($this->once())
@@ -808,7 +816,11 @@ class TokensTest extends TestBase
         $mockClient
             ->expects($this->once())
             ->method('validateTokenUsingJWT')
-            ->will($this->throwException(new ScopesNotDefinedException()));
+            ->will(
+                $this->throwException(
+                    new ScopesNotDefinedException('too many scopes')
+                )
+            );
 
         $mockClient
             ->expects($this->once())

@@ -3,6 +3,15 @@ namespace Talis\Persona\Client;
 
 use \Firebase\JWT\JWT;
 
+use Talis\Persona\Client\ScopesNotDefinedException;
+use Talis\Persona\Client\EmptyResponseException;
+use Talis\Persona\Client\InvalidPublicKeyException;
+use Talis\Persona\Client\InvalidSignatureException;
+use Talis\Persona\Client\InvalidTokenException;
+use Talis\Persona\Client\InvalidValidationException;
+use Talis\Persona\Client\UnauthorisedException;
+use Talis\Persona\Client\UnknownException;
+
 class Tokens extends Base
 {
     /**
@@ -19,8 +28,7 @@ class Tokens extends Base
      *      scope: (string|array) specify this if you wish to validate a scoped token
      * @return int ValidationResults enum
      * @throws \Exception if you do not supply a token AND it cannot extract one from $_SERVER, $_GET, $_POST
-     * @throws DomainException invalid public key
-     * @throw InvalidArgumentException Invalid public key format
+     * @throws InvalidArgumentException Invalid public key format
      */
     public function validateToken($params = [])
     {
@@ -68,7 +76,7 @@ class Tokens extends Base
         } elseif (isset($decodedToken['scopeCount'])) {
             // user scopes not included within
             // the JWT as there are too many
-            throw new ScopesNotDefinedException();
+            throw new ScopesNotDefinedException('too many scopes');
         }
 
         $isSu = in_array('su', $decodedToken['scopes'], true);
@@ -101,26 +109,14 @@ class Tokens extends Base
             throw new \InvalidArgumentException('cannot parse public key');
         } catch (\DomainException $exception) {
             $this->getLogger()->error('Invalid signature', [$exception]);
-            throw new InvalidValidationException(
-                'Invalid signature',
-                ValidationResults::InvalidSignature,
-                $exception
-            );
+            throw new InvalidSignatureException('could not validate signature');
         } catch (\InvalidArgumentException $exception) {
             $this->getLogger()->error('Invalid public key', [$exception]);
-            throw new InvalidValidationException(
-                'Invalid public key',
-                ValidationResults::InvalidPublicKey,
-                $exception
-            );
+            throw new InvalidPublicKeyException('invalid key');
         } catch (\UnexpectedValueException $exception) {
             // Expired, before valid, invalid json, etc
             $this->getLogger()->debug('Invalid token', [$exception]);
-            throw new InvalidValidationException(
-                'Invalid token',
-                ValidationResults::InvalidToken,
-                $exception
-            );
+            throw new InvalidTokenException('invalid token');
         }
     }
 
@@ -431,33 +427,29 @@ class Tokens extends Base
                     ]
                 ]
             );
-        } catch (\Exception $exception) {
+        } catch (\Exception $e) {
             $this->getLogger()->error(
                 'unable to retrieve token metadata',
-                ['exception' => $exception]
+                ['exception' => $e]
             );
 
             switch ($exception->getCode()) {
                 case 400:
                 case 401:
                 case 403:
+                    throw new UnauthorisedException();
                     throw new InvalidValidationException(
-                        "authorisation/authentication issue: {$exception->getCode()}",
-                        ValidationResults::Unauthorised
+                        "authorisation/authentication issue: {$e->getCode()}"
                     );
                 default:
-                    throw new InvalidValidationException(
-                        "unknown communication error: {$exception->getCode()}",
-                        ValidationResults::Unknown
+                    throw new UnknownException(
+                        "unknown communication error: {$e->getCode()}"
                     );
             }
         }
 
         if (empty($body)) {
-            throw new InvalidValidationException(
-                'empty body in response',
-                ValidationResults::EmptyResponse
-            );
+            throw new EmptyResponseException('response body empty');
         }
 
         return $body;
