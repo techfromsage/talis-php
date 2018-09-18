@@ -2,7 +2,7 @@
 namespace Talis\Persona\Client;
 
 /**
- * API was not found on the server.
+ * API returned a not found.
  */
 class NotFoundException extends \Exception
 {

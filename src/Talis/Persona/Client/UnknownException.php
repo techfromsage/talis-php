@@ -4,7 +4,7 @@ namespace Talis\Persona\Client;
 /**
  * A unexpected exception occurred.
  */
-class UnknownException extends InvalidValidationException
+class UnknownException extends TokenValidationException
 {
     public function __construct($msg) {
         parent::__construct(

@@ -8,7 +8,7 @@ use Talis\Persona\Client\EmptyResponseException;
 use Talis\Persona\Client\InvalidPublicKeyException;
 use Talis\Persona\Client\InvalidSignatureException;
 use Talis\Persona\Client\InvalidTokenException;
-use Talis\Persona\Client\InvalidValidationException;
+use Talis\Persona\Client\TokenValidationException;
 use Talis\Persona\Client\UnauthorisedException;
 use Talis\Persona\Client\UnknownException;
 
@@ -67,7 +67,7 @@ class Tokens extends Base
 
         try {
             $decodedToken = $this->decodeToken($token, $publicCert);
-        } catch (InvalidValidationException $e) {
+        } catch (TokenValidationException $e) {
             return $e->getCode();
         }
 
@@ -94,7 +94,7 @@ class Tokens extends Base
      *      specify one the method tries to find one
      * @param string $rawPublicCert public key to validate the token
      * @return array decoded token
-     * @throws InvalidValidationException could not validate token
+     * @throws TokenValidationException could not validate token
      */
     protected function decodeToken($token, $rawPublicCert)
     {
@@ -312,7 +312,7 @@ class Tokens extends Base
      * @oaram int $pubCertCacheTTL optional JWT public certificate time to live
      * @return array list of scopes
      *
-     * @throws InvalidValidationException invalid signature, key or token
+     * @throws TokenValidationException invalid signature, key or token
      * @throws \DomainException decoded token or metadata does not adhere to
      * domain models
      */
@@ -414,7 +414,7 @@ class Tokens extends Base
      * Call Persona
      * @param string $url fully qualified url that will be hit
      * @return array body from http response
-     * @throws InvalidValidationException could not validate token
+     * @throws TokenValidationException could not validate token
      */
     protected function makePersonaHttpRequest($url)
     {
@@ -473,7 +473,7 @@ class Tokens extends Base
 
         try {
             $this->makePersonaHttpRequest($url);
-        } catch(InvalidValidationException $e) {
+        } catch(TokenValidationException $e) {
             return $e->getCode();
         }
 
@@ -485,7 +485,7 @@ class Tokens extends Base
      * Retrieve a token's metadata
      * @param string $token token to retrieve the metadata for
      * @return array metadata
-     * @throws InvalidValidationException
+     * @throws TokenValidationException
      */
     protected function personaRetrieveTokenMetadata($token)
     {

@@ -4,7 +4,7 @@ namespace Talis\Persona\Client;
 /**
  * Authorisation request failed.
  */
-class UnauthorisedException extends InvalidValidationException
+class UnauthorisedException extends TokenValidationException
 {
     public function __construct($msg) {
         parent::__construct(
