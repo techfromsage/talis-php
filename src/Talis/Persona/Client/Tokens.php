@@ -88,12 +88,9 @@ class Tokens extends Base
      *
      * @param string $token a token to validate explicitly, if you do not
      *      specify one the method tries to find one
-     * @param string $publicCert public key to validate the token
+     * @param string $rawPublicCert public key to validate the token
      * @return array decoded token
-     *
-     * @throws DomainException invalid public key
-     * @throws InvalidArgumentException empty public key
-     * @throws UnexpectedValueException invalid token
+     * @throws InvalidValidationException could not validate token
      */
     protected function decodeToken($token, $rawPublicCert)
     {
@@ -319,16 +316,17 @@ class Tokens extends Base
 
     /**
      * List all scopes that belong to a given token
-     * @param string token JWT token
+     * @param string $token JWT token
+     * @oaram int $pubCertCacheTTL optional JWT public certificate time to live
      * @return array list of scopes
      *
      * @throws InvalidValidationException invalid signature, key or token
      * @throws \DomainException decoded token or metadata does not adhere to
      * domain models
      */
-    public function listScopes($token, $cacheTTL = 300)
+    public function listScopes($token, $pubCertCacheTTL = 300)
     {
-        $publicCert = $this->retrieveJWTCertificate($cacheTTL);
+        $publicCert = $this->retrieveJWTCertificate($pubCertCacheTTL);
         $encodedToken = $token['access_token'];
         $decodedToken = $this->decodeToken($encodedToken, $publicCert);
 
@@ -424,6 +422,7 @@ class Tokens extends Base
      * Call Persona
      * @param string $url fully qualified url that will be hit
      * @return array body from http response
+     * @throws InvalidValidationException could not validate token
      */
     protected function makePersonaHttpRequest($url)
     {
