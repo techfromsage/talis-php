@@ -482,7 +482,7 @@ class Tokens extends Base
         $url = $this->getPersonaHost() . $this->config['persona_oauth_route'] . '/' . $token;
 
         if (!empty($scopes)) {
-            $url .= "?scope=" . join(',', $scopes);
+            $url .= '?' . http_build_query(['scope' => join(',', $scopes)]);
         }
 
         try {

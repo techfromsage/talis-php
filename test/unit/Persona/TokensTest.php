@@ -483,7 +483,10 @@ class TokensTest extends TestBase
             'RS256'
         );
 
-        $mockClient->expects($this->once())->method('retrieveJWTCertificate')->will($this->returnValue($this->_publicKey));
+        $mockClient
+            ->expects($this->once())
+            ->method('retrieveJWTCertificate')
+            ->will($this->returnValue($this->_publicKey));
 
         $result = $mockClient->validateToken(
             [
@@ -738,17 +741,9 @@ class TokensTest extends TestBase
             'RS256'
         );
 
-        $accessToken = json_encode(
-            [
-                'access_token' => $encodedToken,
-                'expires_in' => 100,
-                'token_type' => 'bearer',
-            ]
-        );
-
         $expectedValidationUrl = $this->versionedPersonaHost() . '/oauth/tokens/'
-            . $accessToken
-            . '?scope=scope1,scope2';
+            . $encodedToken
+            . '?scope=scope1%2Cscope2';
 
         $mockClient
             ->expects($this->once())
@@ -772,7 +767,7 @@ class TokensTest extends TestBase
             ValidationResults::InvalidToken,
             $mockClient->validateToken(
                 [
-                    'access_token' => $accessToken,
+                    'access_token' => $encodedToken,
                     'scope' => ['scope1', 'scope2'],
                 ]
             )
@@ -805,17 +800,10 @@ class TokensTest extends TestBase
             'RS256'
         );
 
-        $accessToken = json_encode(
-            [
-                'access_token' => $encodedToken,
-                'expires_in' => 100,
-                'token_type' => 'bearer',
-            ]
-        );
-
-        $expectedValidationUrl = $this->versionedPersonaHost() . '/oauth/tokens/'
-            . $accessToken
-            . '?scope=scope1,su,scope2';
+        $expectedValidationUrl = $this->versionedPersonaHost()
+            . '/oauth/tokens/'
+            . $encodedToken
+            . '?scope=scope1%2Csu%2Cscope2';
 
         $mockClient
             ->expects($this->once())
@@ -839,7 +827,7 @@ class TokensTest extends TestBase
             ValidationResults::InvalidToken,
             $mockClient->validateToken(
                 [
-                    'access_token' => $accessToken,
+                    'access_token' => $encodedToken,
                     'scope' => ['scope1', 'su', 'scope2'],
                 ]
             )
