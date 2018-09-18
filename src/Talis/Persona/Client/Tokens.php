@@ -3,14 +3,14 @@ namespace Talis\Persona\Client;
 
 use \Firebase\JWT\JWT;
 
-use Talis\Persona\Client\ScopesNotDefinedException;
-use Talis\Persona\Client\EmptyResponseException;
-use Talis\Persona\Client\InvalidPublicKeyException;
-use Talis\Persona\Client\InvalidSignatureException;
-use Talis\Persona\Client\InvalidTokenException;
-use Talis\Persona\Client\TokenValidationException;
-use Talis\Persona\Client\UnauthorisedException;
-use Talis\Persona\Client\UnknownException;
+use \Talis\Persona\Client\ScopesNotDefinedException;
+use \Talis\Persona\Client\EmptyResponseException;
+use \Talis\Persona\Client\InvalidPublicKeyException;
+use \Talis\Persona\Client\InvalidSignatureException;
+use \Talis\Persona\Client\InvalidTokenException;
+use \Talis\Persona\Client\TokenValidationException;
+use \Talis\Persona\Client\UnauthorisedException;
+use \Talis\Persona\Client\UnknownException;
 
 class Tokens extends Base
 {
@@ -28,7 +28,6 @@ class Tokens extends Base
      *      scope: (string|array) specify this if you wish to validate a scoped token
      * @return int ValidationResults enum
      * @throws \Exception if you do not supply a token AND it cannot extract one from $_SERVER, $_GET, $_POST
-     * @throws InvalidArgumentException Invalid public key format
      */
     public function validateToken($params = [])
     {
@@ -106,13 +105,11 @@ class Tokens extends Base
                 return (array) JWT::decode($token, $pubCert, ['RS256']);
             }
 
-            throw new \InvalidArgumentException('cannot parse public key');
+            $this->getLogger()->error('Invalid public key', [$exception]);
+            throw new InvalidPublicKeyException('invalid key');
         } catch (\DomainException $exception) {
             $this->getLogger()->error('Invalid signature', [$exception]);
             throw new InvalidSignatureException('could not validate signature');
-        } catch (\InvalidArgumentException $exception) {
-            $this->getLogger()->error('Invalid public key', [$exception]);
-            throw new InvalidPublicKeyException('invalid key');
         } catch (\UnexpectedValueException $exception) {
             // Expired, before valid, invalid json, etc
             $this->getLogger()->debug('Invalid token', [$exception]);
@@ -309,12 +306,10 @@ class Tokens extends Base
     /**
      * List all scopes that belong to a given token
      * @param string $token JWT token
-     * @oaram int $pubCertCacheTTL optional JWT public certificate time to live
+     * @param int $pubCertCacheTTL optional JWT public certificate time-to-live
      * @return array list of scopes
      *
      * @throws TokenValidationException invalid signature, key or token
-     * @throws \DomainException decoded token or metadata does not adhere to
-     * domain models
      */
     public function listScopes($token, $pubCertCacheTTL = 300)
     {
@@ -333,10 +328,10 @@ class Tokens extends Base
                 return explode(' ', $meta['scopes']);
             }
 
-            throw new \DomainException('token metadata missing scopes attribute');
+            throw new InvalidTokenException('token metadata missing scopes attribute');
         }
 
-        throw new \DomainException('decoded token is both scope attributes');
+        throw new InvalidTokenException('decoded token has neither scopes nor scopeCount');
     }
 
     /**
@@ -434,7 +429,6 @@ class Tokens extends Base
             );
 
             switch ($exception->getCode()) {
-                case 400:
                 case 401:
                 case 403:
                     throw new UnauthorisedException(
