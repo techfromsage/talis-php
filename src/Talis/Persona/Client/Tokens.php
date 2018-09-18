@@ -425,7 +425,7 @@ class Tokens extends Base
      * @param string $url fully qualified url that will be hit
      * @return array body from http response
      */
-    protected function callPersona($url)
+    protected function makePersonaHttpRequest($url)
     {
         try {
             $body = $this->performRequest(
@@ -486,7 +486,7 @@ class Tokens extends Base
         }
 
         try {
-            $this->callPersona($url);
+            $this->makePersonaHttpRequest($url);
         } catch(InvalidValidationException $e) {
             return $e->getCode();
         }
@@ -504,7 +504,7 @@ class Tokens extends Base
     protected function personaRetrieveTokenMetadata($token)
     {
         $url = $this->getPersonaHost() . $this->config['persona_oauth_route'] . '/' . $token;
-        return $this->callPersona($url);
+        return $this->makePersonaHttpRequest($url);
     }
 
     /**

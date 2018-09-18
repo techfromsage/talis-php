@@ -656,7 +656,7 @@ class TokensTest extends TestBase
     {
         $mockClient = $this->getMock(
             'Talis\Persona\Client\Tokens',
-            ['validateTokenUsingJWT', 'callPersona'],
+            ['validateTokenUsingJWT', 'makePersonaHttpRequest'],
             [
                 [
                     'userAgent' => 'unittest',
@@ -690,7 +690,7 @@ class TokensTest extends TestBase
 
         $mockClient
             ->expects($this->once())
-            ->method('callPersona')
+            ->method('makePersonaHttpRequest')
             ->with($expectedValidationUrl)
             ->will(
                 $this->throwException(
@@ -716,7 +716,7 @@ class TokensTest extends TestBase
     {
         $mockClient = $this->getMock(
             'Talis\Persona\Client\Tokens',
-            ['validateTokenUsingJWT', 'callPersona'],
+            ['validateTokenUsingJWT', 'makePersonaHttpRequest'],
             [
                 [
                     'userAgent' => 'unittest',
@@ -757,7 +757,7 @@ class TokensTest extends TestBase
 
         $mockClient
             ->expects($this->once())
-            ->method('callPersona')
+            ->method('makePersonaHttpRequest')
             ->with($this->equalTo($expectedValidationUrl))
             ->will(
                 $this->throwException(
@@ -783,7 +783,7 @@ class TokensTest extends TestBase
     {
         $mockClient = $this->getMock(
             'Talis\Persona\Client\Tokens',
-            ['validateTokenUsingJWT', 'callPersona'],
+            ['validateTokenUsingJWT', 'makePersonaHttpRequest'],
             [
                 [
                     'userAgent' => 'unittest',
@@ -824,7 +824,7 @@ class TokensTest extends TestBase
 
         $mockClient
             ->expects($this->once())
-            ->method('callPersona')
+            ->method('makePersonaHttpRequest')
             ->with($this->equalTo($expectedValidationUrl))
             ->will(
                 $this->throwException(
@@ -1098,7 +1098,7 @@ class TokensTest extends TestBase
             'Talis\Persona\Client\Tokens',
             [
                 'retrieveJWTCertificate',
-                'callPersona',
+                'makePersonaHttpRequest',
             ],
             [
                 [
@@ -1128,7 +1128,7 @@ class TokensTest extends TestBase
             ->will($this->returnValue($this->_publicKey));
 
         $mockClient->expects($this->once())
-            ->method('callPersona')
+            ->method('makePersonaHttpRequest')
             ->with("localhost/3/oauth/tokens/{$accessToken['access_token']}")
             ->willReturn([
                 'expires' => time() + 1000,
@@ -1146,7 +1146,7 @@ class TokensTest extends TestBase
             'Talis\Persona\Client\Tokens',
             [
                 'retrieveJWTCertificate',
-                'callPersona',
+                'makePersonaHttpRequest',
             ],
             [
                 [
@@ -1176,7 +1176,7 @@ class TokensTest extends TestBase
             ->will($this->returnValue($this->_publicKey));
 
         $mockClient->expects($this->once())
-            ->method('callPersona')
+            ->method('makePersonaHttpRequest')
             ->with("localhost/3/oauth/tokens/{$accessToken['access_token']}")
             ->willReturn([
                 'expires' => time() + 1000,
