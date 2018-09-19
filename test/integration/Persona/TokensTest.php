@@ -194,4 +194,17 @@ class TokensTest extends TestBase
             )
         );
     }
+
+    function testListScopes()
+    {
+        $token = $this->personaClient->obtainNewToken(
+            $this->clientId,
+            $this->clientSecret,
+            ['useCache' => false]
+        );
+
+        $scopes = $this->personaClient->listScopes($token);
+        $this->assertNotEmpty($scopes);
+        $this->assertContains($this->clientId, $scopes);
+    }
 }
