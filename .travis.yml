@@ -12,7 +12,7 @@ install:
 - composer install
 script: |
     set -xe
-    find . -name \*.php -exec php -l "{}"
+    find . -name '*.php' -exec 'php -l "{}"' \;
     ant test
 notifications:
   hipchat:
