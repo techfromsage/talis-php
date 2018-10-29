@@ -1,4 +1,5 @@
 <?php
+
 namespace Talis\Persona\Client;
 
 use \Firebase\JWT\JWT;
@@ -12,7 +13,7 @@ use \Talis\Persona\Client\TokenValidationException;
 use \Talis\Persona\Client\UnauthorisedException;
 use \Talis\Persona\Client\UnknownException;
 
-class Tokens extends Base
+public class Tokens extends Base
 {
     /**
      * Validates the supplied token using JWT or a remote Persona server.
@@ -24,12 +25,14 @@ class Tokens extends Base
      * The order of validation is as follows: JWT, local Redis cache, then remote Persona.
      *
      * @param array $params a set of optional parameters you can pass to this method <pre>
-     *      access_token: (string) a token to validate explicitly, if you do not specify one the method tries to find one,
+     *      access_token: (string) a token to validate explicitly, if you do
+     *          not specify one the method tries to find one
      *      scope: (string|array) specify this if you wish to validate a scoped token
-     * @return int ValidationResults enum
-     * @throws \Exception if you do not supply a token AND it cannot extract one from $_SERVER, $_GET, $_POST
+     * @return integer ValidationResults enum
+     * @throws \Exception If you do not supply a token AND it cannot extract
+     *      one from $_SERVER, $_GET, $_POST
      */
-    public function validateToken($params = [])
+    public function validateToken(array $params = [])
     {
         if (isset($params['access_token']) && !empty($params['access_token'])) {
             $token = $params['access_token'];
@@ -55,12 +58,12 @@ class Tokens extends Base
      * @param string $token a token to validate explicitly, if you do not
      *      specify one the method tries to find one
      * @param array|null $scopes specify this if you wish to validate a scoped token
-     * @param int $cacheTTL time to live value in seconds for the certificate to stay within cache
-     * @return int ValidationResults enum
-     * @throws ScopesNotDefinedException if the JWT token doesn't include the user's scopes
-     * @throws Exception if not able to communicate with Persona to retrieve the public certificate
+     * @param integer $cacheTTL time to live value in seconds for the certificate to stay within cache
+     * @return integer ValidationResults enum
+     * @throws ScopesNotDefinedException If the JWT token doesn't include the user's scopes
+     * @throws Exception If not able to communicate with Persona to retrieve the public certificate
      */
-    protected function validateTokenUsingJWT($token, $scopes, $cacheTTL = 300)
+    protected function validateTokenUsingJWT($token, array $scopes = null, $cacheTTL = 300)
     {
         $publicCert = $this->retrieveJWTCertificate($cacheTTL);
 
@@ -81,9 +84,7 @@ class Tokens extends Base
         $isSu = in_array('su', $decodedToken['scopes'], true);
         $hasScope = count(array_intersect($scopes, $decodedToken['scopes'])) > 0;
 
-        return $isSu || $hasScope
-            ? ValidationResults::Success
-            : ValidationResults::Unauthorised;
+        return $isSu || $hasScope ? ValidationResults::Success : ValidationResults::Unauthorised;
     }
 
     /**
@@ -93,7 +94,7 @@ class Tokens extends Base
      *      specify one the method tries to find one
      * @param string $rawPublicCert public key to validate the token
      * @return array decoded token
-     * @throws TokenValidationException could not validate token
+     * @throws TokenValidationException Could not validate token
      */
     protected function decodeToken($token, $rawPublicCert)
     {
@@ -101,7 +102,9 @@ class Tokens extends Base
             // JWT::decode calls openssl_verify which will cause a fatal error
             // if the certificate is invalid. Calling openssl_pkey_get_public
             // first ensures that the certificate is valid before progressing.
-            if ($pubCert = openssl_pkey_get_public($rawPublicCert)) {
+            $pubCert = openssl_pkey_get_public($rawPublicCert);
+
+            if ($pubCert) {
                 return (array) JWT::decode($token, $pubCert, ['RS256']);
             }
 
@@ -120,9 +123,9 @@ class Tokens extends Base
     /**
      * Retrieve Persona's public certificate for verifying
      * the integrity & authentication of a given JWT
-     * @param int $cacheTTL time to live in seconds for cached responses
+     * @param integer $cacheTTL time to live in seconds for cached responses
      * @return string certificate
-     * @throws Exception cannot comminucate with Persona or Redis
+     * @throws Exception Cannot comminucate with Persona or Redis
      */
     public function retrieveJWTCertificate($cacheTTL = 300)
     {
@@ -139,17 +142,17 @@ class Tokens extends Base
 
     /**
      * Validate the given token by using Persona
-     * @param array $params a set of optional parameters you can pass to this method <pre>
-     *      access_token: (string) a token to validate explicitly, if you do not specify one the method tries to find one,
-     *      scopes: (array) specify this if you wish to validate a scoped token
-     * @return int ValidationResults enum
-     * @throws \Exception if you do not supply a token AND it cannot extract one from $_SERVER, $_GET, $_POST
+     * @param string $token Persona oauth token. If the token is empty the
+     *      request will be used to hopefully find a token.
+     * @param array $scopes specify this if you wish to validate a scoped token
+     * @return integer ValidationResults enum
+     * @throws \Exception If you do not supply a token AND it cannot extract
+     *      one from $_SERVER, $_GET, $_POST
      */
-    protected function validateTokenUsingPersona($token, $scopes)
+    protected function validateTokenUsingPersona($token, array $scopes = [])
     {
         // verify against persona
         $this->getStatsD()->increment('validateToken.cache.miss');
-
 
         $this->getStatsD()->startTiming('validateToken.rest.get');
         $success = $this->personaCheckTokenIsValid($token, $scopes);
@@ -170,20 +173,20 @@ class Tokens extends Base
      * credentials are missing. If configured, this method will also use the token
      * cache for recently created tokens instead of going to Persona.
      *
-     * @param $clientId
-     * @param $clientSecret
+     * @param string $clientId Persona client id
+     * @param string $clientSecret Persona client secret
      * @param array $params a set of optional parameters you can pass into this method <pre>
      *          scope: (string) to obtain a new scoped token
      *          use_cache: (boolean) use cached called (defaults to true)</pre>
      * @return array containing the token details
-     * @throws \Exception if we were unable to generate a new token or if credentials were missing
+     * @throws \Exception If we were unable to generate a new token or if credentials were missing
      */
-    public function obtainNewToken($clientId, $clientSecret, $params = [])
+    public function obtainNewToken($clientId, $clientSecret, array $params = [])
     {
-        $this->getStatsD()->increment("obtainNewToken");
+        $this->getStatsD()->increment('obtainNewToken');
 
         if (empty($clientId) || empty($clientSecret)) {
-            throw new \Exception("You must specify clientId, and clientSecret to obtain a new token");
+            throw new \Exception('You must specify clientId, and clientSecret to obtain a new token');
         }
 
         $token = false;
@@ -192,34 +195,38 @@ class Tokens extends Base
             $token = $this->getCacheBackend()->fetch($cacheKey);
         }
 
-        if (empty($token)) {
-            $query = [
-                'grant_type' => 'client_credentials',
-                'client_id' => $clientId,
-                'client_secret' => $clientSecret,
-            ];
+        if (!empty($token)) {
+            return $token;
+        }
 
-            if (isset($params['scope']) && !empty($params['scope'])) {
-                $query['scope'] = $params['scope'];
-            }
+        $query = [
+            'grant_type' => 'client_credentials',
+            'client_id' => $clientId,
+            'client_secret' => $clientSecret,
+        ];
 
-            $url = $this->getPersonaHost() . $this->config['persona_oauth_route'];
+        if (isset($params['scope']) && !empty($params['scope'])) {
+            $query['scope'] = $params['scope'];
+        }
 
-            $this->getStatsD()->startTiming("obtainNewToken.rest.get");
-            $token = $this->personaObtainNewToken($url, $query);
-            $this->getStatsD()->endTiming("obtainNewToken.rest.get");
+        $url = $this->getPersonaHost() . $this->config['persona_oauth_route'];
 
-            if ($token && isset($token['expires_in'])) {
-                // Add a 60 second leeway as the expires time does not take into
-                // consideration the time taken to communication with Persona
-                // in both directions.. This leads to a edge case where the
-                // token has expired, but the cache hasn't removed it yet
-                $expiresIn = intval($token['expires_in'], 10) - 60;
-                if ($expiresIn > 0) {
-                    $this->getCacheBackend()->save(
-                        $cacheKey, $token, $expiresIn
-                    );
-                }
+        $this->getStatsD()->startTiming('obtainNewToken.rest.get');
+        $token = $this->personaObtainNewToken($url, $query);
+        $this->getStatsD()->endTiming('obtainNewToken.rest.get');
+
+        if ($token && isset($token['expires_in'])) {
+            // Add a 60 second leeway as the expires time does not take into
+            // consideration the time taken to communication with Persona
+            // in both directions.. This leads to a edge case where the
+            // token has expired, but the cache hasn't removed it yet
+            $expiresIn = intval($token['expires_in'], 10) - 60;
+            if ($expiresIn > 0) {
+                $this->getCacheBackend()->save(
+                    $cacheKey,
+                    $token,
+                    $expiresIn
+                );
             }
         }
 
@@ -228,39 +235,41 @@ class Tokens extends Base
 
     /**
      * Signs the given $url plus an $expiry param with the $secret and returns it
-     * @param $url string
-     * @param $expiry int|string defaults to '+15 minutes'
-     * @param $secret string
-     * @return string
-     * @throws \InvalidArgumentException
+     * @param string $url url to sign
+     * @param string $secret secret for signing
+     * @param integer|string $expiry defaults to '+15 minutes'
+     * @return string signed url
+     * @throws \InvalidArgumentException Invalid arguments
      */
     public function presignUrl($url, $secret, $expiry = null)
     {
-        $this->getStatsD()->increment("presignUrl");
+        $this->getStatsD()->increment('presignUrl');
 
         if (empty($url)) {
-            throw new \InvalidArgumentException("No url provided to sign");
+            throw new \InvalidArgumentException('No url provided to sign');
         }
         if (empty($secret)) {
-            throw new \InvalidArgumentException("No secret provided to sign with");
+            throw new \InvalidArgumentException('No secret provided to sign with');
         }
         if ($expiry == null) {
-            $expiry = "+15 minutes";
+            $expiry = '+15 minutes';
         }
 
-        $expParam = (strpos($url, '?') === false) ? "?" : "&";
-        $expParam .= (is_int($expiry)) ? "expires=" . $expiry : "expires=" . strtotime($expiry);
+        $expParam = strpos($url, '?') === false ? '?' : '&';
+        $expParam .= is_int($expiry) ? "expires=$expiry" : 'expires=' . strtotime($expiry);
+
         if (strpos($url, '#') !== false) {
             $url = substr_replace($url, $expParam, strpos($url, '#'), 0);
         } else {
             $url .= $expParam;
         }
 
-        $this->getStatsD()->startTiming("presignUrl.sign");
+        $this->getStatsD()->startTiming('presignUrl.sign');
         $sig = $this->getSignature($url, $secret);
-        $this->getStatsD()->endTiming("presignUrl.sign");
+        $this->getStatsD()->endTiming('presignUrl.sign');
 
-        $sigParam = (strpos($url, '?') === false) ? "?signature=" . $sig : "&signature=" . $sig;
+        $sigParam = strpos($url, '?') === false ? "?signature=$sig" : "&signature=$sig";
+
         if (strpos($url, '#') !== false) {
             $url = substr_replace($url, $sigParam, strpos($url, '#'), 0);
         } else {
@@ -272,9 +281,9 @@ class Tokens extends Base
 
     /**
      * Check if a presigned URL is valid
-     * @param string $url
-     * @param string $secret
-     * @return bool
+     * @param string $url url to check
+     * @param string $secret secret to generate the url signature with
+     * @return boolean true if signed and valid
      */
     public function isPresignedUrlValid($url, $secret)
     {
@@ -298,21 +307,28 @@ class Tokens extends Base
         }
 
         // still here? Check sig
-        $valid = ($query['signature'] == $this->getSignature($this->removeQuerystringVar($url, "signature"), $secret));
-        $this->getStatsD()->increment(($valid) ? "presignUrl.valid" : "presignUrl.invalid");
+        $urlWithoutSignature = $this->removeQuerystringVar($url, 'signature');
+        $signature = $this->getSignature($urlWithoutSignature, $secret);
+        $valid = $query['signature'] === $signature;
+        $this->getStatsD()->increment(($valid) ? 'presignUrl.valid' : 'presignUrl.invalid');
+
         return $valid;
     }
 
     /**
      * List all scopes that belong to a given token
      * @param string $token JWT token
-     * @param int $pubCertCacheTTL optional JWT public certificate time-to-live
+     * @param integer $pubCertCacheTTL optional JWT public certificate time-to-live
      * @return array list of scopes
      *
-     * @throws TokenValidationException invalid signature, key or token
+     * @throws TokenValidationException Invalid signature, key or token
      */
     public function listScopes($token, $pubCertCacheTTL = 300)
     {
+        if (!isset($token['access_token'])) {
+            throw new TokenValidationException('missing access token');
+        }
+
         $publicCert = $this->retrieveJWTCertificate($pubCertCacheTTL);
         $encodedToken = $token['access_token'];
         $decodedToken = $this->decodeToken($encodedToken, $publicCert);
@@ -340,8 +356,8 @@ class Tokens extends Base
      * it checks the $_GET and $_POST for the access_token param.
      * If it can't find one it throws an exception.
      *
-     * @return mixed the access token if it is found
-     * @throws \Exception if no access token is found
+     * @return string access token
+     * @throws \Exception Missing or invalid access token
      */
     protected function getTokenFromRequest()
     {
@@ -350,25 +366,31 @@ class Tokens extends Base
             if (substr($key, 0, 5) <> 'HTTP_') {
                 continue;
             }
-            $header = str_replace(' ', '-', ucwords(str_replace('_', ' ', strtolower(substr($key, 5)))));
+
+            $withoutPrefix = strtolower(substr($key, 5));
+            $removedUnderscores = str_replace('_', ' ', $withoutPrefix);
+            $header = str_replace(' ', '-', ucwords($removedUnderscores));
             $headers[$header] = $value;
         }
+
         if (isset($headers['Bearer'])) {
             if (!preg_match('/Bearer\s(\S+)/', $headers['Bearer'], $matches)) {
                 throw new \Exception('Malformed auth header');
             }
+
             return $matches[1];
         }
 
         if (isset($_GET['access_token'])) {
             return $_GET['access_token'];
         }
+
         if (isset($_POST['access_token'])) {
             return $_POST['access_token'];
         }
 
-        $this->getLogger()->error("No OAuth token supplied in headers, GET or POST");
-        throw new \Exception("No OAuth token supplied");
+        $this->getLogger()->error('No OAuth token supplied in headers, GET or POST');
+        throw new \Exception('No OAuth token supplied');
     }
 
     /**
@@ -376,13 +398,13 @@ class Tokens extends Base
      * contain a non null value;
      *
      * @param array $config the configuration options to validate
-     * @return bool if config passed
-     * @throws \InvalidArgumentException if the config is invalid
+     * @return boolean if config passed
+     * @throws \InvalidArgumentException If the config is invalid
      */
-    protected function checkConfig($config)
+    protected function checkConfig(array $config)
     {
         if (empty($config)) {
-            throw new \InvalidArgumentException("No config provided to Persona Client");
+            throw new \InvalidArgumentException('No config provided to Persona Client');
         }
 
         $requiredProperties = [
@@ -398,18 +420,20 @@ class Tokens extends Base
 
         if (empty($missingProperties)) {
             return true;
-        } else {
-            $this->getLogger()->error("Config provided does not contain values", $missingProperties);
-            throw new \InvalidArgumentException("Config provided does not contain values for: " . implode(",",
-                    $missingProperties));
         }
+
+        $this->getLogger()->error('Config provided does not contain values', $missingProperties);
+        throw new \InvalidArgumentException(
+            'Config provided does not contain values for: '
+            . implode(',', $missingProperties)
+        );
     }
 
     /**
      * Call Persona
      * @param string $url fully qualified url that will be hit
      * @return array body from http response
-     * @throws TokenValidationException could not validate token
+     * @throws TokenValidationException Could not validate token
      */
     protected function makePersonaHttpRequest($url)
     {
@@ -419,7 +443,7 @@ class Tokens extends Base
                 [
                     'headers' => [
                         'Cache-Control' => 'max-age=0, no-cache',
-                    ]
+                    ],
                 ]
             );
         } catch (\Exception $e) {
@@ -455,23 +479,27 @@ class Tokens extends Base
      *
      * @param string $token token to validate
      * @param array $scopes optional scopes to validate
-     * @return int ValidationResults enum
+     * @return integer ValidationResults enum
      */
-    protected function personaCheckTokenIsValid($token, $scopes = [])
+    protected function personaCheckTokenIsValid($token, array $scopes = [])
     {
-        $url = $this->getPersonaHost() . $this->config['persona_oauth_route'] . '/' . $token;
+        $url = $this->getPersonaHost()
+            . $this->config['persona_oauth_route']
+            . '/'
+            . $token;
 
         if (!empty($scopes)) {
-            $url .= '?' . http_build_query(['scope' => join(',', $scopes)]);
+            $queryParams = http_build_query(['scope' => join(',', $scopes)]);
+            $url .= "?$queryParams";
         }
 
         try {
             $this->makePersonaHttpRequest($url);
-        } catch(TokenValidationException $e) {
+        } catch (TokenValidationException $e) {
             return $e->getCode();
         }
 
-        $this->getLogger()->debug("Token valid at server");
+        $this->getLogger()->debug('Token valid at server');
         return ValidationResults::Success;
     }
 
@@ -479,11 +507,15 @@ class Tokens extends Base
      * Retrieve a token's metadata
      * @param string $token token to retrieve the metadata for
      * @return array metadata
-     * @throws TokenValidationException
+     * @throws TokenValidationException Could not validate token
      */
     protected function personaRetrieveTokenMetadata($token)
     {
-        $url = $this->getPersonaHost() . $this->config['persona_oauth_route'] . '/' . $token;
+        $url = $this->getPersonaHost()
+            . $this->config['persona_oauth_route']
+            . '/'
+            . $token;
+
         return $this->makePersonaHttpRequest($url);
     }
 
@@ -491,12 +523,12 @@ class Tokens extends Base
      * Method that wraps the curl post request to persona for obtaining a new
      * token.
      *
-     * @param $url string the persona endpoint to make the request against
-     * @param $query array the set of parameters that will make up the post fields
+     * @param string $url the persona endpoint to make the request against
+     * @param array $query the set of parameters that will make up the post fields
      * @return array json decoded array containing the response body from persona
-     * @throws \Exception if persona was unable to generate a token
+     * @throws \Exception If persona was unable to generate a token
      */
-    protected function personaObtainNewToken($url, $query)
+    protected function personaObtainNewToken($url, array $query)
     {
         return $this->performRequest(
             $url,
@@ -509,9 +541,9 @@ class Tokens extends Base
 
     /**
      * Returns a signature for the given $msg
-     * @param $msg
-     * @param $secret
-     * @return string
+     * @param string $msg message to generate the signatur efor
+     * @param string $secret secret to sign the message with
+     * @return string signature generated with secret and message
      */
     protected function getSignature($msg, $secret)
     {
@@ -519,17 +551,18 @@ class Tokens extends Base
     }
 
     /**
-     * Utility function to remove a querystring param from a $url
-     * @param $url
-     * @param $key
+     * Remove a query parameter from the $url
+     * @param string $url Url to remove the query parameter from
+     * @param string $key Query parameter to remove
      * @see http://www.addedbytes.com/blog/code/php-querystring-functions/
-     * @return string
+     * @return string url with the parameter removed
      */
     protected function removeQuerystringVar($url, $key)
     {
-        $anchor = (strpos($url, '#') !== false) ? substr($url, strpos($url, '#')) : null;
+        $anchor = strpos($url, '#') !== false ? substr($url, strpos($url, '#')) : null;
         $url = preg_replace('/(.*)(?|&)' . $key . '=[^&]+?(&)(.*)/i', '$1$2$4', $url . '&');
         $url = substr($url, 0, -1);
-        return (empty($anchor)) ? $url : $url . $anchor;
+
+        return empty($anchor) ? $url : $url . $anchor;
     }
 }

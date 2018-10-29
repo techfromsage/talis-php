@@ -6,7 +6,12 @@ namespace Talis\Persona\Client;
  */
 class EmptyResponseException extends TokenValidationException
 {
-    public function __construct($msg) {
+    /**
+     * Constructor
+     * @param string $msg message
+     */
+    public function __construct($msg)
+    {
         parent::__construct(
             $msg,
             ValidationResults::EmptyResponse

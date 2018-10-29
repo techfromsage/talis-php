@@ -6,11 +6,15 @@ namespace Talis\Persona\Client;
  */
 class InvalidPublicKeyException extends TokenValidationException
 {
-    public function __construct($msg) {
+    /**
+     * Constructor
+     * @param string $msg message
+     */
+    public function __construct($msg)
+    {
         parent::__construct(
             $msg,
             ValidationResults::InvalidPublicKey
         );
     }
 }
-

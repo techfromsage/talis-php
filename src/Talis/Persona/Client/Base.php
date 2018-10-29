@@ -1,4 +1,5 @@
 <?php
+
 namespace Talis\Persona\Client;
 
 use Monolog\Logger;
@@ -8,7 +9,7 @@ use Guzzle\Cache\DoctrineCacheAdapter;
 use Guzzle\Plugin\Cache\CachePlugin;
 use Guzzle\Plugin\Cache\DefaultCacheStorage;
 
-abstract class Base
+public abstract class Base
 {
     const STATSD_CONN = 'STATSD_CONN';
     const STATSD_PREFIX = 'STATSD_PREFIX';
@@ -69,8 +70,8 @@ abstract class Base
      *      cacheBackend: (Doctrine\Common\Cache\CacheProvider) cache storage
      *      cacheKeyPrefix: (string) optional prefix to append to the cache keys
      *      cacheDefaultTTL: (integer) optional cache TTL value
-     * @throws \InvalidArgumentException if any of the required config parameters are missing
-     * @throws \InvalidArgumentException if the user agent format is invalid
+     * @throws \InvalidArgumentException If any of the required config parameters are missing
+     * @throws \InvalidArgumentException If the user agent format is invalid
      */
     public function __construct(array $config)
     {
@@ -92,24 +93,14 @@ abstract class Base
 
         if ($isValidUserAgent == false) {
             throw new \InvalidArgumentException(
-                'user agent format is not valid (' . $config['userAgent'] . ')'
+                "user agent format is not valid ({$config['userAgent']})"
             );
         }
 
-        $this->logger = isset($config['logger'])
-            ? $config['logger']
-            : null;
-
+        $this->logger = isset($config['logger']) ? $config['logger'] : null;
         $this->cacheBackend = $config['cacheBackend'];
-
-        $this->keyPrefix = isset($config['cacheKeyPrefix'])
-            ? $config['cacheKeyPrefix']
-            : '';
-
-        $this->defaultTtl = isset($config['cacheDefaultTTL'])
-            ? $config['cacheDefaultTTL']
-            : 3600;
-
+        $this->keyPrefix = isset($config['cacheKeyPrefix']) ? $config['cacheKeyPrefix'] : '';
+        $this->defaultTtl = isset($config['cacheDefaultTTL']) ? $config['cacheDefaultTTL'] : 3600;
         $this->phpVersion = phpversion();
     }
 
@@ -119,21 +110,26 @@ abstract class Base
      */
     public function getStatsD()
     {
-        if ($this->statsD == null) {
+        if (is_null($this->statsD)) {
             $connStr = getenv(self::STATSD_CONN);
-            if (!empty($connStr)) {
-                list($host, $port) = explode(":", $connStr);
+
+            if (!empty($connStr) && !empty(strpos($connStr, ':'))) {
+                list($host, $port) = explode(':', $connStr);
                 $conn = new \Domnikl\Statsd\Connection\Socket($host, $port);
             } else {
                 $conn = new \Domnikl\Statsd\Connection\Blackhole();
             }
+
             $this->statsD = new \Domnikl\Statsd\Client($conn);
             $prefix = getenv(self::STATSD_PREFIX);
+
             if (empty($prefix)) {
-                $prefix = "persona.php.client";
+                $prefix = 'persona.php.client';
             }
+
             $this->statsD->setNamespace($prefix);
         }
+
         return $this->statsD;
     }
 
@@ -142,19 +138,21 @@ abstract class Base
      * contain a non null value;
      *
      * @param array $config the configuration options to validate
-     * @return bool if config passed
-     * @throws \InvalidArgumentException if the config is invalid
+     * @return boolean if config passed
+     * @throws \InvalidArgumentException If the config is invalid
      */
-    protected function checkConfig($config)
+    protected function checkConfig(array $config)
     {
         if (empty($config)) {
-            throw new \InvalidArgumentException("No config provided to Persona Client");
+            throw new \InvalidArgumentException(
+                'No config provided to Persona Client'
+            );
         }
 
         $requiredProperties = [
             'userAgent',
             'persona_host',
-            'cacheBackend'
+            'cacheBackend',
         ];
 
         $missingProperties = [];
@@ -166,10 +164,12 @@ abstract class Base
 
         if (empty($missingProperties)) {
             return true;
-        } else {
-            throw new \InvalidArgumentException("Config provided does not contain values for: " . implode(",",
-                    $missingProperties));
         }
+
+        throw new \InvalidArgumentException(
+            'Config provided does not contain values for: '
+            . implode(',', $missingProperties)
+        );
     }
 
     /**
@@ -180,6 +180,7 @@ abstract class Base
         if ($this->logger == null) {
             $this->logger = new Logger(self::LOGGER_NAME);
         }
+
         return $this->logger;
     }
 
@@ -195,7 +196,9 @@ abstract class Base
 
             $adapter = new DoctrineCacheAdapter($this->cacheBackend);
             $storage = new DefaultCacheStorage(
-                $adapter, $this->keyPrefix, $this->defaultTtl
+                $adapter,
+                $this->keyPrefix,
+                $this->defaultTtl
             );
 
             $this->httpClient->addSubscriber(
@@ -218,6 +221,7 @@ abstract class Base
     protected function getClientVersion()
     {
         $version = $this->getCacheBackend()->fetch(self::COMPOSER_VERSION_CACHE_KEY);
+
         if ($version) {
             return $version;
         }
@@ -257,9 +261,7 @@ abstract class Base
             $requestId = $_SERVER['HTTP_X_REQUEST_ID'];
         }
 
-        return empty($requestId) === true
-            ? uniqid()
-            : $requestId;
+        return empty($requestId) ? uniqid() : $requestId;
     }
 
     /**
@@ -278,8 +280,8 @@ abstract class Base
      *      parseJson: (default true) parse the response as JSON
      *      cacheTTL: optional TTL for this request only
      * @return array|null response body
-     * @throws NotFoundException if the http status was a 404
-     * @throws \Exception if response not 200 and valid JSON
+     * @throws NotFoundException If the http status was a 404
+     * @throws \Exception If response not 200 and valid JSON
      */
     protected function performRequest($url, array $opts)
     {
@@ -304,11 +306,11 @@ abstract class Base
             $opts
         );
 
-        $expectedResponseCode = ($opts['expectResponse'] === true) ? 200 : 204;
+        $expectedResponseCode = $opts['expectResponse'] === true ? 200 : 204;
         $body = isset($opts['body']) ? $opts['body'] : null;
 
         if (isset($opts['bearerToken'])) {
-            $httpConfig['headers']['Authorization'] = 'Bearer ' . $opts['bearerToken'];
+            $httpConfig['headers']['Authorization'] = "Bearer {$opts['bearerToken']}";
         }
 
         if ($body != null && $opts['addContentType']) {
@@ -316,8 +318,8 @@ abstract class Base
         }
 
         $version = $this->getClientVersion();
-        $httpConfig['headers']['User-Agent'] = "{$this->config['userAgent']}" .
-            "persona-php-client/{$version} (php/{$this->phpVersion})";
+        $httpConfig['headers']['User-Agent'] = "{$this->config['userAgent']}"
+            .  "persona-php-client/{$version} (php/{$this->phpVersion})";
         $httpConfig['headers']['X-Request-ID'] = $this->getRequestId();
         $httpConfig['headers']['X-Client-Version'] = $version;
         $httpConfig['headers']['X-Client-Language'] = 'php';
@@ -340,6 +342,7 @@ abstract class Base
             $response = $request->send();
         } catch (RequestException $exception) {
             $response = $exception->getRequest()->getResponse();
+
             if (isset($response)) {
                 $status = $response->getStatusCode();
             } else {
@@ -356,14 +359,14 @@ abstract class Base
             );
         }
 
-        if ($response->getStatusCode() != $expectedResponseCode) {
+        if ($response->getStatusCode() !== $expectedResponseCode) {
             $this->getLogger()->error(
-                "Did not retrieve expected response code",
-                ["opts" => $opts, "url" => $url, "response" => $response]
+                'Did not retrieve expected response code',
+                ['opts' => $opts, 'url' => $url, 'response' => $response]
             );
 
             throw new \Exception(
-                "Did not retrieve expected response code from persona",
+                'Did not retrieve expected response code from persona',
                 $response->getStatusCode()
             );
         }
@@ -385,7 +388,7 @@ abstract class Base
             );
 
             throw new \Exception(
-                "Could not parse response from persona as JSON " . $response->getBody()
+                "Could not parse response from persona as JSON {$response->getBody()}"
             );
         }
 
