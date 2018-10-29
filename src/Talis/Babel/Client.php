@@ -42,19 +42,19 @@ class Client
      * @param integer|string $port babel http port
      * @throws ClientException Invalid babel host parameter
      */
-    public function __construct($url, $port = null)
+    public function __construct($host, $port = null)
     {
         if (empty($host)) {
             throw new \Talis\Babel\ClientException('host must be specified');
         }
 
-        if (!preg_match('/^http/', $url)) {
+        if (!preg_match('/^http/', $host)) {
             throw new \Talis\Babel\ClientException(
                 'host must also specify a scheme, either http:// or https://'
             );
         }
 
-        $this->babelHost = $url;
+        $this->babelHost = $host;
         $this->babelPort = $port;
     }
 
@@ -234,20 +234,10 @@ class Client
             );
         }
 
+        $this->checKeysExist(['annotatedBy', 'hasTarget', 'hasBody'], $arrData);
+
         $hasTarget = $arrData['hasTarget'];
         $hasBody = $arrData['hasBody'];
-
-        if (!array_key_exists('annotatedBy', $arrData)) {
-            throw new \Talis\Babel\ClientException(
-                'Missing annotatedBy in data array'
-            );
-        }
-
-        if (!array_key_exists('hasTarget', $arrData)) {
-            throw new \Talis\Babel\ClientException(
-                'Missing hasTarget in data array'
-            );
-        }
 
         if (!is_array($arrData['hasTarget'])) {
             throw new \Talis\Babel\ClientException(
@@ -259,37 +249,11 @@ class Client
         if (!array_key_exists('uri', $hasTarget)) {
             // perhaps it is multi-target
             foreach ($hasTarget as $h) {
-                if (!array_key_exists('uri', $h)) {
-                    throw new \Talis\Babel\ClientException(
-                        'Missing hasTarget.uri in data array'
-                    );
-                }
+                $this->checkKeysExist(['uri'], $h);
             }
         }
 
-        if (!array_key_exists('hasBody', $arrData)) {
-            throw new \Talis\Babel\ClientException(
-                'Missing hasBody in data array'
-            );
-        }
-
-        if (!is_array($arrData['hasBody'])) {
-            throw new \Talis\Babel\ClientException(
-                'hasBody must be an array containing format and type'
-            );
-        }
-
-        if (!array_key_exists('format', $hasBody)) {
-            throw new \Talis\Babel\ClientException(
-                'Missing hasBody.format in data array'
-            );
-        }
-
-        if (!array_key_exists('type', $hasBody)) {
-            throw new \Talis\Babel\ClientException(
-                'Missing hasBody.type in data array'
-            );
-        }
+        $this->checkKeysExist(['format', 'type'], $hasBody);
 
         $requestOptions = null;
         if ($bCreateSynchronously) {
@@ -343,41 +307,7 @@ class Client
          * instances where no data is found.  Anything else raises a generic
          * \Talis\Babel\ClientException.
          */
-        $statusCode = $response->getStatusCode();
-
-        switch ($statusCode) {
-            case 401:
-                $this->getLogger()->error("Persona token invalid/expired for request: GET $url");
-                throw new InvalidPersonaTokenException('Persona token is either invalid or has expired');
-            case 404:
-                $this->getLogger()->error("Nothing found for request: GET $url");
-                throw new NotFoundException("Nothing found for request: $url");
-            default:
-                $errorMessage = 'Unknown error';
-                $responseBody = $response->getBody(true);
-
-                if ($responseBody) {
-                    $arrResponse = json_decode($responseBody, true);
-
-                    if (is_array($arrResponse) && array_key_exists('message', $arrResponse)) {
-                        $errorMessage = $arrResponse['message'];
-                    }
-                }
-
-                $this->getLogger()->error(
-                    "Babel GET failed for request: $url",
-                    [
-                        'statusCode' => $statusCode,
-                        'message' => $response->getMessage(),
-                        'body' => $responseBody,
-                    ]
-                );
-
-                throw new \Talis\Babel\ClientException(
-                    "Error {$statusCode} for GET {$url}: {$errorMessage}",
-                    $statusCode
-                );
-        }
+        $this->handleBabelError($url, $response);
     }
 
     /**
@@ -413,29 +343,7 @@ class Client
          * instances where no data is found.  Anything else raises a generic
          * \Talis\Babel\ClientException.
          */
-
-        $statusCode = $response->getStatusCode();
-        switch ($statusCode) {
-            case 401:
-                $this->getLogger()->error("Persona token invalid/expired for request: HEAD $url");
-                throw new InvalidPersonaTokenException('Persona token is either invalid or has expired');
-            case 404:
-                $this->getLogger()->error("Nothing found for request: HEAD $url");
-                throw new NotFoundException("Nothing found for request: $url");
-            default:
-                $this->getLogger()->error(
-                    "Babel HEAD failed for request: $url",
-                    [
-                        'statusCode' => $statusCode,
-                        'message' => $response->getMessage(),
-                        'body' => $response->getBody(true),
-                    ]
-                );
-                throw new \Talis\Babel\ClientException(
-                    "Error {$statusCode} for HEAD {$url}",
-                    $statusCode
-                );
-        }
+        $this->handleBabelError($url, $response);
     }
 
     /**
@@ -571,5 +479,64 @@ class Client
         }
 
         return $this->httpClient;
+    }
+
+    /**
+     * Check that all checks exist within array
+     * @param array keys keys to check for
+     * @param array array which holds expected keys
+     * @throws \Talis\Babel\ClientException Key missing
+     */
+    protected function checKeysExist(array $keys, array $array)
+    {
+        foreach ($keys as $key) {
+            if (array_key_exists($key, $array) === false) {
+                throw new \Talis\Babel\ClientException("Missing $key in data array");
+            }
+        }
+    }
+
+    /**
+     * Handle a babel error response
+     * @param string $url babel url which was called
+     * @param mixed $response http response
+     */
+    protected function handleBabelError($url, $response)
+    {
+        $statusCode = $response->getStatusCode();
+
+        switch ($statusCode) {
+            case 401:
+                $this->getLogger()->error("Persona token invalid/expired for request: $url");
+                throw new InvalidPersonaTokenException('Persona token is either invalid or has expired');
+            case 404:
+                $this->getLogger()->error("Nothing found for request: $url");
+                throw new NotFoundException("Nothing found for request: $url");
+            default:
+                $errorMessage = 'Unknown error';
+                $responseBody = $response->getBody(true);
+
+                if ($responseBody) {
+                    $arrResponse = json_decode($responseBody, true);
+
+                    if (is_array($arrResponse) && array_key_exists('message', $arrResponse)) {
+                        $errorMessage = $arrResponse['message'];
+                    }
+                }
+
+                $this->getLogger()->error(
+                    "Babel failed for request: $url",
+                    [
+                        'statusCode' => $statusCode,
+                        'message' => $response->getMessage(),
+                        'body' => $responseBody,
+                    ]
+                );
+
+                throw new \Talis\Babel\ClientException(
+                    "Error {$statusCode} for {$url}: {$errorMessage}",
+                    $statusCode
+                );
+        }
     }
 }

@@ -1,7 +1,7 @@
 <?php
 namespace Talis\Persona\Client;
 
-public class Users extends Base
+class Users extends Base
 {
     /**
      * Get a user profile based off a gupid passed in
@@ -45,7 +45,7 @@ e    * @throws \InvalidArgumentException either gupid or token is invalid
         $this->validateStringParam('token', $token);
 
         $queryParams = http_build_query(['guids' => implode(',', $guids)]);
-        $url = $this->getPersonaHost() . "/users?$queryParams");
+        $url = $this->getPersonaHost() . "/users?$queryParams";
 
         try {
             return $this->performRequest(

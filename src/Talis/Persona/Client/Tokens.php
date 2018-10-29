@@ -13,7 +13,7 @@ use \Talis\Persona\Client\TokenValidationException;
 use \Talis\Persona\Client\UnauthorisedException;
 use \Talis\Persona\Client\UnknownException;
 
-public class Tokens extends Base
+class Tokens extends Base
 {
     /**
      * Validates the supplied token using JWT or a remote Persona server.
@@ -452,7 +452,7 @@ public class Tokens extends Base
                 ['exception' => $e]
             );
 
-            switch ($exception->getCode()) {
+            switch ($e->getCode()) {
                 case 401:
                 case 403:
                     throw new UnauthorisedException(

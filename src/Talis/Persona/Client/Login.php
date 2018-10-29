@@ -2,7 +2,7 @@
 
 namespace Talis\Persona\Client;
 
-public class Login extends Base
+class Login extends Base
 {
     const LOGIN_PREFIX = 'PERSONA';
 
@@ -199,7 +199,7 @@ public class Login extends Base
      */
     protected function isLoggedIn()
     {
-        return isset($_SESSION[self::LOGIN_PREFIX . ':loginSSO']));
+        return isset($_SESSION[self::LOGIN_PREFIX . ':loginSSO']);
     }
 
     /**
@@ -244,7 +244,7 @@ public class Login extends Base
      */
     protected function getLoginState()
     {
-        $appId = $_SESSION[self::LOGIN_PREFIX . ':loginAppId']);
+        $appId = $_SESSION[self::LOGIN_PREFIX . ':loginAppId'];
         $seed = md5("$appId::");
         return uniqid($seed, true);
     }

@@ -9,7 +9,7 @@ use \Talis\EchoClient\Event;
 /**
  * Sends events to Echo, if an echo server is enabled.
  */
-public class Client
+class Client
 {
     const ECHO_API_VERSION = 1;
 
@@ -524,16 +524,14 @@ public class Client
      */
     protected function getHeaders($noCache = false)
     {
-        $arrPersonaToken = $this->getPersonaClient()->obtainNewToken(
+        $personaToken = $this->getPersonaClient()->obtainNewToken(
             OAUTH_USER,
             OAUTH_SECRET
         );
 
-        $personaToken = ;
-
         $headers = [
             'Content-Type' => 'application/json',
-            'Authorization' => "Bearer {$arrPersonaToken['access_token']}",
+            'Authorization' => "Bearer {$personaToken['access_token']}",
         ];
 
         if ($noCache) {

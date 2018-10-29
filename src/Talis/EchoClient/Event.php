@@ -2,7 +2,7 @@
 
 namespace Talis\EchoClient;
 
-public class Event implements \JsonSerializable
+class Event implements \JsonSerializable
 {
     private $class;
     private $source;
@@ -16,7 +16,7 @@ public class Event implements \JsonSerializable
      * @param array $props A set of any properties that relate to this event
      * @param string $userId The user this event relates to
      * @param string $timestamp When this event was raised, represented as
- *              seconds since the epoch as a string
+     *       seconds since the epoch as a string
      */
     public function __construct(
         $class,

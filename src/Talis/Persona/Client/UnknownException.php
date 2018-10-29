@@ -4,7 +4,7 @@ namespace Talis\Persona\Client;
 /**
  * A unexpected exception occurred.
  */
-public class UnknownException extends TokenValidationException
+class UnknownException extends TokenValidationException
 {
     /**
      * Constructor

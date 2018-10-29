@@ -2,7 +2,7 @@
 
 namespace Talis\Persona\Client;
 
-public class OAuthClients extends Base
+class OAuthClients extends Base
 {
     /**
      * Return an outh client

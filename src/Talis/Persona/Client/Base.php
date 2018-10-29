@@ -9,7 +9,7 @@ use Guzzle\Cache\DoctrineCacheAdapter;
 use Guzzle\Plugin\Cache\CachePlugin;
 use Guzzle\Plugin\Cache\DefaultCacheStorage;
 
-public abstract class Base
+abstract class Base
 {
     const STATSD_CONN = 'STATSD_CONN';
     const STATSD_PREFIX = 'STATSD_PREFIX';
