@@ -10,7 +10,7 @@ if (!defined('APPROOT')) {
 
 require_once $appRoot . '/test/unit/TestBase.php';
 
-class UsersTest extends TestBase
+public class UsersTest extends TestBase
 {
 
     /**
@@ -25,7 +25,7 @@ class UsersTest extends TestBase
     private $clientId;
     private $clientSecret;
 
-    function setUp()
+    public function setUp()
     {
         parent::setUp();
         $personaConf = $this->getPersonaConfig();
@@ -39,6 +39,7 @@ class UsersTest extends TestBase
                 'cacheBackend' => $this->cacheBackend,
             ]
         );
+
         $this->personaClientTokens = new Tokens(
             [
                 'userAgent' => 'integrationtest',
@@ -48,17 +49,25 @@ class UsersTest extends TestBase
         );
     }
 
-    function testCreateUserThenGetUserByGupid()
+    public function testCreateUserThenGetUserByGupid()
     {
-        $tokenDetails = $this->personaClientTokens->obtainNewToken($this->clientId, $this->clientSecret,
-            ["useCache" => false]);
+        $tokenDetails = $this->personaClientTokens->obtainNewToken(
+            $this->clientId,
+            $this->clientSecret,
+            ['useCache' => false]
+        );
+
         $this->assertArrayHasKey('access_token', $tokenDetails);
         $token = $tokenDetails['access_token'];
 
         $gupid = uniqid('trapdoor:');
         $email = uniqid() . '@example.com';
-        $userCreate = $this->personaClientUser->createUser($gupid, ['name' => 'Sarah Connor', 'email' => $email],
-            $token);
+        $userCreate = $this->personaClientUser->createUser(
+            $gupid,
+            ['name' => 'Sarah Connor', 'email' => $email],
+            $token
+        );
+
         $user = $this->personaClientUser->getUserByGupid($userCreate['gupids'][0], $token);
 
         $this->assertEquals($userCreate['guid'], $user['guid']);
@@ -68,18 +77,29 @@ class UsersTest extends TestBase
         $this->assertEquals($email, $user['profile']['email']);
     }
 
-    function testCreateUserThenGetUserByGuids()
+    public function testCreateUserThenGetUserByGuids()
     {
-        $tokenDetails = $this->personaClientTokens->obtainNewToken($this->clientId, $this->clientSecret,
-            ["useCache" => false]);
+        $tokenDetails = $this->personaClientTokens->obtainNewToken(
+            $this->clientId,
+            $this->clientSecret,
+            ['useCache' => false]
+        );
+
         $this->assertArrayHasKey('access_token', $tokenDetails);
         $token = $tokenDetails['access_token'];
 
         $gupid = uniqid('trapdoor:');
         $email = uniqid() . '@example.com';
-        $userCreate = $this->personaClientUser->createUser($gupid, ['name' => 'Sarah Connor', 'email' => $email],
-            $token);
-        $users = $this->personaClientUser->getUserByGuids([$userCreate['guid']], $token);
+        $userCreate = $this->personaClientUser->createUser(
+            $gupid,
+            ['name' => 'Sarah Connor', 'email' => $email],
+            $token
+        );
+
+        $users = $this->personaClientUser->getUserByGuids(
+            [$userCreate['guid']],
+            $token
+        );
 
         $this->assertCount(1, $users);
         $this->assertEquals($userCreate['guid'], $users[0]['guid']);
@@ -89,24 +109,37 @@ class UsersTest extends TestBase
         $this->assertEquals($email, $users[0]['profile']['email']);
     }
 
-    function testCreateUserThenPatchUser()
+    public function testCreateUserThenPatchUser()
     {
-        $tokenDetails = $this->personaClientTokens->obtainNewToken($this->clientId, $this->clientSecret,
-            ["useCache" => false]);
+        $tokenDetails = $this->personaClientTokens->obtainNewToken(
+            $this->clientId,
+            $this->clientSecret,
+            ['useCache' => false]
+        );
+
         $this->assertArrayHasKey('access_token', $tokenDetails);
         $token = $tokenDetails['access_token'];
 
         $gupid = uniqid('trapdoor:');
         $email = uniqid() . '@example.com';
-        $userCreate = $this->personaClientUser->createUser($gupid, ['name' => 'Sarah Connor', 'email' => $email],
-            $token);
+        $userCreate = $this->personaClientUser->createUser(
+            $gupid,
+            ['name' => 'Sarah Connor', 'email' => $email],
+            $token
+        );
 
         $email = uniqid() . '@example.com';
         // Update user
-        $this->personaClientUser->updateUser($userCreate['guid'], ['name' => 'John Connor', 'email' => $email],
-            $token);
+        $this->personaClientUser->updateUser(
+            $userCreate['guid'],
+            ['name' => 'John Connor', 'email' => $email],
+            $token
+        );
 
-        $user = $this->personaClientUser->getUserByGupid($userCreate['gupids'][0], $token);
+        $user = $this->personaClientUser->getUserByGupid(
+            $userCreate['gupids'][0],
+            $token
+        );
 
         $this->assertEquals($userCreate['guid'], $user['guid']);
         $this->assertCount(1, $user['gupids']);
@@ -115,21 +148,32 @@ class UsersTest extends TestBase
         $this->assertEquals($email, $user['profile']['email']);
     }
 
-    function testCreateUserThenAddGupidToUser()
+    public function testCreateUserThenAddGupidToUser()
     {
-        $tokenDetails = $this->personaClientTokens->obtainNewToken($this->clientId, $this->clientSecret,
-            ["useCache" => false]);
+        $tokenDetails = $this->personaClientTokens->obtainNewToken(
+            $this->clientId,
+            $this->clientSecret,
+            ['useCache' => false]
+        );
+
         $this->assertArrayHasKey('access_token', $tokenDetails);
         $token = $tokenDetails['access_token'];
 
         $gupid = uniqid('trapdoor:');
         $email = uniqid() . '@example.com';
-        $userCreate = $this->personaClientUser->createUser($gupid, ['name' => 'Sarah Connor', 'email' => $email],
-            $token);
+        $userCreate = $this->personaClientUser->createUser(
+            $gupid,
+            ['name' => 'Sarah Connor', 'email' => $email],
+            $token
+        );
 
         // Update gupid
         $anotherGupid = uniqid('trapdoor:');
-        $this->personaClientUser->addGupidToUser($userCreate['guid'], $anotherGupid, $token);
+        $this->personaClientUser->addGupidToUser(
+            $userCreate['guid'],
+            $anotherGupid,
+            $token
+        );
 
         $user = $this->personaClientUser->getUserByGupid($anotherGupid, $token);
 
@@ -141,9 +185,13 @@ class UsersTest extends TestBase
         $this->assertEquals($email, $user['profile']['email']);
     }
 
-    function testGetUserByGupidInvalidTokenThrowsException()
+    public function testGetUserByGupidInvalidTokenThrowsException()
     {
-        $this->setExpectedException('Exception', 'Did not retrieve successful response code');
+        $this->setExpectedException(
+            'Exception',
+            'Did not retrieve successful response code'
+        );
+
         $personaClient = new Users(
             [
                 'userAgent' => 'integrationtest',
@@ -151,26 +199,33 @@ class UsersTest extends TestBase
                 'cacheBackend' => $this->cacheBackend,
             ]
         );
+
         $personaClient->getUserByGupid('123', '456');
     }
 
-    function testGetUserByGupidThrowsNotFoundExceptionWhenUserNotFound()
+    public function testGetUserByGupidThrowsNotFoundExceptionWhenUserNotFound()
     {
         $this->setExpectedException('Talis\Persona\Client\NotFoundException');
 
-        $tokenDetails = $this->personaClientTokens->obtainNewToken($this->clientId, $this->clientSecret, [
-            'useCache' => false
-        ]);
+        $tokenDetails = $this->personaClientTokens->obtainNewToken(
+            $this->clientId,
+            $this->clientSecret,
+            ['useCache' => false]
+        );
+
         $this->assertArrayHasKey('access_token', $tokenDetails);
         $token = $tokenDetails['access_token'];
 
         $this->personaClientUser->getUserByGupid('trapdoor:notfound', $token);
     }
 
-    function testGetUserByGuidsInvalidTokenThrowsException()
+    public function testGetUserByGuidsInvalidTokenThrowsException()
     {
-        $this->setExpectedException('Exception',
-            'Error finding user profiles: Did not retrieve successful response code from persona: 401');
+        $this->setExpectedException(
+            'Exception',
+            'Error finding user profiles: Did not retrieve successful ' .
+                'response code from persona: 401'
+        );
 
         $this->personaClientUser->getUserByGuids(['123'], '456');
     }

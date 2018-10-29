@@ -16,28 +16,30 @@ require_once $appRoot . '/test/unit/TestBase.php';
 
 class TokensTest extends TestBase
 {
-    private $_privateKey;
-    private $_publicKey;
+    private $privateKey;
+    private $publicKey;
 
     public function setUp()
     {
         parent::setUp();
         $this->_wrongPrivateKey = file_get_contents('../keys/wrong_private_key.pem');
-        $this->_privateKey = file_get_contents('../keys/private_key.pem');
-        $this->_publicKey = file_get_contents('../keys/public_key.pem');
+        $this->privateKey = file_get_contents('../keys/private_key.pem');
+        $this->publicKey = file_get_contents('../keys/public_key.pem');
     }
 
-    function testEmptyConfigThrowsException()
+    public function testEmptyConfigThrowsException()
     {
-        $this->setExpectedException('InvalidArgumentException',
+        $this->setExpectedException(
+            'InvalidArgumentException',
             'No config provided to Persona Client'
         );
         $personaClient = new Tokens([]);
     }
 
-    function testMissingRequiredConfigParamsThrowsException()
+    public function testMissingRequiredConfigParamsThrowsException()
     {
-        $this->setExpectedException('InvalidArgumentException',
+        $this->setExpectedException(
+            'InvalidArgumentException',
             'Config provided does not contain values for: persona_host'
         );
         $personaClient = new Tokens(
@@ -49,7 +51,7 @@ class TokensTest extends TestBase
         );
     }
 
-    function testValidConfigDoesNotThrowException()
+    public function testValidConfigDoesNotThrowException()
     {
         $personaClient = new Tokens(
             [
@@ -60,9 +62,10 @@ class TokensTest extends TestBase
         );
     }
 
-    function testMissingUrlThrowsException()
+    public function testMissingUrlThrowsException()
     {
-        $this->setExpectedException('InvalidArgumentException',
+        $this->setExpectedException(
+            'InvalidArgumentException',
             'No url provided to sign'
         );
         $personaClient = new Tokens(
@@ -75,12 +78,12 @@ class TokensTest extends TestBase
 
         date_default_timezone_set('UTC');
         $signedUrl = $personaClient->presignUrl('', 'mysecretkey', null);
-
     }
 
-    function testMissingSecretThrowsException()
+    public function testMissingSecretThrowsException()
     {
-        $this->setExpectedException('InvalidArgumentException',
+        $this->setExpectedException(
+            'InvalidArgumentException',
             'No secret provided to sign with'
         );
         $personaClient = new Tokens(
@@ -93,10 +96,9 @@ class TokensTest extends TestBase
 
         date_default_timezone_set('UTC');
         $signedUrl = $personaClient->presignUrl('http://someurl', '', null);
-
     }
 
-    function testPresignUrlNoExpiry()
+    public function testPresignUrlNoExpiry()
     {
         $personaClient = new Tokens(
             [
@@ -107,11 +109,16 @@ class TokensTest extends TestBase
         );
 
         date_default_timezone_set('UTC');
-        $signedUrl = $personaClient->presignUrl('http://someurl/someroute', 'mysecretkey', null);
+        $signedUrl = $personaClient->presignUrl(
+            'http://someurl/someroute',
+            'mysecretkey',
+            null
+        );
+
         $this->assertContains('?expires=', $signedUrl);
     }
 
-    function testPresignUrlNoExpiryAnchor()
+    public function testPresignUrlNoExpiryAnchor()
     {
         $personaClient = new Tokens(
             [
@@ -122,16 +129,19 @@ class TokensTest extends TestBase
         );
 
         date_default_timezone_set('UTC');
-        $signedUrl = $personaClient->presignUrl('http://someurl/someroute#myAnchor', 'mysecretkey', null);
+        $signedUrl = $personaClient->presignUrl(
+            'http://someurl/someroute#myAnchor',
+            'mysecretkey',
+            null
+        );
 
         // assert ?expiry comes before #
-        $pieces = explode("#", $signedUrl);
+        $pieces = explode('#', $signedUrl);
         $this->assertTrue(count($pieces) == 2);
         $this->assertContains('?expires=', $pieces[0]);
-
     }
 
-    function testPresignUrlNoExpiryExistingQueryString()
+    public function testPresignUrlNoExpiryExistingQueryString()
     {
         $personaClient = new Tokens(
             [
@@ -142,12 +152,16 @@ class TokensTest extends TestBase
         );
 
         date_default_timezone_set('UTC');
-        $signedUrl = $personaClient->presignUrl('http://someurl/someroute?myparam=foo#myAnchor', 'mysecretkey', null);
+        $signedUrl = $personaClient->presignUrl(
+            'http://someurl/someroute?myparam=foo#myAnchor',
+            'mysecretkey',
+            null
+        );
 
         $this->assertContains('?myparam=foo&expires=', $signedUrl);
     }
 
-    function testPresignUrlNoExpiryAnchorExistingQueryString()
+    public function testPresignUrlNoExpiryAnchorExistingQueryString()
     {
         $personaClient = new Tokens(
             [
@@ -158,16 +172,19 @@ class TokensTest extends TestBase
         );
 
         date_default_timezone_set('UTC');
-        $signedUrl = $personaClient->presignUrl('http://someurl/someroute?myparam=foo#myAnchor', 'mysecretkey', null);
-
+        $signedUrl = $personaClient->presignUrl(
+            'http://someurl/someroute?myparam=foo#myAnchor',
+            'mysecretkey',
+            null
+        );
 
         // assert ?expiry comes before #
-        $pieces = explode("#", $signedUrl);
+        $pieces = explode('#', $signedUrl);
         $this->assertTrue(count($pieces) == 2);
         $this->assertContains('?myparam=foo&expires=', $pieces[0]);
     }
 
-    function testPresignUrlWithExpiry()
+    public function testPresignUrlWithExpiry()
     {
         $personaClient = new Tokens(
             [
@@ -177,12 +194,21 @@ class TokensTest extends TestBase
             ]
         );
 
-        $signedUrl = $personaClient->presignUrl('http://someurl/someroute', 'mysecretkey', 1234567890);
-        $this->assertEquals('http://someurl/someroute?expires=1234567890&signature=5be20a17931f220ca03d446a25748a9ef707cd508c753760db11f1f95485f1f6',
-            $signedUrl);
+        $signedUrl = $personaClient->presignUrl(
+            'http://someurl/someroute',
+            'mysecretkey',
+            1234567890
+        );
+
+        $this->assertEquals(
+            'http://someurl/someroute?expires=1234567890'
+            . '&signature=5be20a17931f220ca03d446a2574'
+            . '8a9ef707cd508c753760db11f1f95485f1f6',
+            $signedUrl
+        );
     }
 
-    function testPresignUrlWithExpiryAnchor()
+    public function testPresignUrlWithExpiryAnchor()
     {
         $personaClient = new Tokens(
             [
@@ -192,12 +218,21 @@ class TokensTest extends TestBase
             ]
         );
 
-        $signedUrl = $personaClient->presignUrl('http://someurl/someroute#myAnchor', 'mysecretkey', 1234567890);
-        $this->assertEquals('http://someurl/someroute?expires=1234567890&signature=c4fbb2b15431ef08e861687bd55fd0ab98bb52eee7a1178bdd10888eadbb48bb#myAnchor',
-            $signedUrl);
+        $signedUrl = $personaClient->presignUrl(
+            'http://someurl/someroute#myAnchor',
+            'mysecretkey',
+            1234567890
+        );
+
+        $this->assertEquals(
+            'http://someurl/someroute?expires=1234567890&'
+            .  'signature=c4fbb2b15431ef08e861687bd55fd0ab98'
+            . 'bb52eee7a1178bdd10888eadbb48bb#myAnchor',
+            $signedUrl
+        );
     }
 
-    function testPresignUrlWithExpiryExistingQuerystring()
+    public function testPresignUrlWithExpiryExistingQuerystring()
     {
         $personaClient = new Tokens(
             [
@@ -207,12 +242,21 @@ class TokensTest extends TestBase
             ]
         );
 
-        $signedUrl = $personaClient->presignUrl('http://someurl/someroute?myparam=foo', 'mysecretkey', 1234567890);
-        $this->assertEquals('http://someurl/someroute?myparam=foo&expires=1234567890&signature=7675bae38ddea8c2236d208a5003337f926af4ebd33aac03144eb40c69d58804',
-            $signedUrl);
+        $signedUrl = $personaClient->presignUrl(
+            'http://someurl/someroute?myparam=foo',
+            'mysecretkey',
+            1234567890
+        );
+
+        $this->assertEquals(
+            'http://someurl/someroute?myparam=foo&expires=1234567890'
+            . '&signature=7675bae38ddea8c2236d208a5003337f926af4ebd3'
+            . '3aac03144eb40c69d58804',
+            $signedUrl
+        );
     }
 
-    function testPresignUrlWithExpiryAnchorExistingQuerystring()
+    public function testPresignUrlWithExpiryAnchorExistingQuerystring()
     {
         $personaClient = new Tokens(
             [
@@ -222,13 +266,21 @@ class TokensTest extends TestBase
             ]
         );
 
-        $signedUrl = $personaClient->presignUrl('http://someurl/someroute?myparam=foo#myAnchor', 'mysecretkey',
-            1234567890);
-        $this->assertEquals('http://someurl/someroute?myparam=foo&expires=1234567890&signature=f871db0896f6e893b607d2987ccc838786114b9778b4dbae2b554c2faf9486a1#myAnchor',
-            $signedUrl);
+        $signedUrl = $personaClient->presignUrl(
+            'http://someurl/someroute?myparam=foo#myAnchor',
+            'mysecretkey',
+            1234567890
+        );
+
+        $this->assertEquals(
+            'http://someurl/someroute?myparam=foo&expires=1234567890'
+            . '&signature=f871db0896f6e893b607d2987ccc838786114b9778'
+            . 'b4dbae2b554c2faf9486a1#myAnchor',
+            $signedUrl
+        );
     }
 
-    function testIsPresignedUrlValidTimeInFuture()
+    public function testIsPresignedUrlValidTimeInFuture()
     {
         $personaClient = new Tokens(
             [
@@ -238,12 +290,19 @@ class TokensTest extends TestBase
             ]
         );
 
-        $presignedUrl = $personaClient->presignUrl('http://someurl/someroute', 'mysecretkey', "+5 minutes");
+        $presignedUrl = $personaClient->presignUrl(
+            'http://someurl/someroute',
+            'mysecretkey',
+            '+5 minutes'
+        );
 
-        $this->assertTrue($personaClient->isPresignedUrlValid($presignedUrl, 'mysecretkey'));
+        $this->assertTrue($personaClient->isPresignedUrlValid(
+            $presignedUrl,
+            'mysecretkey'
+        ));
     }
 
-    function testIsPresignedUrlValidTimeInFutureExistingParams()
+    public function testIsPresignedUrlValidTimeInFutureExistingParams()
     {
         $personaClient = new Tokens(
             [
@@ -253,12 +312,19 @@ class TokensTest extends TestBase
             ]
         );
 
-        $presignedUrl = $personaClient->presignUrl('http://someurl/someroute?myparam=foo', 'mysecretkey', "+5 minutes");
+        $presignedUrl = $personaClient->presignUrl(
+            'http://someurl/someroute?myparam=foo',
+            'mysecretkey',
+            '+5 minutes'
+        );
 
-        $this->assertTrue($personaClient->isPresignedUrlValid($presignedUrl, 'mysecretkey'));
+        $this->assertTrue($personaClient->isPresignedUrlValid(
+            $presignedUrl,
+            'mysecretkey'
+        ));
     }
 
-    function testIsPresignedUrlValidTimeInFutureExistingParamsAnchor()
+    public function testIsPresignedUrlValidTimeInFutureExistingParamsAnchor()
     {
         $personaClient = new Tokens(
             [
@@ -268,13 +334,19 @@ class TokensTest extends TestBase
             ]
         );
 
-        $presignedUrl = $personaClient->presignUrl('http://someurl/someroute?myparam=foo#myAnchor', 'mysecretkey',
-            "+5 minutes");
+        $presignedUrl = $personaClient->presignUrl(
+            'http://someurl/someroute?myparam=foo#myAnchor',
+            'mysecretkey',
+            '+5 minutes'
+        );
 
-        $this->assertTrue($personaClient->isPresignedUrlValid($presignedUrl, 'mysecretkey'));
+        $this->assertTrue($personaClient->isPresignedUrlValid(
+            $presignedUrl,
+            'mysecretkey'
+        ));
     }
 
-    function testIsPresignedUrlValidTimeInPastExistingParamsAnchor()
+    public function testIsPresignedUrlValidTimeInPastExistingParamsAnchor()
     {
         $personaClient = new Tokens(
             [
@@ -284,13 +356,19 @@ class TokensTest extends TestBase
             ]
         );
 
-        $presignedUrl = $personaClient->presignUrl('http://someurl/someroute?myparam=foo#myAnchor', 'mysecretkey',
-            "-5 minutes");
+        $presignedUrl = $personaClient->presignUrl(
+            'http://someurl/someroute?myparam=foo#myAnchor',
+            'mysecretkey',
+            '-5 minutes'
+        );
 
-        $this->assertFalse($personaClient->isPresignedUrlValid($presignedUrl, 'mysecretkey'));
+        $this->assertFalse($personaClient->isPresignedUrlValid(
+            $presignedUrl,
+            'mysecretkey'
+        ));
     }
 
-    function testIsPresignedUrlValidRemoveExpires()
+    public function testIsPresignedUrlValidRemoveExpires()
     {
         $personaClient = new Tokens(
             [
@@ -300,15 +378,21 @@ class TokensTest extends TestBase
             ]
         );
 
-        $presignedUrl = $personaClient->presignUrl('http://someurl/someroute?myparam=foo#myAnchor', 'mysecretkey',
-            "+5 minutes");
+        $presignedUrl = $personaClient->presignUrl(
+            'http://someurl/someroute?myparam=foo#myAnchor',
+            'mysecretkey',
+            '+5 minutes'
+        );
 
         $presignedUrl = str_replace('expires=', 'someothervar=', $presignedUrl);
 
-        $this->assertFalse($personaClient->isPresignedUrlValid($presignedUrl, 'mysecretkey'));
+        $this->assertFalse($personaClient->isPresignedUrlValid(
+            $presignedUrl,
+            'mysecretkey'
+        ));
     }
 
-    function testIsPresignedUrlValidRemoveSig()
+    public function testIsPresignedUrlValidRemoveSig()
     {
         $personaClient = new Tokens(
             [
@@ -318,50 +402,77 @@ class TokensTest extends TestBase
             ]
         );
 
-        $presignedUrl = $personaClient->presignUrl('http://someurl/someroute?myparam=foo#myAnchor', 'mysecretkey',
-            "+5 minutes");
+        $presignedUrl = $personaClient->presignUrl(
+            'http://someurl/someroute?myparam=foo#myAnchor',
+            'mysecretkey',
+            '+5 minutes'
+        );
 
         $presignedUrl = str_replace('signature=', 'someothervar=', $presignedUrl);
 
-        $this->assertFalse($personaClient->isPresignedUrlValid($presignedUrl, 'mysecretkey'));
+        $this->assertFalse($personaClient->isPresignedUrlValid(
+            $presignedUrl,
+            'mysecretkey'
+        ));
     }
 
-    function testUseCacheFalseOnObtainToken()
+    public function testUseCacheFalseOnObtainToken()
     {
-        $mockClient = $this->getMock('Talis\Persona\Client\Tokens', ['personaObtainNewToken'], [
+        $mockClient = $this->getMock(
+            'Talis\Persona\Client\Tokens',
+            ['personaObtainNewToken'],
             [
-                'userAgent' => 'unittest',
-                'persona_host' => 'localhost',
-                'cacheBackend' => $this->cacheBackend,
+                [
+                    'userAgent' => 'unittest',
+                    'persona_host' => 'localhost',
+                    'cacheBackend' => $this->cacheBackend,
+                ]
             ]
-        ]);
+        );
 
-        $mockClient->expects($this->once())->method("personaObtainNewToken")->will($this->returnValue([
-            "access_token" => "foo",
-            "expires" => "100",
-            "scopes" => "su"
-        ]));
+        $mockClient->expects($this->once())
+            ->method('personaObtainNewToken')
+            ->will($this->returnValue([
+                'access_token' => 'foo',
+                'expires' => '100',
+                'scopes' => 'su'
+            ]));
 
-        $mockClient->obtainNewToken('client_id', 'client_secret', ['useCache' => false]);
+        $mockClient->obtainNewToken(
+            'client_id',
+            'client_secret',
+            ['useCache' => false]
+        );
     }
 
-    function testObtainToken()
+    public function testObtainToken()
     {
-        $mockClient = $this->getMock('Talis\Persona\Client\Tokens', ['personaObtainNewToken'], [
+        $mockClient = $this->getMock(
+            'Talis\Persona\Client\Tokens',
+            ['personaObtainNewToken'],
             [
-                'userAgent' => 'unittest',
-                'persona_host' => 'localhost',
-                'cacheBackend' => $this->cacheBackend,
+                [
+                    'userAgent' => 'unittest',
+                    'persona_host' => 'localhost',
+                    'cacheBackend' => $this->cacheBackend,
+                ]
             ]
-        ]);
+        );
 
-        $expectedToken = ["access_token" => "foo", "expires_in" => "100", "scopes" => "su"];
-        $cacheKey = "obtain_token:" . hash_hmac('sha256', 'client_id', 'client_secret');
+        $expectedToken = [
+            'access_token' => 'foo',
+            'expires_in' => '100',
+            'scopes' => 'su'
+        ];
 
-        $mockClient->expects($this->once())->method("personaObtainNewToken")->will($this->returnValue($expectedToken));
+        $cacheKey = 'obtain_token:' . hash_hmac('sha256', 'client_id', 'client_secret');
+
+        $mockClient->expects($this->once())
+            ->method('personaObtainNewToken')
+            ->will($this->returnValue($expectedToken));
 
         $token = $mockClient->obtainNewToken('client_id', 'client_secret');
-        $this->assertEquals($token['access_token'], "foo");
+        $this->assertEquals($token['access_token'], 'foo');
     }
 
     /**
@@ -396,12 +507,17 @@ class TokensTest extends TestBase
                 'audience' => 'standard_user',
                 'scopeCount' => 30,
             ],
-            $this->_privateKey,
+            $this->privateKey,
             'RS256'
         );
 
-        $mockClient->expects($this->once())->method('retrieveJWTCertificate')->will($this->returnValue($this->_publicKey));
-        $mockClient->expects($this->once())->method('performRequest')->will($this->returnValue(true));
+        $mockClient->expects($this->once())
+            ->method('retrieveJWTCertificate')
+            ->will($this->returnValue($this->publicKey));
+
+        $mockClient->expects($this->once())
+            ->method('performRequest')
+            ->will($this->returnValue(true));
 
         $result = $mockClient->validateToken(
             [
@@ -438,11 +554,13 @@ class TokensTest extends TestBase
                 'audience' => 'standard_user',
                 'scopes' => ['su'],
             ],
-            $this->_privateKey,
+            $this->privateKey,
             'RS256'
         );
 
-        $mockClient->expects($this->once())->method('retrieveJWTCertificate')->will($this->returnValue($this->_publicKey));
+        $mockClient->expects($this->once())
+            ->method('retrieveJWTCertificate')
+            ->will($this->returnValue($this->publicKey));
 
         $result = $mockClient->validateToken(
             [
@@ -480,14 +598,14 @@ class TokensTest extends TestBase
                 'audience' => 'standard_user',
                 'scopes' => ['su'],
             ],
-            $this->_privateKey,
+            $this->privateKey,
             'RS256'
         );
 
         $mockClient
             ->expects($this->once())
             ->method('retrieveJWTCertificate')
-            ->will($this->returnValue($this->_publicKey));
+            ->will($this->returnValue($this->publicKey));
 
         $result = $mockClient->validateToken(
             [
@@ -530,7 +648,7 @@ class TokensTest extends TestBase
 
         $mockClient->expects($this->once())
             ->method('retrieveJWTCertificate')
-            ->will($this->returnValue($this->_privateKey));
+            ->will($this->returnValue($this->privateKey));
 
         $this->assertEquals(
             ValidationResults::InvalidPublicKey,
@@ -568,7 +686,7 @@ class TokensTest extends TestBase
                 'audience' => 'standard_user',
                 'scopeCount' => 10,
             ],
-            $this->_privateKey,
+            $this->privateKey,
             'RS256'
         );
 
@@ -619,7 +737,7 @@ class TokensTest extends TestBase
                         'audience' => 'standard_user',
                         'scopeCount' => 10,
                     ],
-                    $this->_privateKey,
+                    $this->privateKey,
                     'RS256'
                 ),
                 'expires_in' => 100,
@@ -678,7 +796,7 @@ class TokensTest extends TestBase
                 'audience' => 'standard_user',
                 'scopeCount' => 50,
             ],
-            $this->_privateKey,
+            $this->privateKey,
             'RS256'
         );
 
@@ -742,7 +860,7 @@ class TokensTest extends TestBase
                 'audience' => 'standard_user',
                 'scopeCount' => 50,
             ],
-            $this->_privateKey,
+            $this->privateKey,
             'RS256'
         );
 
@@ -805,7 +923,7 @@ class TokensTest extends TestBase
                 'audience' => 'standard_user',
                 'scopeCount' => 50,
             ],
-            $this->_privateKey,
+            $this->privateKey,
             'RS256'
         );
 
@@ -863,7 +981,7 @@ class TokensTest extends TestBase
 
         $mockClient->expects($this->once())
             ->method('retrieveJWTCertificate')
-            ->will($this->returnValue($this->_publicKey));
+            ->will($this->returnValue($this->publicKey));
 
         $jwt = JWT::encode(
             [
@@ -873,7 +991,7 @@ class TokensTest extends TestBase
                 'audience' => 'standard_user',
                 'scopes' => ['invalid1', 'scope2'],
             ],
-            $this->_privateKey,
+            $this->privateKey,
             'RS256'
         );
 
@@ -903,7 +1021,7 @@ class TokensTest extends TestBase
 
         $mockClient->expects($this->once())
             ->method('retrieveJWTCertificate')
-            ->will($this->returnValue($this->_publicKey));
+            ->will($this->returnValue($this->publicKey));
 
         $jwt = JWT::encode(
             [
@@ -913,7 +1031,7 @@ class TokensTest extends TestBase
                 'audience' => 'standard_user',
                 'scopes' => ['invalid1', 'scope2'],
             ],
-            $this->_privateKey,
+            $this->privateKey,
             'RS256'
         );
 
@@ -1037,7 +1155,7 @@ class TokensTest extends TestBase
 
         $mockClient->expects($this->once())
             ->method('retrieveJWTCertificate')
-            ->will($this->returnValue($this->_publicKey));
+            ->will($this->returnValue($this->publicKey));
 
         $accessToken = [
             'access_token' => $jwt = JWT::encode(
@@ -1048,7 +1166,7 @@ class TokensTest extends TestBase
                     'audience' => 'standard_user',
                     'scopes' => ['scope1', 'scope2'],
                 ],
-                $this->_privateKey,
+                $this->privateKey,
                 'RS256'
             ),
         ];
@@ -1073,7 +1191,7 @@ class TokensTest extends TestBase
 
         $mockClient->expects($this->once())
             ->method('retrieveJWTCertificate')
-            ->will($this->returnValue($this->_publicKey));
+            ->will($this->returnValue($this->publicKey));
 
         $accessToken = [
             'access_token' => JWT::encode(
@@ -1084,7 +1202,7 @@ class TokensTest extends TestBase
                     'audience' => 'standard_user',
                     // missing scopes attribute
                 ],
-                $this->_privateKey,
+                $this->privateKey,
                 'RS256'
             ),
         ];
@@ -1119,14 +1237,14 @@ class TokensTest extends TestBase
                     'audience' => 'standard_user',
                     'scopeCount' => 10,
                 ],
-                $this->_privateKey,
+                $this->privateKey,
                 'RS256'
             ),
         ];
 
         $mockClient->expects($this->once())
             ->method('retrieveJWTCertificate')
-            ->will($this->returnValue($this->_publicKey));
+            ->will($this->returnValue($this->publicKey));
 
         $mockClient->expects($this->once())
             ->method('makePersonaHttpRequest')
@@ -1167,14 +1285,14 @@ class TokensTest extends TestBase
                     'audience' => 'standard_user',
                     'scopeCount' => 10,
                 ],
-                $this->_privateKey,
+                $this->privateKey,
                 'RS256'
             ),
         ];
 
         $mockClient->expects($this->once())
             ->method('retrieveJWTCertificate')
-            ->will($this->returnValue($this->_publicKey));
+            ->will($this->returnValue($this->publicKey));
 
         $mockClient->expects($this->once())
             ->method('makePersonaHttpRequest')

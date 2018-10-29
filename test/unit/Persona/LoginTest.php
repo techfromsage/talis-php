@@ -12,7 +12,7 @@ require_once $appRoot . '/test/unit/TestBase.php';
 
 class LoginTest extends TestBase
 {
-    function testRequireAuthInvalidProvider()
+    public function testRequireAuthInvalidProvider()
     {
         $this->setExpectedException('InvalidArgumentException', 'Invalid provider');
 
@@ -26,7 +26,7 @@ class LoginTest extends TestBase
         $personaClient->requireAuth(['test'], 'appid', 'appsecret');
     }
 
-    function testRequireAuthInvalidAppId()
+    public function testRequireAuthInvalidAppId()
     {
         $this->setExpectedException('InvalidArgumentException', 'Invalid appId');
 
@@ -40,7 +40,7 @@ class LoginTest extends TestBase
         $personaClient->requireAuth('trapdoor', ['appid'], 'appsecret');
     }
 
-    function testRequireAuthInvalidAppSecret()
+    public function testRequireAuthInvalidAppSecret()
     {
         $this->setExpectedException('InvalidArgumentException', 'Invalid appSecret');
 
@@ -54,7 +54,7 @@ class LoginTest extends TestBase
         $personaClient->requireAuth('trapdoor', 'appid', ['appsecret']);
     }
 
-    function testRequireAuthNoRedirectUri()
+    public function testRequireAuthNoRedirectUri()
     {
         $mockClient = $this->getMock('Talis\Persona\Client\Login', ['login'], [
             [
@@ -73,7 +73,7 @@ class LoginTest extends TestBase
         $this->assertEquals('trapdoor', $_SESSION[Login::LOGIN_PREFIX . ':loginProvider']);
     }
 
-    function testRequireAuthInvalidRedirectUri()
+    public function testRequireAuthInvalidRedirectUri()
     {
         $this->setExpectedException('InvalidArgumentException', 'Invalid redirectUri');
 
@@ -87,7 +87,7 @@ class LoginTest extends TestBase
         $personaClient->requireAuth('trapdoor', 'appid', 'appsecret', ['redirectUri']);
     }
 
-    function testRequireAuthWithRedirectUri()
+    public function testRequireAuthWithRedirectUri()
     {
         $mockClient = $this->getMock('Talis\Persona\Client\Login', ['login'], [
             [
@@ -107,7 +107,7 @@ class LoginTest extends TestBase
         $this->assertEquals('trapdoor', $_SESSION[Login::LOGIN_PREFIX . ':loginProvider']);
     }
 
-    function testRequireAuthAlreadyLoggedIn()
+    public function testRequireAuthAlreadyLoggedIn()
     {
         $mockClient = $this->getMock('Talis\Persona\Client\Login', ['isLoggedIn', 'login'], [
             [
@@ -126,7 +126,7 @@ class LoginTest extends TestBase
         $this->assertFalse(isset($_SESSION));
     }
 
-    function testRequireAuthNotAlreadyLoggedIn()
+    public function testRequireAuthNotAlreadyLoggedIn()
     {
         $mockClient = $this->getMock('Talis\Persona\Client\Login', ['isLoggedIn', 'login'], [
             [
@@ -150,7 +150,7 @@ class LoginTest extends TestBase
     }
 
     // validateAuth tests
-    function testValidateAuthThrowsExceptionWhenPayloadDoesNotContainSignature()
+    public function testValidateAuthThrowsExceptionWhenPayloadDoesNotContainSignature()
     {
         $this->setExpectedException('Exception', 'Signature not set');
         $personaClient = new Login(
@@ -163,7 +163,7 @@ class LoginTest extends TestBase
         $personaClient->validateAuth();
     }
 
-    function testValidateAuthThrowsExceptionWhenPayloadDoesNotExist()
+    public function testValidateAuthThrowsExceptionWhenPayloadDoesNotExist()
     {
         $this->setExpectedException('Exception', 'Payload not set');
         $personaClient = new Login(
@@ -177,7 +177,7 @@ class LoginTest extends TestBase
         $personaClient->validateAuth();
     }
 
-    function testValidateAuthThrowsExceptionWhenPayloadIsAString()
+    public function testValidateAuthThrowsExceptionWhenPayloadIsAString()
     {
         $this->setExpectedException('Exception', 'Payload not json');
         $personaClient = new Login(
@@ -192,7 +192,7 @@ class LoginTest extends TestBase
         $personaClient->validateAuth();
     }
 
-    function testValidateAuthThrowsExceptionWhenPayloadIsMissingState()
+    public function testValidateAuthThrowsExceptionWhenPayloadIsMissingState()
     {
         $this->setExpectedException('Exception', 'Login state does not match');
         $personaClient = new Login(
@@ -208,7 +208,7 @@ class LoginTest extends TestBase
         $personaClient->validateAuth();
     }
 
-    function testValidateAuthPayloadMismatchingSignature()
+    public function testValidateAuthPayloadMismatchingSignature()
     {
         $this->setExpectedException('Exception', 'Signature does not match');
         $personaClient = new Login(
@@ -225,14 +225,14 @@ class LoginTest extends TestBase
         ];
 
         $encodedPayload = base64_encode(json_encode($payload));
-        $signature = hash_hmac("sha256", $encodedPayload, 'notmyappsecret');
+        $signature = hash_hmac('sha256', $encodedPayload, 'notmyappsecret');
         $_POST['persona:signature'] = $signature;
 
         $_POST['persona:payload'] = base64_encode(json_encode($payload));
         $personaClient->validateAuth();
     }
 
-    function testValidateAuthPayloadContainsStateAndSignatureNoOtherPayload()
+    public function testValidateAuthPayloadContainsStateAndSignatureNoOtherPayload()
     {
         $personaClient = new Login(
             [
@@ -250,7 +250,7 @@ class LoginTest extends TestBase
         $encodedPayload = base64_encode(json_encode($payload));
         $_POST['persona:payload'] = $encodedPayload;
 
-        $signature = hash_hmac("sha256", $encodedPayload, 'appsecret');
+        $signature = hash_hmac('sha256', $encodedPayload, 'appsecret');
         $_POST['persona:signature'] = $signature;
 
         $this->assertTrue($personaClient->validateAuth());
@@ -264,7 +264,7 @@ class LoginTest extends TestBase
         $this->assertArrayHasKey('redirect', $_SESSION[Login::LOGIN_PREFIX . ':loginSSO']);
     }
 
-    function testValidateAuthPayloadContainsStateAndSignatureFullPayload()
+    public function testValidateAuthPayloadContainsStateAndSignatureFullPayload()
     {
         $personaClient = new Login(
             [
@@ -297,7 +297,7 @@ class LoginTest extends TestBase
         $encodedPayload = base64_encode(json_encode($payload));
         $_POST['persona:payload'] = $encodedPayload;
 
-        $signature = hash_hmac("sha256", $encodedPayload, 'appsecret');
+        $signature = hash_hmac('sha256', $encodedPayload, 'appsecret');
         $_POST['persona:signature'] = $signature;
 
         $this->assertTrue($personaClient->validateAuth());
@@ -317,7 +317,7 @@ class LoginTest extends TestBase
         $this->assertEquals('http://example.com/wherever', $_SESSION[Login::LOGIN_PREFIX . ':loginSSO']['redirect']);
     }
 
-    function testValidateAuthPayloadContainsStateAndSignatureFullPayloadCheckLoginIsCalled()
+    public function testValidateAuthPayloadContainsStateAndSignatureFullPayloadCheckLoginIsCalled()
     {
         $mockClient = $this->getMock('Talis\Persona\Client\Login', ['isLoggedIn'], [
             [
@@ -354,13 +354,13 @@ class LoginTest extends TestBase
         $encodedPayload = base64_encode(json_encode($payload));
         $_POST['persona:payload'] = $encodedPayload;
 
-        $signature = hash_hmac("sha256", $encodedPayload, 'appsecret');
+        $signature = hash_hmac('sha256', $encodedPayload, 'appsecret');
         $_POST['persona:signature'] = $signature;
 
         $mockClient->validateAuth();
     }
 
-    function testValidateAuthAfterRequireAuth()
+    public function testValidateAuthAfterRequireAuth()
     {
         $mockClient = $this->getMock('Talis\Persona\Client\Login', ['isLoggedIn', 'login'], [
             [
@@ -404,7 +404,7 @@ class LoginTest extends TestBase
         $encodedPayload = base64_encode(json_encode($payload));
         $_POST['persona:payload'] = $encodedPayload;
 
-        $signature = hash_hmac("sha256", $encodedPayload, 'appsecret');
+        $signature = hash_hmac('sha256', $encodedPayload, 'appsecret');
         $_POST['persona:signature'] = $signature;
 
         $this->assertTrue($mockClient->validateAuth());
@@ -415,7 +415,7 @@ class LoginTest extends TestBase
     }
 
     // getPersistentId tests
-    function testGetPersistentIdNoSession()
+    public function testGetPersistentIdNoSession()
     {
         $personaClient = new Login(
             [
@@ -427,20 +427,7 @@ class LoginTest extends TestBase
         $this->assertFalse($personaClient->getPersistentId());
     }
 
-    function testGetPersistentIdNoGupidInSession()
-    {
-        $personaClient = new Login(
-            [
-                'userAgent' => 'unittest',
-                'persona_host' => 'localhost',
-                'cacheBackend' => $this->cacheBackend,
-            ]
-        );
-        $_SESSION[Login::LOGIN_PREFIX . ':loginSSO'] = [];
-        $this->assertFalse($personaClient->getPersistentId());
-    }
-
-    function testGetPersistentIdNoLoginProviderInSession()
+    public function testGetPersistentIdNoGupidInSession()
     {
         $personaClient = new Login(
             [
@@ -453,7 +440,20 @@ class LoginTest extends TestBase
         $this->assertFalse($personaClient->getPersistentId());
     }
 
-    function testGetPersistentIdEmptyGupids()
+    public function testGetPersistentIdNoLoginProviderInSession()
+    {
+        $personaClient = new Login(
+            [
+                'userAgent' => 'unittest',
+                'persona_host' => 'localhost',
+                'cacheBackend' => $this->cacheBackend,
+            ]
+        );
+        $_SESSION[Login::LOGIN_PREFIX . ':loginSSO'] = [];
+        $this->assertFalse($personaClient->getPersistentId());
+    }
+
+    public function testGetPersistentIdEmptyGupids()
     {
         $personaClient = new Login(
             [
@@ -468,7 +468,7 @@ class LoginTest extends TestBase
         $this->assertFalse($personaClient->getPersistentId());
     }
 
-    function testGetPersistentIdNoMatchingGupid()
+    public function testGetPersistentIdNoMatchingGupid()
     {
         $personaClient = new Login(
             [
@@ -487,7 +487,7 @@ class LoginTest extends TestBase
         $this->assertFalse($personaClient->getPersistentId());
     }
 
-    function testGetPersistentIdFoundMatchingGupid()
+    public function testGetPersistentIdFoundMatchingGupid()
     {
         $personaClient = new Login(
             [
@@ -507,7 +507,7 @@ class LoginTest extends TestBase
     }
 
     // getRedirectUrl tests
-    function testGetRedirectUrlNoSession()
+    public function testGetRedirectUrlNoSession()
     {
         $personaClient = new Login(
             [
@@ -519,7 +519,7 @@ class LoginTest extends TestBase
         $this->assertFalse($personaClient->getRedirectUrl());
     }
 
-    function testGetRedirectUrlNoRedirectInSession()
+    public function testGetRedirectUrlNoRedirectInSession()
     {
         $personaClient = new Login(
             [
@@ -532,7 +532,7 @@ class LoginTest extends TestBase
         $this->assertFalse($personaClient->getRedirectUrl());
     }
 
-    function testGetRedirectUrlFoundRedirectInSession()
+    public function testGetRedirectUrlFoundRedirectInSession()
     {
         $personaClient = new Login(
             [
@@ -546,7 +546,7 @@ class LoginTest extends TestBase
     }
 
     // getScopes tests
-    function testGetScopesUserNoSession()
+    public function testGetScopesUserNoSession()
     {
         $personaClient = new Login(
             [
@@ -558,7 +558,7 @@ class LoginTest extends TestBase
         $this->assertFalse($personaClient->getScopes());
     }
 
-    function testGetScopesNoProfileInSession()
+    public function testGetScopesNoProfileInSession()
     {
         $personaClient = new Login(
             [
@@ -571,7 +571,7 @@ class LoginTest extends TestBase
         $this->assertFalse($personaClient->getScopes());
     }
 
-    function testGetScopes()
+    public function testGetScopes()
     {
         $personaClient = new Login(
             [
@@ -584,7 +584,7 @@ class LoginTest extends TestBase
         $this->assertEquals(['919191'], $personaClient->getScopes());
     }
 
-    function testGetProfileNoSession()
+    public function testGetProfileNoSession()
     {
         $personaClient = new Login(
             [
@@ -596,7 +596,7 @@ class LoginTest extends TestBase
         $this->assertEquals([], $personaClient->getProfile());
     }
 
-    function testGetProfileNoProfileInSession()
+    public function testGetProfileNoProfileInSession()
     {
         $personaClient = new Login(
             [
@@ -609,7 +609,7 @@ class LoginTest extends TestBase
         $this->assertEquals([], $personaClient->getProfile());
     }
 
-    function testGetProfile()
+    public function testGetProfile()
     {
         $personaClient = new Login(
             [
@@ -623,7 +623,7 @@ class LoginTest extends TestBase
         $this->assertEquals($profile, $personaClient->getProfile());
     }
 
-    function testRequireAuthRequireProfile()
+    public function testRequireAuthRequireProfile()
     {
         $arguments = [
             [
