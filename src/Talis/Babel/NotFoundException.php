@@ -1,6 +1,6 @@
 <?php
 namespace Talis\Babel;
 
-class NotFoundException extends \Exception {
-
-} 
+class NotFoundException extends \Exception
+{
+}

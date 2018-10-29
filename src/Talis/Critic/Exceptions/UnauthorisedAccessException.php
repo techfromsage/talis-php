@@ -1,8 +1,7 @@
 <?php
 
-
 namespace Talis\Critic\Exceptions;
 
-
-class UnauthorisedAccessException extends ErrorResponseException {
+class UnauthorisedAccessException extends ErrorResponseException
+{
 }

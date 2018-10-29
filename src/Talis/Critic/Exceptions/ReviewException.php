@@ -1,9 +1,7 @@
 <?php
 
-
 namespace Talis\Critic\Exceptions;
 
-
-class ReviewException extends \Exception {
-
+class ReviewException extends \Exception
+{
 }
