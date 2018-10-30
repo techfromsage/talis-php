@@ -48,7 +48,7 @@ class Client
             throw new \Talis\Babel\ClientException('host must be specified');
         }
 
-        if (!preg_match('/^http/', $host)) {
+        if (!preg_match('/^https?:\/\//', $host)) {
             throw new \Talis\Babel\ClientException(
                 'host must also specify a scheme, either http:// or https://'
             );
@@ -84,12 +84,8 @@ class Client
      */
     public function getTargetFeed($target, $token, $hydrate = false, array $options = [])
     {
-        if (empty($target)) {
-            throw new \Talis\Babel\ClientException('Missing target');
-        }
-
-        if (empty($token)) {
-            throw new \Talis\Babel\ClientException('Missing token');
+        if (empty($target) || empty($token)) {
+            throw new \Talis\Babel\ClientException('Missing target or token');
         }
 
         $hash = md5($target);
@@ -119,12 +115,8 @@ class Client
      */
     public function getTargetFeedCount($target, $token, $deltaToken = 0)
     {
-        if (empty($target)) {
-            throw new \Talis\Babel\ClientException('Missing target');
-        }
-
-        if (empty($token)) {
-            throw new \Talis\Babel\ClientException('Missing token');
+        if (empty($target) || empty($token)) {
+            throw new \Talis\Babel\ClientException('Missing target or token');
         }
 
         $hash = md5($target);
@@ -391,41 +383,7 @@ class Client
             return $arrResponse;
         }
 
-        // Is is a Persona token problem?
-        $statusCode = $response->getStatusCode();
-        if ($statusCode == 401) {
-            $this->getLogger()->error(
-                "Persona token invalid/expired for request: POST $url"
-            );
-
-            throw new InvalidPersonaTokenException(
-                'Persona token is either invalid or has expired'
-            );
-        }
-
-        $errorMessage = 'Unknown error';
-        $responseBody = $response->getBody(true);
-
-        if ($responseBody) {
-            $arrResponse = json_decode($responseBody, true);
-            if (is_array($arrResponse) && array_key_exists('message', $arrResponse)) {
-                $errorMessage = $arrResponse['message'];
-            }
-        }
-
-        $this->getLogger()->error(
-            "Babel POST failed for request: $url",
-            [
-                'statusCode' => $statusCode,
-                'message' => $response->getMessage(),
-                'body' => $responseBody,
-            ]
-        );
-
-        throw new \Talis\Babel\ClientException(
-            "Error {$statusCode} for POST {$url}: {$errorMessage}",
-            $statusCode
-        );
+        $this->handleBabelError($url, $response);
     }
 
     /**
