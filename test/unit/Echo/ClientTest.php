@@ -304,7 +304,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
 
         $result = $echoClient->getRecentEvents('expected.event', 'foo', 'bar');
 
-        $this->assertEquals([$expectedEvent],$result);
+        $this->assertEquals([$expectedEvent], $result);
     }
 
     public function testGetEvents()
