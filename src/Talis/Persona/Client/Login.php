@@ -105,13 +105,16 @@ class Login extends Base
         unset($_SESSION[self::LOGIN_PREFIX . ':loginState']);
 
         // Final step - validate the token
-        $_SESSION[self::LOGIN_PREFIX . ':loginSSO'] = [
-            'token' => isset($payload['token']) ? $payload['token'] : false,
-            'guid' => isset($payload['guid']) ? $payload['guid'] : '',
-            'gupid' => isset($payload['gupid']) ? $payload['gupid'] : [],
-            'profile' => isset($payload['profile']) ? $payload['profile'] : [],
-            'redirect' => isset($payload['redirect']) ? $payload['redirect'] : '',
-        ];
+        $_SESSION[self::LOGIN_PREFIX . ':loginSSO'] = array_merge(
+            [
+                'token' => false,
+                'guid' => '',
+                'gupid' => [],
+                'profile' => [],
+                'redirect' => '',
+            ],
+            $payload
+        )
 
         if ($this->isLoggedIn()) {
             $this->getLogger()->debug('Auth successful');

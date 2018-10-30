@@ -58,7 +58,7 @@ class OAuthClients extends Base
         // "scope" only supports 2 keys, "$add" and "$remove". These 2 checks
         // ensure that at least 1 of these must be present, and that there are
         // no others passed through.
-        if (!isset($properties['scope']) || count($properties['scope']) === 0) {
+        if (empty($properties['scope'])) {
             throw new \InvalidArgumentException('Invalid properties');
         }
 
