@@ -38,7 +38,7 @@ class Client
     /**
      * Babel client must be created with a host/port to connect to Babel.
      *
-     * @param string $url babel http url
+     * @param string $host babel http url
      * @param integer|string $port babel http port
      * @throws ClientException Invalid babel host parameter
      */
@@ -483,8 +483,8 @@ class Client
 
     /**
      * Check that all checks exist within array
-     * @param array keys keys to check for
-     * @param array array which holds expected keys
+     * @param array $keys keys to check for
+     * @param array $array which holds expected keys
      * @throws \Talis\Babel\ClientException Key missing
      */
     protected function checKeysExist(array $keys, array $array)
