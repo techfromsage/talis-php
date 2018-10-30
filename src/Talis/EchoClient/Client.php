@@ -34,32 +34,20 @@ class Client
          * The calling project needs to have already set these up.
          */
 
-        if (!defined('OAUTH_USER')) {
-            throw new \Exception('Missing define: OAUTH_USER');
-        }
+        $mandatoryConstants = [
+            'OAUTH_USER',
+            'OAUTH_SECRET',
+            'PERSONA_HOST',
+            'PERSONA_OAUTH_ROUTE',
+            'PERSONA_TOKENCACHE_HOST',
+            'PERSONA_TOKENCACHE_PORT',
+            'PERSONA_TOKENCACHE_DB',
+        ];
 
-        if (!defined('OAUTH_SECRET')) {
-            throw new \Exception('Missing define: OAUTH_SECRET');
-        }
-
-        if (!defined('PERSONA_HOST')) {
-            throw new \Exception('Missing define: PERSONA_HOST');
-        }
-
-        if (!defined('PERSONA_OAUTH_ROUTE')) {
-            throw new \Exception('Missing define: PERSONA_OAUTH_ROUTE');
-        }
-
-        if (!defined('PERSONA_TOKENCACHE_HOST')) {
-            throw new \Exception('Missing define: PERSONA_TOKENCACHE_HOST');
-        }
-
-        if (!defined('PERSONA_TOKENCACHE_PORT')) {
-            throw new \Exception('Missing define: PERSONA_TOKENCACHE_PORT');
-        }
-
-        if (!defined('PERSONA_TOKENCACHE_DB')) {
-            throw new \Exception('Missing define: PERSONA_TOKENCACHE_DB');
+        foreach ($mandatoryConstants as $mandatoryConstant) {
+            if (!defined($mandatoryConstant)) {
+                throw new \Exception("Missing define: $mandatoryConstant");
+            }
         }
 
         if (!defined('ECHO_CLASS_PREFIX')) {
@@ -178,8 +166,8 @@ class Client
      * @param integer $limit maximum amouint to return
      * @param integer $offset offset from the beginning
      * @param string $format response format, csv or json (default: json)
-     * @param integer $from events from a certain point in time (unix timestamp)
-     * @param integer $to events up to a certain point in time (unix timestamp)
+     * @param integer $fromDate events from a certain point in time (unix timestamp)
+     * @param integer $toDate events up to a certain point in time (unix timestamp)
      * @throws \Exception Communication issues with Echo
      * @return array|string an array if the response is json, otherwise a string
      */
@@ -190,8 +178,8 @@ class Client
         $limit = 25,
         $offset = 0,
         $format = null,
-        $from = null,
-        $to = null
+        $fromDate = null,
+        $toDate = null
     ) {
         if (!empty($class)) {
             $class = ECHO_CLASS_PREFIX . $class;
@@ -211,91 +199,34 @@ class Client
             return false;
         }
 
-        $eventUrl = "$baseUrl/events?";
-        $params = [];
+        $params = [
+            'limit' => $limit,
+            'offset' => $offset,
+            'class' => $class,
+            'key' => $key,
+            'value' => $value,
+            'format' => $format,
+            'to' => date('c', $toDate),
+            'from' => date('c', $fromDate),
+        ];
 
-        if (!empty($limit)) {
-            $params['limit'] = $limit;
-        }
-        if (!empty($offset)) {
-            $params['offset'] = $offset;
-        }
-        if (!empty($class)) {
-            $params['class'] = $class;
-        }
-        if (!empty($key)) {
-            $params['key'] = $key;
-        }
-        if (!empty($value)) {
-            $params['value'] = $value;
-        }
-        if (!empty($format)) {
-            $params['format'] = $format;
-        }
-        if (!empty($to)) {
-            $params['to'] = date('c', $to);
-        }
-        if (!empty($from)) {
-            $params['from'] = date('c', $from);
+        foreach ($params as $key => $value) {
+            if (empty($value)) {
+                unset($params[$key]);
+            }
         }
 
-        $eventUrl .= http_build_query($params);
+        $eventUrl = "$baseUrl/events?" . http_build_query($params);
+        $response = null;
 
         try {
-            $client = $this->getHttpClient();
-            $request = $client->get(
+            $request = $this->getHttpClient()->get(
                 $eventUrl,
                 $this->getHeaders(),
                 ['connect_timeout' => 2]
             );
 
             $response = $request->send();
-            if ($response->isSuccessful()) {
-                switch ($format) {
-                    case 'csv':
-                        $result = $response->getBody(true);
-
-                        if ($result) {
-                            return $result;
-                        }
-
-                        break;
-                    default:
-                        $result = json_decode($response->getBody(true), true);
-
-                        if (isset($result['events'])) {
-                            $this->getLogger()->debug(
-                                "Success getting events from echo - $class"
-                            );
-
-                            return $result['events'];
-                        }
-                }
-
-                $this->getLogger()->warning(
-                    "Failed getting events from echo - $class",
-                    [
-                        'responseCode' => $response->getStatusCode(),
-                        'responseBody' => $response->getBody(true),
-                    ]
-                );
-
-                throw new \Exception(
-                    'Failed getting events from echo, could not decode response'
-                );
-            } else {
-                $this->getLogger()->warning(
-                    "Failed getting events from echo - $class",
-                    [
-                        'responseCode' => $response->getStatusCode(),
-                        'responseBody' => $response->getBody(true),
-                    ]
-                );
-
-                throw new \Exception(
-                    'Failed getting events from echo, response was not successful'
-                );
-            }
         } catch (\Exception $e) {
             // For any exception issue, just log the issue and fail silently.
             // E.g. failure to connect to echo server, or whatever.
@@ -309,6 +240,47 @@ class Client
 
             throw $e;
         }
+
+        $body = $this->parseBody($response, $format);
+        if ($body) {
+            return $body;
+        }
+
+        $this->getLogger()->warning(
+            "Failed getting events from echo - $class",
+            [
+                'responseCode' => $response->getStatusCode(),
+                'responseBody' => $response->getBody(true),
+            ]
+        );
+
+        throw new \Exception('Failed getting events from echo');
+    }
+
+    /**
+     * Parse the response from Echo
+     * @param mixed $response http response from echo
+     * @param string $format csv or json (default json)
+     * @return mixed list of events or csv string
+     */
+    protected function parseBody($response, $format)
+    {
+        if ($response->isSuccessful()) {
+            $body = $response->getBody(true);
+
+            if ($format === 'csv') {
+                if ($body) {
+                    return $body;
+                }
+            } else {
+                $parsedBody = json_decode($body, true);
+                if (isset($parsedBody['events'])) {
+                    return $parsedBody['events'];
+                }
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -400,23 +372,20 @@ class Client
             throw new \Exception('You must supply a valid analytics type');
         }
 
-        if (empty($class)) {
-            throw new \Exception('You must supply a class');
+        if (empty($class) || empty($baseUrl) {
+            throw new \Exception('class or base url empty');
         }
 
-        if (empty($baseUrl)) {
-            throw new \Exception('Could not determine echo base URL');
+        $queryParams = ['class' => $class];
+        if (is_array($opts)) {
+            $queryParams = array_merge($queryParams, $opts);
         }
 
         $eventUrl = $baseUrl
             . '/analytics/'
             .  $type
             . '?'
-            . http_build_query(['class' => $class]);
-
-        if (count($opts) > 0) {
-            $eventUrl .= '&' . http_build_query($opts);
-        }
+            . http_build_query($queryParams);
 
         $client = $this->getHttpClient();
         $request = $client->get(

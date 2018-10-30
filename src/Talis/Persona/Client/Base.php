@@ -265,25 +265,12 @@ abstract class Base
     }
 
     /**
-     * Perform the request according to the $curlOptions. Only
-     * GET and HEAD requests are cached.
-     * tip: turn off caching by defining the 'Cache-Control'
-     *      header with a value of 'max-age=0, no-cache'
-     * @param string $url request url
-     * @param array $opts configuration / options:
-     *      timeout: (30 seconds) HTTP timeout
-     *      body: optional HTTP body
-     *      headers: optional HTTP headers
-     *      method: (default GET) HTTP method
-     *      expectResponse: (default true) parse the http response
-     *      addContentType: (default true) add type application/x-www-form-urlencoded
-     *      parseJson: (default true) parse the response as JSON
-     *      cacheTTL: optional TTL for this request only
-     * @return array|null response body
-     * @throws NotFoundException If the http status was a 404
-     * @throws \Exception If response not 200 and valid JSON
+     * Create a HTTP request with a predefined set of headers
+     * @param string $url url to request
+     * @param array $opts options
+     * @return mixed http request
      */
-    protected function performRequest($url, array $opts)
+    protected function createRequest($url, array $opts)
     {
         $httpKeys = ['timeout', 'body'];
         $definedHttpConfig = array_intersect_key($opts, array_flip($httpKeys));
@@ -306,7 +293,6 @@ abstract class Base
             $opts
         );
 
-        $expectedResponseCode = $opts['expectResponse'] === true ? 200 : 204;
         $body = isset($opts['body']) ? $opts['body'] : null;
 
         if (isset($opts['bearerToken'])) {
@@ -334,6 +320,31 @@ abstract class Base
             $httpConfig
         );
 
+        return $request;
+    }
+
+    /**
+     * Perform the request according to the $curlOptions. Only
+     * GET and HEAD requests are cached.
+     * tip: turn off caching by defining the 'Cache-Control'
+     *      header with a value of 'max-age=0, no-cache'
+     * @param string $url request url
+     * @param array $opts configuration / options:
+     *      timeout: (30 seconds) HTTP timeout
+     *      body: optional HTTP body
+     *      headers: optional HTTP headers
+     *      method: (default GET) HTTP method
+     *      expectResponse: (default true) parse the http response
+     *      addContentType: (default true) add type application/x-www-form-urlencoded
+     *      parseJson: (default true) parse the response as JSON
+     *      cacheTTL: optional TTL for this request only
+     * @return array|null response body
+     * @throws NotFoundException If the http status was a 404
+     * @throws \Exception If response not 200 and valid JSON
+     */
+    protected function performRequest($url, array $opts)
+    {
+        $request = $this->createRequest($url, $opts);
         // Only caches GET & HEAD requests, see
         // \Doctrine\Common\Cache\DefaultCanCacheStrategy
         $request->getParams()->set('cache.override_ttl', $opts['cacheTTL']);
@@ -359,6 +370,7 @@ abstract class Base
             );
         }
 
+        $expectedResponseCode = $opts['expectResponse'] === true ? 200 : 204;
         if ($response->getStatusCode() !== $expectedResponseCode) {
             $this->getLogger()->error(
                 'Did not retrieve expected response code',
