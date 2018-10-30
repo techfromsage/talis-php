@@ -51,7 +51,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $this->setRequiredDefines();
 
         $stubPersonaClient = $this->getMock('\Talis\Persona\Client\Tokens', [], [], '', false);
-        $stubPersonaClient->expects($this->once()
+        $stubPersonaClient->expects($this->once())
             ->method('obtainNewToken')
             ->will($this->returnValue(['access_token' => 'some-token']));
 
@@ -268,7 +268,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $stubPersonaClient = $this->getMock('\Talis\Persona\Client\Tokens', [], [], '', false);
         $stubPersonaClient->expects($this->once())
             ->method('obtainNewToken')
-            ->will($this->returnValue(['access_token' => 'some-token'))];
+            ->will($this->returnValue(['access_token' => 'some-token']));
 
         $expectedEvent = ['class' => 'test.expected.event'];
         $response = new \Guzzle\Http\Message\Response('200');
@@ -293,7 +293,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $echoClient = $this->getMock(
             '\Talis\EchoClient\Client',
             ['getPersonaClient', 'getHttpClient']
-        ];
+        );
 
         $echoClient->expects($this->once())
             ->method('getPersonaClient')
@@ -304,7 +304,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
 
         $result = $echoClient->getRecentEvents('expected.event', 'foo', 'bar');
 
-        $this->assertEquals([$expectedEvent),$result];
+        $this->assertEquals([$expectedEvent],$result);
     }
 
     public function testGetEvents()
@@ -316,7 +316,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
             ->getMock();
         $stubPersonaClient->expects($this->once())
             ->method('obtainNewToken')
-            ->will($this->returnValue(['access_token' => 'some-token'))];
+            ->will($this->returnValue(['access_token' => 'some-token']));
 
         $expectedEvent = ['class' => 'test.expected.event'];
         $response = new \Guzzle\Http\Message\Response('200');
@@ -337,7 +337,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
 
         $result = $echoClient->getEvents('expected.event', 'foo', 'bar');
 
-        $this->assertEquals([$expectedEvent),$result];
+        $this->assertEquals([$expectedEvent], $result);
     }
 
     public function testGetEventsOffset()
@@ -347,7 +347,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $stubPersonaClient = $this->getMock('\Talis\Persona\Client\Tokens', [], [], '', false);
         $stubPersonaClient->expects($this->once())
             ->method('obtainNewToken')
-            ->will($this->returnValue(['access_token' => 'some-token'))];
+            ->will($this->returnValue(['access_token' => 'some-token']));
 
         $expectedEvent = ['class' => 'test.expected.event'];
         $response = new \Guzzle\Http\Message\Response('200');
@@ -368,7 +368,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
 
         $result = $echoClient->getEvents('expected.event', 'foo', 'bar', 25, 30);
 
-        $this->assertEquals([$expectedEvent),$result];
+        $this->assertEquals([$expectedEvent], $result);
     }
 
     public function testGetEventsCsvFormat()
@@ -378,7 +378,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $stubPersonaClient = $this->getMock('\Talis\Persona\Client\Tokens', [], [], '', false);
         $stubPersonaClient->expects($this->once())
             ->method('obtainNewToken')
-            ->will($this->returnValue(['access_token' => 'some-token'))];
+            ->will($this->returnValue(['access_token' => 'some-token']));
 
         $expectedResult = '"a","csv","file"' . "\n" . '"with","some,"data"';
         $response = new \Guzzle\Http\Message\Response('200');
@@ -414,7 +414,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
             ->getMock();
         $stubPersonaClient->expects($this->once())
             ->method('obtainNewToken')
-            ->will($this->returnValue(['access_token' => 'some-token'))];
+            ->will($this->returnValue(['access_token' => 'some-token']));
 
         $expectedEvent = ['class' => 'test.expected.event'];
         $response = new \Guzzle\Http\Message\Response('200');
@@ -438,7 +438,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
 
         $result = $echoClient->getEvents('expected.event', 'foo', 'bar', 25, 0, null, 1516634248);
 
-        $this->assertEquals([$expectedEvent),$result];
+        $this->assertEquals([$expectedEvent], $result);
     }
 
     public function testGetEventsFromCertainTime()
@@ -450,7 +450,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
             ->getMock();
         $stubPersonaClient->expects($this->once())
             ->method('obtainNewToken')
-            ->will($this->returnValue(['access_token' => 'some-token'))];
+            ->will($this->returnValue(['access_token' => 'some-token']));
 
         $expectedEvent = ['class' => 'test.expected.event'];
         $response = new \Guzzle\Http\Message\Response('200');
@@ -475,7 +475,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
 
         $result = $echoClient->getEvents('expected.event', 'foo', 'bar', 25, 0, null, null, 1516634248);
 
-        $this->assertEquals([$expectedEvent),$result];
+        $this->assertEquals([$expectedEvent], $result);
     }
 
     public function testGetEventsFromCertainTimeToACertainTime()
@@ -487,7 +487,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
             ->getMock();
         $stubPersonaClient->expects($this->once())
             ->method('obtainNewToken')
-            ->will($this->returnValue(['access_token' => 'some-token'))];
+            ->will($this->returnValue(['access_token' => 'some-token']));
 
         $expectedEvent = ['class' => 'test.expected.event'];
         $response = new \Guzzle\Http\Message\Response('200');
@@ -513,7 +513,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
 
         $result = $echoClient->getEvents('expected.event', 'foo', 'bar', 25, 0, null, 1516634248, 1516634417);
 
-        $this->assertEquals([$expectedEvent),$result];
+        $this->assertEquals([$expectedEvent], $result);
     }
 
     public function testHitsReturnsExpectedJSON()
@@ -523,7 +523,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $stubPersonaClient = $this->getMock('\Talis\Persona\Client\Tokens', [], [], '', false);
         $stubPersonaClient->expects($this->once())
             ->method('obtainNewToken')
-            ->will($this->returnValue(['access_token' => 'some-token'))];
+            ->will($this->returnValue(['access_token' => 'some-token']));
 
         $response = new \Guzzle\Http\Message\Response('200');
         $response->setBody(
@@ -585,7 +585,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $stubPersonaClient = $this->getMock('\Talis\Persona\Client\Tokens', [], [], '', false);
         $stubPersonaClient->expects($this->once())
             ->method('obtainNewToken')
-            ->will($this->returnValue(['access_token' => 'some-token'))];
+            ->will($this->returnValue(['access_token' => 'some-token']));
 
         $expectedResponse = "here,are,some,headers\n,and,here,is,some,data";
         $response = new \Guzzle\Http\Message\Response('200');
@@ -626,7 +626,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $response->setBody(
             '{"head":{"type":"hits","class":"test.player.view","group_by":"source","count":27},'
             . '"results":['
-            . '{"source":"web.talis-com.b50367b.2014-05-15","hits":45}',
+            . '{"source":"web.talis-com.b50367b.2014-05-15","hits":45}'
             . '{"source":"web.talis-com.b692220.2014-05-15","hits":9},'
             . '{"source":"mobile.android-v1.9","hits":16},'
             . '{"source":"web.talis-com.f1afa4f.2014-05-13","hits":21},'
@@ -740,7 +740,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $echoClient->expects($this->once())->method('getPersonaClient')->will($this->returnValue($stubPersonaClient));
         $echoClient->expects($this->once())->method('getHttpClient')->will($this->returnValue($stubHttpClient));
 
-        $result = $echoClient->getHits('player.view', ['key' => 'some_key', 'value' => 'some_value')];
+        $result = $echoClient->getHits('player.view', ['key' => 'some_key', 'value' => 'some_value']);
 
         $this->assertTrue(isset($result['head']));
         $this->assertTrue(isset($result['results']));

@@ -132,7 +132,7 @@ class Client
         $url = "/feeds/targets/$hash/activity/annotations?$queryParams";
 
         $headers = $this->performBabelHead($url, $token);
-        $newItemsHeader = $headers->get('X-Feed-New-Items')->to[];
+        $newItemsHeader = $headers->get('X-Feed-New-Items')->toArray();
 
         if (count($newItemsHeader) !== 1) {
             throw new \Talis\Babel\ClientException(

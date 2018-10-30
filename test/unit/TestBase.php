@@ -17,7 +17,7 @@ function envvalue($name, $default)
     return $value == false ? $default : $value;
 }
 
-public abstract class TestBase extends PHPUnit_Framework_TestCase
+abstract class TestBase extends PHPUnit_Framework_TestCase
 {
     protected $cacheBackend = null;
 

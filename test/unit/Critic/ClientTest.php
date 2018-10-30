@@ -8,7 +8,7 @@ if (!defined('APPROOT')) {
 /**
  * Unit tests for CriticClient
  */
-public class ClientTest extends \PHPUnit_Framework_TestCase
+class ClientTest extends \PHPUnit_Framework_TestCase
 {
     private $criticBaseUrl;
     private $criticClient;
@@ -108,7 +108,7 @@ public class ClientTest extends \PHPUnit_Framework_TestCase
         $criticClient->setPersonaConnectValues($this->personaConfig);
 
         $criticClient->createReview(
-            $this->postFields
+            $this->postFields,
             'someClientId',
             'someClientSecret'
         );

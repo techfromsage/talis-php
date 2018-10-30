@@ -11,7 +11,7 @@ if (!defined('APPROOT')) {
 
 require_once $appRoot . '/test/unit/TestBase.php';
 
-public class OAuthClientsTest extends TestBase
+class OAuthClientsTest extends TestBase
 {
 
     /**
