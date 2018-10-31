@@ -12,9 +12,12 @@ use \Talis\Persona\Client\InvalidTokenException;
 use \Talis\Persona\Client\TokenValidationException;
 use \Talis\Persona\Client\UnauthorisedException;
 use \Talis\Persona\Client\UnknownException;
+use \Talis\Persona\Client\Cache;
 
 class Tokens extends Base
 {
+    use Cache;
+
     /**
      * Validates the supplied token using JWT or a remote Persona server.
      * An optional scope can be supplied to validate against. If a token
@@ -73,7 +76,7 @@ class Tokens extends Base
             return $e->getCode();
         }
 
-        if ($scopes === null) {
+        if (empty($scopes)) {
             return ValidationResults::Success;
         } elseif (isset($decodedToken['scopeCount'])) {
             // user scopes not included within
@@ -84,7 +87,11 @@ class Tokens extends Base
         $isSu = in_array('su', $decodedToken['scopes'], true);
         $hasScope = count(array_intersect($scopes, $decodedToken['scopes'])) > 0;
 
-        return $isSu || $hasScope ? ValidationResults::Success : ValidationResults::Unauthorised;
+        if ($isSu || $hasScope) {
+            return ValidationResults::Success;
+        }
+
+        return ValidationResults::Unauthorised;
     }
 
     /**
@@ -189,14 +196,11 @@ class Tokens extends Base
             throw new \Exception('You must specify clientId, and clientSecret to obtain a new token');
         }
 
-        $token = false;
         if (!isset($params['use_cache']) || $params['use_cache'] !== false) {
-            $cacheKey = 'accesstoken_' . md5($clientId);
-            $token = $this->getCacheBackend()->fetch($cacheKey);
-        }
-
-        if (!empty($token)) {
-            return $token;
+            $token = $this->getCachedToken($clientId);
+            if ($token) {
+                return $token;
+            }
         }
 
         $query = [
@@ -210,109 +214,12 @@ class Tokens extends Base
         }
 
         $url = $this->getPersonaHost() . $this->config['persona_oauth_route'];
-
         $this->getStatsD()->startTiming('obtainNewToken.rest.get');
         $token = $this->personaObtainNewToken($url, $query);
         $this->getStatsD()->endTiming('obtainNewToken.rest.get');
 
-        if ($token && isset($token['expires_in'])) {
-            // Add a 60 second leeway as the expires time does not take into
-            // consideration the time taken to communication with Persona
-            // in both directions.. This leads to a edge case where the
-            // token has expired, but the cache hasn't removed it yet
-            $expiresIn = intval($token['expires_in'], 10) - 60;
-            if ($expiresIn > 0) {
-                $this->getCacheBackend()->save(
-                    $cacheKey,
-                    $token,
-                    $expiresIn
-                );
-            }
-        }
-
+        $this->cacheToken($clientId, $token);
         return $token;
-    }
-
-    /**
-     * Signs the given $url plus an $expiry param with the $secret and returns it
-     * @param string $url url to sign
-     * @param string $secret secret for signing
-     * @param integer|string $expiry defaults to '+15 minutes'
-     * @return string signed url
-     * @throws \InvalidArgumentException Invalid arguments
-     */
-    public function presignUrl($url, $secret, $expiry = null)
-    {
-        $this->getStatsD()->increment('presignUrl');
-
-        if (empty($url)) {
-            throw new \InvalidArgumentException('No url provided to sign');
-        }
-        if (empty($secret)) {
-            throw new \InvalidArgumentException('No secret provided to sign with');
-        }
-        if ($expiry == null) {
-            $expiry = '+15 minutes';
-        }
-
-        $expParam = strpos($url, '?') === false ? '?' : '&';
-        $expParam .= is_int($expiry) ? "expires=$expiry" : 'expires=' . strtotime($expiry);
-
-        if (strpos($url, '#') !== false) {
-            $url = substr_replace($url, $expParam, strpos($url, '#'), 0);
-        } else {
-            $url .= $expParam;
-        }
-
-        $this->getStatsD()->startTiming('presignUrl.sign');
-        $sig = $this->getSignature($url, $secret);
-        $this->getStatsD()->endTiming('presignUrl.sign');
-
-        $sigParam = strpos($url, '?') === false ? "?signature=$sig" : "&signature=$sig";
-
-        if (strpos($url, '#') !== false) {
-            $url = substr_replace($url, $sigParam, strpos($url, '#'), 0);
-        } else {
-            $url .= $sigParam;
-        }
-
-        return $url;
-    }
-
-    /**
-     * Check if a presigned URL is valid
-     * @param string $url url to check
-     * @param string $secret secret to generate the url signature with
-     * @return boolean true if signed and valid
-     */
-    public function isPresignedUrlValid($url, $secret)
-    {
-        $query = [];
-        $urlParts = parse_url($url);
-        parse_str($urlParts['query'], $query);
-
-        // no expires?
-        if (!isset($query['expires'])) {
-            return false;
-        }
-
-        // no signature?
-        if (!isset($query['signature'])) {
-            return false;
-        }
-
-        // $expires less than current time?
-        if (intval($query['expires']) < time()) {
-            return false;
-        }
-
-        // still here? Check sig
-        $urlWithoutSignature = $this->removeQuerystringVar($url, 'signature');
-        $signature = $this->getSignature($urlWithoutSignature, $secret);
-        $valid = $query['signature'] === $signature;
-        $this->getStatsD()->increment(($valid) ? 'presignUrl.valid' : 'presignUrl.invalid');
-
-        return $valid;
     }
 
     /**
@@ -330,6 +237,7 @@ class Tokens extends Base
         }
 
         $publicCert = $this->retrieveJWTCertificate($pubCertCacheTTL);
+
         $encodedToken = $token['access_token'];
         $decodedToken = $this->decodeToken($encodedToken, $publicCert);
 
@@ -351,82 +259,17 @@ class Tokens extends Base
     }
 
     /**
-     * Attempts to find an access token based on the current request.
-     * It first looks at $_SERVER headers for a Bearer, failing that
-     * it checks the $_GET and $_POST for the access_token param.
-     * If it can't find one it throws an exception.
-     *
-     * @return string access token
-     * @throws \Exception Missing or invalid access token
-     */
-    protected function getTokenFromRequest()
-    {
-        $headers = [];
-        foreach ($_SERVER as $key => $value) {
-            if (substr($key, 0, 5) <> 'HTTP_') {
-                continue;
-            }
-
-            $withoutPrefix = strtolower(substr($key, 5));
-            $removedUnderscores = str_replace('_', ' ', $withoutPrefix);
-            $header = str_replace(' ', '-', ucwords($removedUnderscores));
-            $headers[$header] = $value;
-        }
-
-        if (isset($headers['Bearer'])) {
-            if (!preg_match('/Bearer\s(\S+)/', $headers['Bearer'], $matches)) {
-                throw new \Exception('Malformed auth header');
-            }
-
-            return $matches[1];
-        }
-
-        if (isset($_GET['access_token'])) {
-            return $_GET['access_token'];
-        }
-
-        if (isset($_POST['access_token'])) {
-            return $_POST['access_token'];
-        }
-
-        $this->getLogger()->error('No OAuth token supplied in headers, GET or POST');
-        throw new \Exception('No OAuth token supplied');
-    }
-
-    /**
      * Checks the supplied config, verifies that all required parameters are present and
      * contain a non null value;
      *
      * @param array $config the configuration options to validate
-     * @return boolean if config passed
      * @throws \InvalidArgumentException If the config is invalid
      */
     protected function checkConfig(array $config)
     {
-        if (empty($config)) {
-            throw new \InvalidArgumentException('No config provided to Persona Client');
+        if (empty($config) || !isset($config['persona_host'])) {
+            throw new \InvalidArgumentException('invalid configuration');
         }
-
-        $requiredProperties = [
-            'persona_host',
-        ];
-
-        $missingProperties = [];
-        foreach ($requiredProperties as $property) {
-            if (!isset($config[$property])) {
-                array_push($missingProperties, $property);
-            }
-        }
-
-        if (empty($missingProperties)) {
-            return true;
-        }
-
-        $this->getLogger()->error('Config provided does not contain values', $missingProperties);
-        throw new \InvalidArgumentException(
-            'Config provided does not contain values for: '
-            . implode(',', $missingProperties)
-        );
     }
 
     /**
@@ -537,32 +380,5 @@ class Tokens extends Base
                 'body' => http_build_query($query, '', '&'),
             ]
         );
-    }
-
-    /**
-     * Returns a signature for the given $msg
-     * @param string $msg message to generate the signatur efor
-     * @param string $secret secret to sign the message with
-     * @return string signature generated with secret and message
-     */
-    protected function getSignature($msg, $secret)
-    {
-        return hash_hmac('sha256', $msg, $secret);
-    }
-
-    /**
-     * Remove a query parameter from the $url
-     * @param string $url Url to remove the query parameter from
-     * @param string $key Query parameter to remove
-     * @see http://www.addedbytes.com/blog/code/php-querystring-functions/
-     * @return string url with the parameter removed
-     */
-    protected function removeQuerystringVar($url, $key)
-    {
-        $anchor = strpos($url, '#') !== false ? substr($url, strpos($url, '#')) : null;
-        $url = preg_replace('/(.*)(?|&)' . $key . '=[^&]+?(&)(.*)/i', '$1$2$4', $url . '&');
-        $url = substr($url, 0, -1);
-
-        return empty($anchor) ? $url : $url . $anchor;
     }
 }

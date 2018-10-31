@@ -138,38 +138,23 @@ abstract class Base
      * contain a non null value;
      *
      * @param array $config the configuration options to validate
-     * @return boolean if config passed
      * @throws \InvalidArgumentException If the config is invalid
      */
     protected function checkConfig(array $config)
     {
-        if (empty($config)) {
-            throw new \InvalidArgumentException(
-                'No config provided to Persona Client'
-            );
-        }
-
         $requiredProperties = [
             'userAgent',
             'persona_host',
             'cacheBackend',
         ];
 
-        $missingProperties = [];
-        foreach ($requiredProperties as $property) {
-            if (!isset($config[$property])) {
-                array_push($missingProperties, $property);
+        foreach ($requiredProperties as $requiredProperty) {
+            if (!isset($config[$requiredProperty])) {
+                throw new \InvalidArgumentException(
+                    "Configuration missing $requiredProperty"
+                );
             }
         }
-
-        if (empty($missingProperties)) {
-            return true;
-        }
-
-        throw new \InvalidArgumentException(
-            'Config provided does not contain values for: '
-            . implode(',', $missingProperties)
-        );
     }
 
     /**
@@ -274,12 +259,6 @@ abstract class Base
     {
         $httpKeys = ['timeout', 'body'];
         $definedHttpConfig = array_intersect_key($opts, array_flip($httpKeys));
-        $httpConfig = array_merge(
-            [
-                'timeout' => 30,
-            ],
-            $definedHttpConfig
-        );
 
         $opts = array_merge(
             [
@@ -293,6 +272,21 @@ abstract class Base
             $opts
         );
 
+        $version = $this->getClientVersion();
+        $httpConfig = array_merge(
+            [
+                'timeout' => 30,
+                'User-Agent' => "{$this->config['userAgent']}"
+                . "persona-php-client/{$version} "
+                . "(php/{$this->phpVersion})",
+                'X-Request-ID' => $this->getRequestId(),
+                'X-Client-Version' => $version,
+                'X-Client-Language' => 'php',
+                'X-Client-Consumer' => $this->config['userAgent'],
+            ],
+            $definedHttpConfig
+        );
+
         $body = isset($opts['body']) ? $opts['body'] : null;
 
         if (isset($opts['bearerToken'])) {
@@ -302,14 +296,6 @@ abstract class Base
         if ($body != null && $opts['addContentType']) {
             $httpConfig['headers']['Content-Type'] = 'application/x-www-form-urlencoded';
         }
-
-        $version = $this->getClientVersion();
-        $httpConfig['headers']['User-Agent'] = "{$this->config['userAgent']}"
-            .  "persona-php-client/{$version} (php/{$this->phpVersion})";
-        $httpConfig['headers']['X-Request-ID'] = $this->getRequestId();
-        $httpConfig['headers']['X-Client-Version'] = $version;
-        $httpConfig['headers']['X-Client-Language'] = 'php';
-        $httpConfig['headers']['X-Client-Consumer'] = $this->config['userAgent'];
 
         $client = $this->getHTTPClient();
         $request = $client->createRequest(
@@ -423,5 +409,48 @@ abstract class Base
     protected function getPersonaHost()
     {
         return $this->config['persona_host'] . '/' . self::PERSONA_API_VERSION;
+    }
+
+    /**
+     * Attempts to find an access token based on the current request.
+     * It first looks at $_SERVER headers for a Bearer, failing that
+     * it checks the $_GET and $_POST for the access_token param.
+     * If it can't find one it throws an exception.
+     *
+     * @return string access token
+     * @throws \Exception Missing or invalid access token
+     */
+    protected function getTokenFromRequest()
+    {
+        $headers = [];
+        foreach ($_SERVER as $key => $value) {
+            if (substr($key, 0, 5) <> 'HTTP_') {
+                continue;
+            }
+
+            $withoutPrefix = strtolower(substr($key, 5));
+            $removedUnderscores = str_replace('_', ' ', $withoutPrefix);
+            $header = str_replace(' ', '-', ucwords($removedUnderscores));
+            $headers[$header] = $value;
+        }
+
+        if (isset($headers['Bearer'])) {
+            if (!preg_match('/Bearer\s(\S+)/', $headers['Bearer'], $matches)) {
+                throw new \Exception('Malformed auth header');
+            }
+
+            return $matches[1];
+        }
+
+        if (isset($_GET['access_token'])) {
+            return $_GET['access_token'];
+        }
+
+        if (isset($_POST['access_token'])) {
+            return $_POST['access_token'];
+        }
+
+        $this->getLogger()->error('No OAuth token supplied in headers, GET or POST');
+        throw new \Exception('No OAuth token supplied');
     }
 }

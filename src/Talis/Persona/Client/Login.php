@@ -114,14 +114,9 @@ class Login extends Base
                 'redirect' => '',
             ],
             $payload
-        )
+        );
 
-        if ($this->isLoggedIn()) {
-            $this->getLogger()->debug('Auth successful');
-            return true;
-        }
-
-        return false;
+        return $this->isLoggedIn();
     }
 
     /**

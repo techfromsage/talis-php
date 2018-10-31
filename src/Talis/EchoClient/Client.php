@@ -5,11 +5,12 @@ use \Monolog\Handler\StreamHandler;
 use \Monolog\Logger;
 
 use \Talis\EchoClient\Event;
+use \Talis\EchoClient\Base;
 
 /**
  * Sends events to Echo, if an echo server is enabled.
  */
-class Client
+class Client extends Base
 {
     const ECHO_API_VERSION = 1;
 
@@ -19,11 +20,6 @@ class Client
     const ECHO_ANALYTICS_AVG = 'average';
     const ECHO_MAX_BATCH_EVENTS = 100;
     const ECHO_MAX_BATCH_SIZE_IN_BYTES = 1000000;
-
-    private $personaClient;
-    private $tokenCacheClient;
-    private $debugEnabled = false;
-    private static $logger;
 
     /**
      * Constructor
@@ -342,6 +338,45 @@ class Client
     }
 
     /**
+     * Build a url to retrieve analytics from Echo
+     * @param string $type analytic query type
+     * @param string $class event class
+     * @param array $opts query parameter options
+     * @return string url
+     */
+    protected function buildAnalyticsUrl($type, $class, array $opts)
+    {
+        $baseUrl = $this->getBaseUrl();
+
+        if (!in_array(
+            $type,
+            [
+                self::ECHO_ANALYTICS_HITS,
+                self::ECHO_ANALYTICS_AVG,
+                self::ECHO_ANALYTICS_MAX,
+                self::ECHO_ANALYTICS_SUM
+            ]
+        )) {
+            throw new \Exception('You must supply a valid analytics type');
+        }
+
+        if (empty($class) || empty($baseUrl)) {
+            throw new \Exception('class or base url empty');
+        }
+
+        $queryParams = ['class' => $class];
+        if (is_array($opts)) {
+            $queryParams = array_merge($queryParams, $opts);
+        }
+
+        return $baseUrl
+            . '/analytics/'
+            .  $type
+            . '?'
+            . http_build_query($queryParams);
+    }
+
+    /**
      * Request for analytics.
      *
      * @param string $class event class
@@ -358,38 +393,9 @@ class Client
         $noCache = false
     ) {
         $class = ECHO_CLASS_PREFIX . $class;
-        $baseUrl = $this->getBaseUrl();
 
-        if (!in_array(
-            $type,
-            [
-                self::ECHO_ANALYTICS_HITS,
-                self::ECHO_ANALYTICS_AVG,
-                self::ECHO_ANALYTICS_MAX,
-                self::ECHO_ANALYTICS_SUM
-            ]
-        )) {
-            throw new \Exception('You must supply a valid analytics type');
-        }
-
-        if (empty($class) || empty($baseUrl) {
-            throw new \Exception('class or base url empty');
-        }
-
-        $queryParams = ['class' => $class];
-        if (is_array($opts)) {
-            $queryParams = array_merge($queryParams, $opts);
-        }
-
-        $eventUrl = $baseUrl
-            . '/analytics/'
-            .  $type
-            . '?'
-            . http_build_query($queryParams);
-
-        $client = $this->getHttpClient();
-        $request = $client->get(
-            $eventUrl,
+        $request = $this->getHttpClient()->get(
+            $this->buildAnalyticsUrl($type, $class, $opts),
             $this->getHeaders($noCache),
             ['connect_timeout' => 10]
         );
@@ -450,39 +456,6 @@ class Client
                 . $response->getStatusCode()
             );
         }
-    }
-
-    /**
-     * Enable debug mode for this client.  If this is enabled we log things
-     * like the Persona client. Only use in development, not production!
-     *
-     * @param boolean $debugEnabled Whether debug mode should be enabled or
-     *      not (default = false)
-     */
-    public function setDebugEnabled($debugEnabled)
-    {
-        $this->debugEnabled = $debugEnabled;
-    }
-
-    /**
-     * Is debugging enabled for this class? We log out things like the Persona
-     * token etc. Only to be used in development!.
-     *
-     * @return boolean
-     */
-    public function isDebugEnabled()
-    {
-        return $this->debugEnabled;
-    }
-
-    /**
-     * Allow the calling project to use its own instance of a MonoLog Logger class.
-     *
-     * @param Logger $logger logger
-     */
-    public static function setLogger(Logger $logger)
-    {
-        self::$logger = $logger;
     }
 
     /**
@@ -600,91 +573,5 @@ class Client
         }
 
         return ECHO_HOST . '/' . self::ECHO_API_VERSION;
-    }
-
-    /**
-     * To allow mocking of the Guzzle client for testing.
-     *
-     * @return Client
-     */
-    protected function getHttpClient()
-    {
-        return new \Guzzle\Http\Client();
-    }
-
-    /**
-     * To allow mocking of the PersonaClient for testing.
-     *
-     * @return \Talis\Persona\Client\Tokens
-     */
-    protected function getPersonaClient()
-    {
-        if (!isset($this->personaClient)) {
-            $cacheDriver = new \Doctrine\Common\Cache\PredisCache(
-                $this->getCacheClient()
-            );
-
-            $this->personaClient = new \Talis\Persona\Client\Tokens([
-                'persona_host' => PERSONA_HOST,
-                'persona_oauth_route' => PERSONA_OAUTH_ROUTE,
-                'userAgent' => 'echo-php-client',
-                'cacheBackend' => $cacheDriver,
-            ]);
-        }
-
-        return $this->personaClient;
-    }
-
-    /**
-     * Lazy Loader, returns a predis client instance
-     *
-     * @return boolean|\Predis\Client false else a connected predis instance
-     * @throws \Predis\Connection\ConnectionException If it cannot connect to the server specified
-     */
-    protected function getCacheClient()
-    {
-        if (!isset($this->tokenCacheClient)) {
-            $this->tokenCacheClient = new \Predis\Client([
-                'scheme' => 'tcp',
-                'host' => PERSONA_TOKENCACHE_HOST,
-                'port' => PERSONA_TOKENCACHE_PORT,
-                'database' => PERSONA_TOKENCACHE_DB,
-            ]);
-        }
-
-        return $this->tokenCacheClient;
-    }
-
-    /**
-     * Get the current Logger instance.
-     *
-     * @return Logger
-     */
-    protected function getLogger()
-    {
-        if (self::$logger == null) {
-            // If an instance of the MongoLog Logger hasn't been passed
-            // in then default to stderr.
-            self::$logger = new Logger('echoclient');
-            $streamHandler = new StreamHandler(
-                '/tmp/echo-client.log',
-                Logger::DEBUG
-            );
-
-            self::$logger->pushHandler($streamHandler);
-        }
-
-        return self::$logger;
-    }
-
-    /**
-     * Returns the size of a given string in bytes
-     *
-     * @param string $input The string whose length we wish to compute
-     * @return integer The length of the string in bytes
-     */
-    protected function getStringSizeInBytes($input)
-    {
-        return strlen(utf8_decode($input));
     }
 }

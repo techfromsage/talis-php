@@ -1,7 +1,9 @@
 #!/bin/bash
 while true; do
     inotifywait -e modify,create,delete,move -r `pwd`;
+    clear;
     find . -name '*.php' | grep -v /vendor/ | xargs -I{} php -l "{}" \ &&
      docker-compose run lint | head -n50 &&
-     docker-compose run codecheck | head -n50;
+     docker-compose run codecheck | head -n50 &&
+     docker-compose run test;
 done
