@@ -12,11 +12,11 @@ use \Talis\Persona\Client\InvalidTokenException;
 use \Talis\Persona\Client\TokenValidationException;
 use \Talis\Persona\Client\UnauthorisedException;
 use \Talis\Persona\Client\UnknownException;
-use \Talis\Persona\Client\Cache;
+use \Talis\Persona\Client\TokenCache;
 
 class Tokens extends Base
 {
-    use Cache;
+    use TokenCache;
 
     /**
      * Validates the supplied token using JWT or a remote Persona server.
@@ -77,7 +77,7 @@ class Tokens extends Base
         }
 
         if (empty($scopes)) {
-            return ValidationResults::Success;
+            return ValidationResults::SUCCESS;
         } elseif (isset($decodedToken['scopeCount'])) {
             // user scopes not included within
             // the JWT as there are too many
@@ -88,10 +88,10 @@ class Tokens extends Base
         $hasScope = count(array_intersect($scopes, $decodedToken['scopes'])) > 0;
 
         if ($isSu || $hasScope) {
-            return ValidationResults::Success;
+            return ValidationResults::SUCCESS;
         }
 
-        return ValidationResults::Unauthorised;
+        return ValidationResults::UNAUTHORISED;
     }
 
     /**
@@ -343,7 +343,7 @@ class Tokens extends Base
         }
 
         $this->getLogger()->debug('Token valid at server');
-        return ValidationResults::Success;
+        return ValidationResults::SUCCESS;
     }
 
     /**

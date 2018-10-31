@@ -1,6 +1,8 @@
 <?php
 namespace Talis\Persona\Client;
 
+use Talis\Persona\ValidationResults;
+
 /**
  * Signature within the JWT does not represent the token.
  */
@@ -14,7 +16,7 @@ class InvalidSignatureException extends TokenValidationException
     {
         parent::__construct(
             $msg,
-            ValidationResults::InvalidSignature
+            ValidationResults::INVALID_SIGNATURE
         );
     }
 }

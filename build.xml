@@ -61,6 +61,10 @@
         <exec dir="." executable="${vendor.dir}/bin/phpcs" failonerror="true">
           <arg line="-s -p --severity=3 --standard=test/Standards/TalisPHP --extensions=php ./"/>
         </exec>
+        <echo>Running PHP Lint for code quality...</echo>
+        <exec dir="." executable="${vendor.dir}/bin/phplint" failonerror="true">
+            <arg line="./ --exclude=vendor --no-cache" />
+        </exec>
     </target>
 
     <target name="code-check" depends="clean">

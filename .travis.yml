@@ -1,7 +1,9 @@
 services:
 - redis-server
-sudo: false
+sudo: required
 language: php
+services:
+  - docker
 php:
 - 7.2
 - 7.1
@@ -10,10 +12,12 @@ php:
 - 5.5
 install:
 - composer install
+- docker pull phpstan/phpstan
 script: |
     set -xe
     find . -name '*.php' | grep -v './vendor/' | xargs -I{} php -l "{}" \;
     ant test
+    docker run -ti --rm -v `pwd`:/app phpstan/phpstan analyse /app
 notifications:
   hipchat:
     rooms:

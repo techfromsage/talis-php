@@ -226,7 +226,7 @@ class Client
             );
         }
 
-        $this->checKeysExist(['annotatedBy', 'hasTarget', 'hasBody'], $arrData);
+        $this->checkKeysExist(['annotatedBy', 'hasTarget', 'hasBody'], $arrData);
 
         $hasTarget = $arrData['hasTarget'];
         $hasBody = $arrData['hasBody'];
@@ -445,7 +445,7 @@ class Client
      * @param array $array which holds expected keys
      * @throws \Talis\Babel\ClientException Key missing
      */
-    protected function checKeysExist(array $keys, array $array)
+    protected function checkKeysExist(array $keys, array $array)
     {
         foreach ($keys as $key) {
             if (array_key_exists($key, $array) === false) {

@@ -2,17 +2,19 @@
 
 namespace Talis\EchoClient;
 
-abstract class Client
+use \Monolog\Handler\StreamHandler;
+use \Monolog\Logger;
+
+abstract class Base
 {
     private static $logger;
     private $tokenCacheClient;
     private $personaClient;
 
-
     /**
      * Get the current Logger instance.
      *
-     * @return Logger
+     * @return Mongolog\Logger
      */
     protected function getLogger()
     {
@@ -34,7 +36,7 @@ abstract class Client
     /**
      * Allow the calling project to use its own instance of a MonoLog Logger class.
      *
-     * @param Logger $logger logger
+     * @param \Monolog\Logger $logger logger
      */
     public static function setLogger(Logger $logger)
     {

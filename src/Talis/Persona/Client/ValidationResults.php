@@ -1,7 +1,7 @@
 <?php
 namespace Talis\Persona\Client;
 
-abstract class ValidationResults
+class ValidationResults
 {
     // TODO: oops, these have changed
     const SUCCESS = 0;

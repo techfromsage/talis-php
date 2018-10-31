@@ -1,6 +1,8 @@
 <?php
 namespace Talis\Persona\Client;
 
+use Talis\Persona\ValidationResults;
+
 /**
  * Authorisation request failed.
  */
@@ -14,7 +16,7 @@ class UnauthorisedException extends TokenValidationException
     {
         parent::__construct(
             $msg,
-            ValidationResults::Unauthorised
+            ValidationResults::UNAUTHORISED
         );
     }
 }

@@ -254,7 +254,7 @@ e    * @throws \InvalidArgumentException either gupid or token is invalid
      */
     protected function validateStringParam($name, $value)
     {
-        if (!is_string($value) || emtpy(trim($value))) {
+        if (!is_string($value) || empty(trim($value))) {
             $this->getLogger()->error("Invalid $name", [$name => $value]);
             throw new \InvalidArgumentException("Invalid $name");
         }

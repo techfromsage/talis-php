@@ -1,6 +1,8 @@
 <?php
 namespace Talis\Persona\Client;
 
+use Talis\Persona\ValidationResults;
+
 /**
  * Response from the server included a empty body.
  */
@@ -14,7 +16,7 @@ class EmptyResponseException extends TokenValidationException
     {
         parent::__construct(
             $msg,
-            ValidationResults::EmptyResponse
+            ValidationResults::EMPTY_RESPONSE
         );
     }
 }

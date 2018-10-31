@@ -1,6 +1,8 @@
 <?php
 namespace Talis\Persona\Client;
 
+use Talis\Persona\ValidationResults;
+
 /**
  * Either the token is malformed or it has expired.
  */
@@ -14,7 +16,7 @@ class InvalidTokenException extends TokenValidationException
     {
         parent::__construct(
             $msg,
-            ValidationResults::InvalidToken
+            ValidationResults::INVALID_TOKEN
         );
     }
 }
