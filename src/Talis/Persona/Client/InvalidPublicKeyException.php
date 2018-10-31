@@ -1,7 +1,7 @@
 <?php
 namespace Talis\Persona\Client;
 
-use Talis\Persona\ValidationResults;
+use Talis\Persona\Client\ValidationResults;
 
 /**
  * Public key used to validate the JWT is considered invalid.

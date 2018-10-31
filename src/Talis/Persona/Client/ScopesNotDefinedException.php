@@ -2,7 +2,7 @@
 
 namespace Talis\Persona\Client;
 
-use Talis\Persona\ValidationResults;
+use Talis\Persona\Client\ValidationResults;
 
 /**
  * JWT includes a 'scopeCount' rather than a list of scopes.

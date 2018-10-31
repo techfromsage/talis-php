@@ -1,7 +1,7 @@
 <?php
 namespace Talis\Persona\Client;
 
-use Talis\Persona\ValidationResults;
+use Talis\Persona\Client\ValidationResults;
 
 /**
  * Response from the server included a empty body.

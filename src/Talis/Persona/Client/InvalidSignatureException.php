@@ -1,7 +1,7 @@
 <?php
 namespace Talis\Persona\Client;
 
-use Talis\Persona\ValidationResults;
+use Talis\Persona\Client\ValidationResults;
 
 /**
  * Signature within the JWT does not represent the token.

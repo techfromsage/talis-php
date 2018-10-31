@@ -1,7 +1,7 @@
 <?php
-namespace Talis\Persona\Client;
+namespace \Talis\Persona\Client;
 
-use Talis\Persona\ValidationResults;
+use Talis\Persona\Client\ValidationResults;
 
 /**
  * A unexpected exception occurred.
@@ -16,7 +16,7 @@ class UnknownException extends TokenValidationException
     {
         parent::__construct(
             $msg,
-            ValidationResults::UNKNOWN_EXCEPTION
+            ValidationResults::UNKNOWN
         );
     }
 }

@@ -14,7 +14,7 @@ abstract class Base
     /**
      * Get the current Logger instance.
      *
-     * @return Mongolog\Logger
+     * @return \Monolog\Logger
      */
     protected function getLogger()
     {
