@@ -16,7 +16,7 @@
   "require": {
     "php": ">=5.3.0",
     "monolog/monolog": ">=1.13.1",
-    "domnikl/statsd": ">=1.0.2",
+    "domnikl/statsd": ">=1.0.2 <2.0.0",
     "psr/log": ">=1.0.0",
     "firebase/php-jwt": "^3.0",
     "doctrine/common": "^2.5",
