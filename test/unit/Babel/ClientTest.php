@@ -43,7 +43,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @expectedException \Talis\Babel\ClientException
-     * @expectedExceptionMessage babelHost must be specified
+     * @expectedExceptionMessage host must be specified
      */
     public function testConstructorFailure()
     {
@@ -69,7 +69,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @expectedException \Talis\Babel\ClientException
-     * @expectedExceptionMessage Missing token
+     * @expectedExceptionMessage Missing target or token
      */
     public function testGetTargetFeedWithNoToken()
     {
@@ -116,7 +116,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @expectedException \Talis\Babel\ClientException
-     * @expectedExceptionMessage Missing hasBody.format in data array
+     * @expectedExceptionMessage Missing format in data array
      */
     public function testCreateAnnotationMissingHasBodyFormat()
     {
@@ -129,7 +129,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @expectedException \Talis\Babel\ClientException
-     * @expectedExceptionMessage Missing hasBody.type in data array
+     * @expectedExceptionMessage Missing type in data array
      */
     public function testCreateAnnotationMissingHasBodyType()
     {
@@ -198,7 +198,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
 
         $this->setExpectedException(
             'Talis\Babel\ClientException',
-            "Error 400 for POST /annotations: {$responseBody['message']}"
+            "Error 400 for /annotations: {$responseBody['message']}"
         );
 
         $babelClient->createAnnotation(
@@ -227,7 +227,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
 
         $this->setExpectedException(
             'Talis\Babel\ClientException',
-            'Error 400 for GET ' . $path . ': ' . $responseBody['message']
+            'Error 400 for ' . $path . ': ' . $responseBody['message']
         );
 
         $babelClient->getTargetFeed('1234', 'someToken');
@@ -253,7 +253,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
 
         $this->setExpectedException(
             'Talis\Babel\ClientException',
-            'Error 500 for HEAD ' . $path
+            'Error 500 for ' . $path
         );
 
         $babelClient->getTargetFeedCount('1234', 'someToken');

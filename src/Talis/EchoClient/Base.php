@@ -108,4 +108,18 @@ abstract class Base
 
         return $this->personaClient;
     }
+
+    /**
+     * Parse date from string
+     * @param string $date date to parse
+     * @return null|date
+     */
+    protected function parseDate($date)
+    {
+        if (empty($date)) {
+            return null;
+        }
+
+        return date('c', $date);
+    }
 }

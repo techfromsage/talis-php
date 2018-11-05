@@ -99,13 +99,12 @@ abstract class Base
             );
         }
 
-        $this->logger = isset($config['logger']) ? $config['logger'] : null;
+        $this->logger = $this->get($config, 'logger', null);
         $this->cacheBackend = $config['cacheBackend'];
-        $this->keyPrefix = isset($config['cacheKeyPrefix']) ? $config['cacheKeyPrefix'] : '';
-        $this->defaultTtl = isset($config['cacheDefaultTTL']) ? $config['cacheDefaultTTL'] : 3600;
+        $this->keyPrefix = $this->get($config, 'cacheKeyPrefix', '');
+        $this->defaultTtl = $this->get($config, 'cacheDefaultTTL', 3600);
         $this->phpVersion = phpversion();
     }
-
 
     /**
      * Lazy-load statsD
@@ -336,7 +335,9 @@ abstract class Base
         $request = $this->createRequest($url, $opts);
         // Only caches GET & HEAD requests, see
         // \Doctrine\Common\Cache\DefaultCanCacheStrategy
-        $request->getParams()->set('cache.override_ttl', $opts['cacheTTL']);
+        if (isset($opts['cacheTTL'])) {
+            $request->getParams()->set('cache.override_ttl', $opts['cacheTTL']);
+        }
 
         try {
             $response = $request->send();
@@ -359,8 +360,24 @@ abstract class Base
             );
         }
 
-        $expectedResponseCode = $opts['expectResponse'] === true ? 200 : 204;
-        if ($response->getStatusCode() !== $expectedResponseCode) {
+        return $this->parseResponse($url, $response, $opts);
+    }
+
+    /**
+     * Parse the response from Persona.
+     * @param string $url url
+     * @param mixed $response response from persona
+     * @param array $opts options
+     * @return string|array
+     */
+    protected function parseResponse($url, $response, array $opts)
+    {
+        $parseJson = $this->get($opts, 'parseJson', false) === false;
+        $expectResponse = $this->get($opts, 'expectResponse', true) === true;
+        $expectedResponseCode = $expectResponse ? 200 : 204;
+        $statusCode = $response->getStatusCode();
+
+        if ($statusCode !== $expectedResponseCode) {
             $this->getLogger()->error(
                 'Did not retrieve expected response code',
                 ['opts' => $opts, 'url' => $url, 'response' => $response]
@@ -368,16 +385,16 @@ abstract class Base
 
             throw new \Exception(
                 'Did not retrieve expected response code from persona',
-                $response->getStatusCode()
+                $statusCode
             );
         }
 
         // Not expecting a body to be returned
-        if ($opts['expectResponse'] === false) {
+        if ($expectResponse === false) {
             return null;
         }
 
-        if ($opts['parseJson'] === false) {
+        if ($parseJson === false) {
             return $response->getBody();
         }
 
@@ -394,6 +411,22 @@ abstract class Base
         }
 
         return $json;
+    }
+
+    /**
+     * Get a value from a array, or return a default if the key doesn't exist.
+     * @param array $array array to find the value within
+     * @param string $key key to find the value from
+     * @param mixed $default value to return when key doesn't exist
+     * @return mixed
+     */
+    protected function get(array $array, $key, $default = null)
+    {
+        if (isset($array[$key])) {
+            return $array[$key];
+        }
+
+        return $default;
     }
 
     /**

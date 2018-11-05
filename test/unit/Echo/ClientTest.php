@@ -626,7 +626,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $response->setBody(
             '{"head":{"type":"hits","class":"test.player.view","group_by":"source","count":27},'
             . '"results":['
-            . '{"source":"web.talis-com.b50367b.2014-05-15","hits":45}'
+            . '{"source":"web.talis-com.b50367b.2014-05-15","hits":45},'
             . '{"source":"web.talis-com.b692220.2014-05-15","hits":9},'
             . '{"source":"mobile.android-v1.9","hits":16},'
             . '{"source":"web.talis-com.f1afa4f.2014-05-13","hits":21},'

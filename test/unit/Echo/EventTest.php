@@ -40,7 +40,6 @@ class EventTest extends \PHPUnit_Framework_TestCase
         return [
             [123, 'source', [], 'some-user', '123456789', '`class` must be a string'],
             ['class', 123, [], 'some-user', '123456789', '`source` must be a string'],
-            ['class', 'source', 123, 'some-user', '123456789', '`props` must be an array'],
             ['class', 'source', [], 123, '123456789', '`userId` must be a string'],
             ['class', 'source', [], 'some-user', 12345, '`timestamp` must be a string'],
         ];

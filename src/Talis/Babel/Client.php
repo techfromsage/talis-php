@@ -245,7 +245,13 @@ class Client
             }
         }
 
-        $this->checkKeysExist(['format', 'type'], $hasBody);
+        if (is_array($hasBody)) {
+            $this->checkKeysExist(['format', 'type'], $hasBody);
+        } else {
+            throw new \Talis\Babel\ClientException(
+                'hasBody must be an array containing format and type'
+            );
+        }
 
         $requestOptions = null;
         if ($bCreateSynchronously) {

@@ -86,19 +86,6 @@ class UsersTest extends TestBase
         $this->assertEquals('Max Payne', $user['profile']['name']);
     }
 
-    public function testGetUserByGuidsInvalidGuidsThrowsException()
-    {
-        $this->setExpectedException('InvalidArgumentException', 'Invalid guids');
-        $personaClient = new Users(
-            [
-                'userAgent' => 'unittest',
-                'persona_host' => 'localhost',
-                'cacheBackend' => $this->cacheBackend,
-            ]
-        );
-        $personaClient->getUserByGuids('', '');
-    }
-
     public function testGetUserByGuidsEmptyTokenThrowsException()
     {
         $this->setExpectedException('InvalidArgumentException', 'Invalid token');
@@ -174,7 +161,7 @@ class UsersTest extends TestBase
                 'cacheBackend' => $this->cacheBackend,
             ]
         );
-        $personaClient->createUser('', 'profile', 'token');
+        $personaClient->createUser('', [], 'token');
     }
 
     public function testCreateUserInvalidGupid()
@@ -187,7 +174,7 @@ class UsersTest extends TestBase
                 'cacheBackend' => $this->cacheBackend,
             ]
         );
-        $personaClient->createUser(['gupid'], 'profile', 'token');
+        $personaClient->createUser(['gupid'], [], 'token');
     }
 
     public function testCreateUserEmptyProfile()
@@ -204,19 +191,6 @@ class UsersTest extends TestBase
             ->method('performRequest')
             ->will($this->returnValue($expectedResponse));
         $mockClient->createUser('gupid', [], 'token');
-    }
-
-    public function testCreateUserInvalidProfile()
-    {
-        $this->setExpectedException('InvalidArgumentException', 'Invalid profile');
-        $personaClient = new Users(
-            [
-                'userAgent' => 'unittest',
-                'persona_host' => 'localhost',
-                'cacheBackend' => $this->cacheBackend,
-            ]
-        );
-        $personaClient->createUser('gupid', 'profile', 'token');
     }
 
     public function testCreateUserEmptyToken()
@@ -326,7 +300,7 @@ class UsersTest extends TestBase
                 'cacheBackend' => $this->cacheBackend,
             ]
         );
-        $personaClient->updateUser('123', 'PROFILE', '987');
+        $personaClient->updateUser('123', [], '987');
     }
 
     public function testUpdateUserEmptyToken()

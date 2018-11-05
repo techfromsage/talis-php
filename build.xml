@@ -54,7 +54,7 @@
         </exec>
     </target>
 
-    <target name="test" depends="clean, lint, code-check, unittest, integrationtest" description="Run all the tests"/>
+    <target name="test" depends="clean,  unittest, integrationtest" description="Run all the tests"/>
 
     <target name="lint" depends="clean">
         <echo>Running PHP Codesniffer for code quality...</echo>

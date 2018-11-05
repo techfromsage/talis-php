@@ -124,19 +124,6 @@ class OAuthClientsTest extends TestBase
         $personaClient->updateOAuthClient('123', [], '987');
     }
 
-    public function testUpdateOAuthClientInvalidProperties()
-    {
-        $this->setExpectedException('Exception', 'Invalid properties');
-        $personaClient = new OAuthClients(
-            [
-                'userAgent' => 'unittest',
-                'persona_host' => 'localhost',
-                'cacheBackend' => $this->cacheBackend,
-            ]
-        );
-        $personaClient->updateOAuthClient('123', 'PROPERTIES', '987');
-    }
-
     public function testUpdateOAuthClientInvalidPropertiesKeys()
     {
         $this->setExpectedException('Exception', 'Invalid properties');

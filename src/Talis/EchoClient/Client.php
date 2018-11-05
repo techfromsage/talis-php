@@ -202,8 +202,8 @@ class Client extends Base
             'key' => $key,
             'value' => $value,
             'format' => $format,
-            'to' => date('c', $toDate),
-            'from' => date('c', $fromDate),
+            'to' => $this->parseDate($toDate),
+            'from' => $this->parseDate($fromDate),
         ];
 
         foreach ($params as $key => $value) {

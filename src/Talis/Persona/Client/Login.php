@@ -59,12 +59,12 @@ class Login extends Base
      */
     public function validateAuth()
     {
-        if (!isset($_POST['persona:signature'])) {
+        if (!isset($_POST['persona:payload'])) {
             $this->getLogger()->error('Payload not set');
             throw new \Exception('Payload not set');
         }
 
-        if (!isset($_POST['persona:payload'])) {
+        if (!isset($_POST['persona:signature'])) {
             $this->getLogger()->error('Signature not set');
             throw new \Exception('Signature not set');
         }
@@ -226,7 +226,7 @@ class Login extends Base
             $query = [];
         }
 
-        if (empty($redirectUri)) {
+        if (!empty($redirectUri)) {
             $query['redirectUri'] = $redirectUri;
         }
 

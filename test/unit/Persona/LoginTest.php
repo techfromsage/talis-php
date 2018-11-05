@@ -160,6 +160,7 @@ class LoginTest extends TestBase
                 'cacheBackend' => $this->cacheBackend,
             ]
         );
+        $_POST['persona:payload'] = '';
         $personaClient->validateAuth();
     }
 
