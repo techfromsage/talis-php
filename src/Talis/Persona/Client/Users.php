@@ -10,7 +10,7 @@ class Users extends Base
      * @param string $token Persona oauth token
      * @param integer $cacheTTL amount of time to cache the request
      * @return mixed response from Persona
-e    * @throws \InvalidArgumentException either gupid or token is invalid
+     * @throws \InvalidArgumentException either gupid or token is invalid
      * @throws \Exception Http communication error
      */
     public function getUserByGupid($gupid, $token, $cacheTTL = 300)
