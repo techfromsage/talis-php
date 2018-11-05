@@ -8,7 +8,7 @@ use Guzzle\Http\Exception\RequestException;
 use Guzzle\Cache\DoctrineCacheAdapter;
 use Guzzle\Plugin\Cache\CachePlugin;
 use Guzzle\Plugin\Cache\DefaultCacheStorage;
-use \Domnikl\Statsd\Connection\UdpSocket;
+use \Domnikl\Statsd\Connection\Socket;
 use \Domnikl\Statsd\Connection\Blackhole;
 
 abstract class Base
@@ -117,7 +117,7 @@ abstract class Base
 
             if (!empty($connStr) && !empty(strpos($connStr, ':'))) {
                 list($host, $port) = explode(':', $connStr);
-                $conn = new UdpSocket($host, $port);
+                $conn = new Socket($host, $port);
             } else {
                 $conn = new Blackhole();
             }

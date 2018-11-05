@@ -344,7 +344,7 @@ class Client extends Base
      * @param array $opts query parameter options
      * @return string url
      */
-    protected function buildAnalyticsUrl($type, $class, array $opts)
+    protected function buildAnalyticsUrl($type, $class, array $opts = [])
     {
         $baseUrl = $this->getBaseUrl();
 

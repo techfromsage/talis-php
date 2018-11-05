@@ -63,7 +63,6 @@ abstract class Base
         return $this->tokenCacheClient;
     }
 
-
     /**
      * Returns the size of a given string in bytes
      *
@@ -74,7 +73,6 @@ abstract class Base
     {
         return strlen(utf8_decode($input));
     }
-
 
     /**
      * To allow mocking of the Guzzle client for testing.

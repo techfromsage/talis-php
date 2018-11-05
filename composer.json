@@ -13,13 +13,6 @@
   "homepage": "https://github.com/talis/talis-php",
   "type": "library",
   "license": "MIT",
-  "authors": [
-    {
-      "name": "Malcolm Landon",
-      "email": "ml@talis.com",
-      "homepage": "http://engineering.talis.com"
-    }
-  ],
   "require": {
     "php": ">=5.3.0",
     "monolog/monolog": ">=1.13.1",
