@@ -372,7 +372,7 @@ abstract class Base
      */
     protected function parseResponse($url, $response, array $opts)
     {
-        $parseJson = $this->get($opts, 'parseJson', false) === false;
+        $parseJson = $this->get($opts, 'parseJson', true) === true;
         $expectResponse = $this->get($opts, 'expectResponse', true) === true;
         $expectedResponseCode = $expectResponse ? 200 : 204;
         $statusCode = $response->getStatusCode();

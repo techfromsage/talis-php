@@ -100,7 +100,7 @@ class TokensTest extends TestBase
     public function testValidateTokenReturnsFalseIfTokenIsNotValid()
     {
         $this->assertEquals(
-            ValidationResults::InvalidToken,
+            ValidationResults::INVALID_TOKEN,
             $this->personaClient->validateToken(['access_token' => 'my token'])
         );
     }
@@ -119,7 +119,7 @@ class TokensTest extends TestBase
 
         // first validation call is validated by persona
         $this->assertEquals(
-            ValidationResults::Success,
+            ValidationResults::SUCCESS,
             $this->personaClient->validateToken(['access_token' => $token])
         );
     }
@@ -140,7 +140,7 @@ class TokensTest extends TestBase
 
         // first validation call is validated by persona
         $this->assertEquals(
-            ValidationResults::Success,
+            ValidationResults::SUCCESS,
             $this->personaClient->validateToken()
         );
     }
@@ -160,7 +160,7 @@ class TokensTest extends TestBase
         $_POST = ['access_token' => $token];
         // first validation call is validated by persona
         $this->assertEquals(
-            ValidationResults::Success,
+            ValidationResults::SUCCESS,
             $this->personaClient->validateToken()
         );
     }
@@ -182,7 +182,7 @@ class TokensTest extends TestBase
 
         // first validation call is validated by persona
         $this->assertEquals(
-            ValidationResults::Success,
+            ValidationResults::SUCCESS,
             $this->personaClient->validateToken()
         );
     }
@@ -204,7 +204,7 @@ class TokensTest extends TestBase
 
         // first validation call is validated by persona
         $this->assertEquals(
-            ValidationResults::Success,
+            ValidationResults::SUCCESS,
             $this->personaClient->validateToken(
                 [
                     'access_token' => $token,
