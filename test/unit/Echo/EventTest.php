@@ -1,8 +1,7 @@
 <?php
 namespace Talis\EchoClient;
 
-if (!defined('APPROOT'))
-{
+if (!defined('APPROOT')) {
     define('APPROOT', dirname(dirname(dirname(__DIR__))));
 }
 
@@ -16,8 +15,7 @@ class EventTest extends \PHPUnit_Framework_TestCase
 {
     public function setUp()
     {
-
-        define('ECHO_CLASS_PREFIX','test.');
+        define('ECHO_CLASS_PREFIX', 'test.');
     }
 
 
@@ -40,11 +38,10 @@ class EventTest extends \PHPUnit_Framework_TestCase
     public function badConstructorArgsProvider()
     {
         return [
-            [123, 'source', array(), 'some-user', '123456789', '`class` must be a string'],
-            ['class', 123, array(), 'some-user', '123456789', '`source` must be a string'],
-            ['class', 'source', 123, 'some-user', '123456789', '`props` must be an array'],
-            ['class', 'source', array(), 123, '123456789', '`userId` must be a string'],
-            ['class', 'source', array(), 'some-user', 12345, '`timestamp` must be a string']
+            [123, 'source', [], 'some-user', '123456789', '`class` must be a string'],
+            ['class', 123, [], 'some-user', '123456789', '`source` must be a string'],
+            ['class', 'source', [], 123, '123456789', '`userId` must be a string'],
+            ['class', 'source', [], 'some-user', 12345, '`timestamp` must be a string'],
         ];
     }
 
@@ -56,17 +53,17 @@ class EventTest extends \PHPUnit_Framework_TestCase
 
         $class = 'some-class';
         $source = 'some-source';
-        $props = array('foo' => 'bar');
+        $props = ['foo' => 'bar'];
         $userId = 'some-user';
         $timestamp = '1234567890';
 
-        $expected = json_encode(array(
+        $expected = json_encode([
             'class' => ECHO_CLASS_PREFIX . $class,
             'source' => $source,
             'props' => $props,
             'user' => $userId,
-            'timestamp' => $timestamp
-        ));
+            'timestamp' => $timestamp,
+        ]);
 
         $event = new \Talis\EchoClient\Event($class, $source, $props, $userId, $timestamp);
         $this->assertEquals($expected, json_encode($event, true));
@@ -81,15 +78,15 @@ class EventTest extends \PHPUnit_Framework_TestCase
 
         $class = 'some-class';
         $source = 'some-source';
-        $props = array('foo' => 'bar');
+        $props = ['foo' => 'bar'];
         $timestamp = '1234567890';
 
-        $expected = json_encode(array(
+        $expected = json_encode([
             'class' => ECHO_CLASS_PREFIX . $class,
             'source' => $source,
             'props' => $props,
-            'timestamp' => $timestamp
-        ));
+            'timestamp' => $timestamp,
+        ]);
 
         $event = new \Talis\EchoClient\Event($class, $source, $props, null, $timestamp);
         $this->assertEquals($expected, json_encode($event, true));
@@ -104,18 +101,17 @@ class EventTest extends \PHPUnit_Framework_TestCase
 
         $class = 'some-class';
         $source = 'some-source';
-        $props = array('foo' => 'bar');
+        $props = ['foo' => 'bar'];
         $userId = 'some-user';
 
-        $expected = json_encode(array(
+        $expected = json_encode([
             'class' => ECHO_CLASS_PREFIX . $class,
             'source' => $source,
             'props' => $props,
-            'user' => $userId
-        ));
+            'user' => $userId,
+        ]);
 
         $event = new \Talis\EchoClient\Event($class, $source, $props, $userId, null);
         $this->assertEquals($expected, json_encode($event, true));
     }
-
 }

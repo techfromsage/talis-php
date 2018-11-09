@@ -1,24 +1,38 @@
 version: '2'
 
 services:
+  init:
+    image: talis/talis-php
+    volumes:
+      - ".:/var/talis-php"
+    command: /bin/bash -c "service redis-server start && source /etc/profile.d/* && ant init"
+  lint:
+    image: talis/talis-php
+    volumes:
+      - ".:/var/talis-php"
+    command: /bin/bash -c "service redis-server start && source /etc/profile.d/* && ant lint"
+  lint-stan:
+    image: phpstan/phpstan
+    volumes:
+      - ".:/app"
+    command: 'analyse /app'
+  codecheck:
+    image: talis/talis-php
+    volumes:
+      - ".:/var/talis-php"
+    command: /bin/bash -c "service redis-server start && source /etc/profile.d/* && ant code-check"
   test:
     image: talis/talis-php
     volumes:
-      - "./src:/var/talis-php/src"
-      - "./test:/var/talis-php/test"
-      - "./build.xml:/var/talis-php/build.xml"
+      - ".:/var/talis-php"
     command: /bin/bash -c "service redis-server start && source /etc/profile.d/* && ant test"
   unittest:
     image: talis/talis-php
     volumes:
-      - "./src:/var/talis-php/src"
-      - "./test:/var/talis-php/test"
-      - "./build.xml:/var/talis-php/build.xml"
+      - ".:/var/talis-php"
     command: /bin/bash -c "service redis-server start && source /etc/profile.d/* && ant unittest"
   integrationtest:
     image: talis/talis-php
     volumes:
-      - "./src:/var/talis-php/src"
-      - "./test:/var/talis-php/test"
-      - "./build.xml:/var/talis-php/build.xml"
+      - ".:/var/talis-php"
     command: /bin/bash -c "service redis-server start && source /etc/profile.d/* && ant integrationtest"

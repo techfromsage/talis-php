@@ -38,66 +38,66 @@ class Client
     /**
      * Babel client must be created with a host/port to connect to Babel.
      *
-     * @param $babelHost
-     * @param $babelPort
-     * @throws ClientException
+     * @param string $host babel http url
+     * @param integer|string $port babel http port
+     * @throws ClientException Invalid babel host parameter
      */
-    function __construct($babelHost, $babelPort=null)
+    public function __construct($host, $port = null)
     {
-        if (empty($babelHost))
-        {
-            throw new \Talis\Babel\ClientException('babelHost must be specified');
+        if (empty($host)) {
+            throw new \Talis\Babel\ClientException('host must be specified');
         }
 
-        if (!preg_match('/^http/', $babelHost))
-        {
-            throw new \Talis\Babel\ClientException('babelHost must also specify a scheme, either http:// or https://');
+        if (!preg_match('/^https?:\/\//', $host)) {
+            throw new \Talis\Babel\ClientException(
+                'host must also specify a scheme, either http:// or https://'
+            );
         }
 
-        $this->babelHost = $babelHost;
-        $this->babelPort = $babelPort;
+        $this->babelHost = $host;
+        $this->babelPort = $port;
     }
 
     /**
      * Specify an instance of MonoLog Logger for the Babel client to use.
-     * @param Logger $logger
+     * @param \Psr\Log\LoggerInterface $logger logger to use
      */
-    function setLogger(\Psr\Log\LoggerInterface $logger)
+    public function setLogger(\Psr\Log\LoggerInterface $logger)
     {
         $this->logger = $logger;
     }
 
     /**
-     * Get a feed based off a target identifier. Return either a list of feed identifiers, or hydrate it and
-     * pass back the data as well
+     * Get a feed based off a target identifier. Return either a list of feed
+     * identifiers, or hydrate it and pass back the data as well.
      *
      * @param string $target Feed target identifier
      * @param string $token Persona token
-     * @param bool $hydrate Gets a fully hydrated feed, i.e. actually contains the posts
+     * @param boolean $hydrate Gets fully hydrated feed, i.e. contains the posts
      * @param array $options Valid values for the options array:-
-     *   delta_token  - Filter to annotations made after the high water mark represented by delta_token
+     *   delta_token  - Filter to annotations made after the high water mark
+     *      represented by delta_token
      *   limit        - limit returned results
      *   offset       - offset start of results
-     * @throws \Talis\Babel\ClientException
+     * @throws \Talis\Babel\ClientException Error communicating with Babel
      * @return mixed
      */
-    function getTargetFeed($target, $token, $hydrate=false, array $options=array())
+    public function getTargetFeed($target, $token, $hydrate = false, array $options = [])
     {
-        if (empty($target))
-        {
-            throw new \Talis\Babel\ClientException('Missing target');
-        }
-        if (empty($token))
-        {
-            throw new \Talis\Babel\ClientException('Missing token');
+        if (empty($target) || empty($token)) {
+            throw new \Talis\Babel\ClientException('Missing target or token');
         }
 
-        $url = '/feeds/targets/'.md5($target).'/activity/annotations'.($hydrate ? '/hydrate':'');
+        $hash = md5($target);
+        $url = "/feeds/targets/$hash/activity/annotations";
+
+        if ($hydrate) {
+            $url .= '/hydrate';
+        }
 
         $queryString = http_build_query($options);
-        if (!empty($queryString))
-        {
-            $url .= '?'.$queryString;
+        if (!empty($queryString)) {
+            $url .= "?$queryString";
         }
 
         return $this->performBabelGet($url, $token);
@@ -105,52 +105,58 @@ class Client
 
     /**
      * Gets the count of new items on the $target feed since $deltaToken was issued
-     * @param $target
-     * @param $token
-     * @param int $deltaToken
+     * @param string $target target feed
+     * @param string $token persona oauth token
+     * @param integer $deltaToken delta token for feed
      * @return mixed
-     * @throws \Talis\Babel\ClientException
-     * @throws InvalidPersonaTokenException
-     * @throws NotFoundException
+     * @throws \Talis\Babel\ClientException Issue communicating with Babel
+     * @throws InvalidPersonaTokenException Invalid Persona token
+     * @throws NotFoundException Could not find feed
      */
-    function getTargetFeedCount($target, $token, $deltaToken=0)
+    public function getTargetFeedCount($target, $token, $deltaToken = 0)
     {
-        if (empty($target))
-        {
-            throw new \Talis\Babel\ClientException('Missing target');
-        }
-        if (empty($token))
-        {
-            throw new \Talis\Babel\ClientException('Missing token');
+        if (empty($target) || empty($token)) {
+            throw new \Talis\Babel\ClientException('Missing target or token');
         }
 
-        $url = '/feeds/targets/'.md5($target)."/activity/annotations?delta_token=$deltaToken";
+        $hash = md5($target);
+        $queryParams = http_build_query(['delta_token' => $deltaToken]);
+        $url = "/feeds/targets/$hash/activity/annotations?$queryParams";
 
-        $headers = $this->performBabelHead($url,$token);
-        $newItemsHeader = $headers->get("X-Feed-New-Items")->toArray();
-        if (count($newItemsHeader)!==1)
-        {
-            throw new \Talis\Babel\ClientException('Unexpected amount of X-Feed-New-Items headers returned');
+        $headers = $this->performBabelHead($url, $token);
+        $newItemsHeader = $headers->get('X-Feed-New-Items')->toArray();
+
+        if (count($newItemsHeader) !== 1) {
+            throw new \Talis\Babel\ClientException(
+                'Unexpected amount of X-Feed-New-Items headers returned'
+            );
         }
+
         return intval($newItemsHeader[0]);
     }
 
     /***
-     * Queries multiple feeds. Given an array of feed ids it will return a merged hydrated feed.
+     * Queries multiple feeds. Given an array of feed ids it will return a
+     * merged hydrated feed.
      *
-     * NB: "feedIds" are fairly cryptic redis keys it seems, according to the limited docs in babel-server.
-     *     An example would be 'targets:<md5 hash of targetUri>:activity'.
-     *     There maybe other examples of feedIds but I've not found them yet...
+     * NB: "feedIds" are fairly cryptic redis keys it seems, according to
+     * the limited docs in babel-server.
+     *
+     * An example would be 'targets:<md5 hash of targetUri>:activity'.
+     * There maybe other examples of feedIds but I've not found them yet...
      *
      * @param array $feedIds An array of Feed Identifiers (see note above)
      * @param string $token Persona token
-     * @throws \Talis\Babel\ClientException
-     * @return array
+     * @throws \Talis\Babel\ClientException Babel communication error
+     * @return array response from babel
      */
-    function getFeeds(array $feedIds, $token)
+    public function getFeeds(array $feedIds, $token)
     {
-        $strFeedIds = implode(',', $feedIds);
-        $url = '/feeds/annotations/hydrate?feed_ids='.urlencode($strFeedIds);
+        $queryParams = http_build_query([
+            'feed_ids' => implode(',', $feedIds)
+        ]);
+
+        $url = "/feeds/annotations/hydrate?$queryParams";
         return $this->performBabelGet($url, $token);
     }
 
@@ -159,7 +165,7 @@ class Client
      *
      * TODO See if all these are supported in the node client...
      *
-     * @param $token
+     * @param string $token Persona oauth token
      * @param array $options Valid values for the options array:-
      *   hasTarget    - restrict to a specific target
      *   annotatedBy  - restrict to annotations made by a specific user
@@ -169,18 +175,17 @@ class Client
      *   limit        - limit returned results
      *   offset       - offset start of results
      * @return mixed
-     * @throws \Talis\Babel\ClientException
-     * @throws InvalidPersonaTokenException
-     * @throws NotFoundException
+     * @throws \Talis\Babel\ClientException Babel communication error
+     * @throws InvalidPersonaTokenException Invalid token
+     * @throws NotFoundException Cannot find feed
      */
-    function getAnnotations($token, array $options=array())
+    public function getAnnotations($token, array $options = [])
     {
         $url = '/annotations';
+        $queryParams = http_build_query($options);
 
-        $queryString = http_build_query($options);
-        if (!empty($queryString))
-        {
-            $url .= '?'.$queryString;
+        if (!empty($queryParams)) {
+            $url .= "?$queryParams";
         }
 
         return $this->performBabelGet($url, $token);
@@ -207,279 +212,184 @@ class Client
      *
      * @param string $token A valid Persona token.
      * @param array $arrData The data from which to create the annotation
-     * @param bool $bCreateSynchronously If set, will not return until the feed for this annotation has also been created in Redis.
-     * @throws InvalidPersonaTokenException
-     * @throws \Talis\Babel\ClientException
+     * @param boolean $bCreateSynchronously If set, will not return until
+     *      the feed for this annotation has also been created in Redis.
+     * @throws InvalidPersonaTokenException Invalid Persona token.
+     * @throws \Talis\Babel\ClientException Babel communication error.
      * @return array
      */
-    function createAnnotation($token, array $arrData, $bCreateSynchronously=false)
+    public function createAnnotation($token, array $arrData, $bCreateSynchronously = false)
     {
-        if (empty($token))
-        {
-            throw new InvalidPersonaTokenException('No persona token specified');
+        if (empty($token)) {
+            throw new InvalidPersonaTokenException(
+                'No persona token specified'
+            );
         }
 
-        if (!array_key_exists('annotatedBy', $arrData))
-        {
-            throw new \Talis\Babel\ClientException("Missing annotatedBy in data array");
-        }
+        $this->checkKeysExist(['annotatedBy', 'hasTarget', 'hasBody'], $arrData);
 
-        if (!array_key_exists('hasTarget', $arrData))
-        {
-            throw new \Talis\Babel\ClientException("Missing hasTarget in data array");
-        }
-        if (!is_array($arrData['hasTarget']))
-        {
-            throw new \Talis\Babel\ClientException('hasTarget must be an array containing uri');
-        }
         $hasTarget = $arrData['hasTarget'];
-        if (!array_key_exists('uri', $hasTarget))
-        {
+        $hasBody = $arrData['hasBody'];
+
+        if (!is_array($arrData['hasTarget'])) {
+            throw new \Talis\Babel\ClientException(
+                'hasTarget must be an array containing uri'
+            );
+        }
+
+        // TODO: doesn't check for empty array
+        if (!array_key_exists('uri', $hasTarget)) {
             // perhaps it is multi-target
-            foreach($hasTarget as $h)
-            {
-                if (!array_key_exists('uri', $h))
-                {
-                    throw new \Talis\Babel\ClientException("Missing hasTarget.uri in data array");
-                }
+            foreach ($hasTarget as $h) {
+                $this->checkKeysExist(['uri'], $h);
             }
         }
 
-        if (!array_key_exists('hasBody', $arrData))
-        {
-            throw new \Talis\Babel\ClientException('Missing hasBody in data array');
-        }
-        if (!is_array($arrData['hasBody']))
-        {
-            throw new \Talis\Babel\ClientException('hasBody must be an array containing format and type');
-        }
-        $hasBody = $arrData['hasBody'];
-        if (!array_key_exists('format', $hasBody))
-        {
-            throw new \Talis\Babel\ClientException("Missing hasBody.format in data array");
-        }
-        if (!array_key_exists('type', $hasBody))
-        {
-            throw new \Talis\Babel\ClientException("Missing hasBody.type in data array");
+        if (is_array($hasBody)) {
+            $this->checkKeysExist(['format', 'type'], $hasBody);
+        } else {
+            throw new \Talis\Babel\ClientException(
+                'hasBody must be an array containing format and type'
+            );
         }
 
-        if ($bCreateSynchronously)
-        {
-            // Specific header that Babel server accepts to not return until the feed has also been created for the annotation.
-            $requestOptions = array('headers'=>array('X-Ingest-Synchronously'=>'true'));
-        }
-        else
-        {
-            $requestOptions = null;
+        $requestOptions = null;
+        if ($bCreateSynchronously) {
+            // Specific header that Babel server accepts to not return until the
+            // feed has also been created for the annotation.
+            $requestOptions = ['headers' => ['X-Ingest-Synchronously' => 'true']];
         }
 
         $url = '/annotations';
-
         return $this->performBabelPost($url, $token, $arrData, $requestOptions);
     }
-
 
     /**
      * Perform a GET request against Babel and return the response or handle error.
      *
-     * @param $url
-     * @param $token
-     * @return mixed
-     * @throws InvalidPersonaTokenException
-     * @throws NotFoundException
-     * @throws \Talis\Babel\ClientException
+     * @param string $url Babel url
+     * @param string $token Persona oauth token
+     * @return mixed response from babel
+     * @throws InvalidPersonaTokenException Invalid persona token
+     * @throws NotFoundException Babel feed not found
+     * @throws \Talis\Babel\ClientException Cannot communicate with Babel
      */
     protected function performBabelGet($url, $token)
     {
-        $headers = array(
-            'Accept'=>'application/json',
-            'Authorization'=>'Bearer '.$token
-        );
+        $headers = [
+            'Accept' => 'application/json',
+            'Authorization' => "Bearer $token",
+        ];
 
-        $this->getLogger()->debug('Babel GET: '.$url, $headers);
-
+        $this->getLogger()->debug("Babel GET: $url", $headers);
         $httpClient = $this->getHttpClient();
 
-        $request = $httpClient->get($url, $headers, array('exceptions'=>false));
-
+        $request = $httpClient->get($url, $headers, ['exceptions' => false]);
         $response = $request->send();
 
-        if ($response->isSuccessful())
-        {
+        if ($response->isSuccessful()) {
             $responseBody = $response->getBody(true);
-
             $arrResponse = json_decode($responseBody, true);
-            if ($arrResponse == null)
-            {
-                $this->getLogger()->error('Failed to decode JSON response: '.$responseBody);
-                throw new \Talis\Babel\ClientException('Failed to decode JSON response: '.$responseBody);
+
+            if ($arrResponse == null) {
+                $msg = "Failed to decode JSON response: $responseBody";
+                $this->getLogger()->error($msg);
+                throw new \Talis\Babel\ClientException($msg);
             }
 
             return $arrResponse;
         }
-        else
-        {
-            /*
-             * For error scenarios we want to distinguish Persona problems and instances where no data is found.
-             * Anything else raises a generic \Talis\Babel\ClientException.
-             */
-            $statusCode = $response->getStatusCode();
-            switch ($statusCode)
-            {
-                case 401:
-                    $this->getLogger()->error('Persona token invalid/expired for request: GET '.$url);
-                    throw new InvalidPersonaTokenException('Persona token is either invalid or has expired');
-                case 404:
-                    $this->getLogger()->error('Nothing found for request: GET '.$url);
-                    throw new NotFoundException('Nothing found for request:'.$url);
-                default:
-                    $errorMessage = 'Unknown error';
-                    $responseBody = $response->getBody(true);
-                    if ($responseBody)
-                    {
-                        $arrResponse = json_decode($responseBody, true);
-                        if (is_array($arrResponse) && array_key_exists('message', $arrResponse))
-                        {
-                            $errorMessage = $arrResponse['message'];
-                        }
-                    }
-                    $this->getLogger()->error('Babel GET failed for request: '.$url, array('statusCode'=>$statusCode, 'message'=>$response->getMessage(), 'body'=>$responseBody));
-                    throw new \Talis\Babel\ClientException("Error ${statusCode} for GET ${url}: ${errorMessage}", $statusCode);
-            }
-        }
+
+        /*
+         * For error scenarios we want to distinguish Persona problems and
+         * instances where no data is found.  Anything else raises a generic
+         * \Talis\Babel\ClientException.
+         */
+        $this->handleBabelError($url, $response);
     }
 
     /**
-     * Perform a HEAD request against Babel and return the response headers or handle error.
+     * Perform a HEAD request against Babel and return the response headers
+     * or handle error.
      *
-     * @param $url
-     * @param $token
+     * @param string $url babel url
+     * @param string $token persona oauth token
      * @return HeaderCollection
-     * @throws InvalidPersonaTokenException
-     * @throws NotFoundException
-     * @throws \Talis\Babel\ClientException
+     * @throws InvalidPersonaTokenException Invalid Persona oauth token
+     * @throws NotFoundException Babel feed not found
+     * @throws \Talis\Babel\ClientException Could not communicate with Babel
      */
     protected function performBabelHead($url, $token)
     {
-        $headers = array(
-            'Accept'=>'application/json',
-            'Authorization'=>'Bearer '.$token
-        );
+        $headers = [
+            'Accept' => 'application/json',
+            'Authorization' => "Bearer $token",
+        ];
 
         $this->getLogger()->debug('Babel HEAD: '.$url, $headers);
 
         $httpClient = $this->getHttpClient();
-
-        $request = $httpClient->head($url, $headers, array('exceptions'=>false));
-
+        $request = $httpClient->head($url, $headers, ['exceptions' => false]);
         $response = $request->send();
 
-        if ($response->isSuccessful())
-        {
+        if ($response->isSuccessful()) {
             return $response->getHeaders();
         }
-        else
-        {
-            /*
-             * For error scenarios we want to distinguish Persona problems and instances where no data is found.
-             * Anything else raises a generic \Talis\Babel\ClientException.
-             */
-            $statusCode = $response->getStatusCode();
-            switch ($statusCode)
-            {
-                case 401:
-                    $this->getLogger()->error('Persona token invalid/expired for request: HEAD '.$url);
-                    throw new InvalidPersonaTokenException('Persona token is either invalid or has expired');
-                case 404:
-                    $this->getLogger()->error('Nothing found for request: HEAD '.$url);
-                    throw new NotFoundException('Nothing found for request:'.$url);
-                default:
-                    $this->getLogger()->error('Babel HEAD failed for request: '.$url, array('statusCode'=>$statusCode, 'message'=>$response->getMessage(), 'body'=>$response->getBody(true)));
-                    throw new \Talis\Babel\ClientException("Error ${statusCode} for HEAD ${url}", $statusCode);
-            }
-        }
+
+        /*
+         * For error scenarios we want to distinguish Persona problems and
+         * instances where no data is found.  Anything else raises a generic
+         * \Talis\Babel\ClientException.
+         */
+        $this->handleBabelError($url, $response);
     }
 
     /**
      * Perform a GET request against Babel and return the response or handle error.
      *
-     * @param $url
-     * @param $token
-     * @param array $arrData
+     * @param string $url babel http url
+     * @param string $token persona oauth token
+     * @param array $arrData http post parameters
      * @param array|null $requestOptions Additional request options to use.
      * @return mixed
-     * @throws InvalidPersonaTokenException
-     * @throws \Talis\Babel\ClientException
+     * @throws InvalidPersonaTokenException Invalid Persona token
+     * @throws \Talis\Babel\ClientException Babel communication errors
      */
-    protected function performBabelPost($url, $token, array $arrData, $requestOptions=null)
+    protected function performBabelPost($url, $token, array $arrData, array $requestOptions = null)
     {
-        if (empty($requestOptions))
-        {
-            $requestOptions = array();
-        }
-        elseif (!is_array($requestOptions))
-        {
-            throw new \Talis\Babel\ClientException('requestOptions must be an array');
+        if (empty($requestOptions)) {
+            $requestOptions = [];
         }
 
-        $headers = array(
-            'Accept'=>'application/json',
-            'Authorization'=>'Bearer '.$token
-        );
+        $headers = [
+            'Accept' => 'application/json',
+            'Authorization' => "Bearer $token",
+        ];
 
-        if (isset($requestOptions['headers']))
-        {
+        if (isset($requestOptions['headers'])) {
             $headers = array_merge($headers, $requestOptions['headers']);
         }
 
-        $this->getLogger()->debug('Babel POST: '.$url, $arrData);
+        $this->getLogger()->debug("Babel POST: $url", $arrData);
 
         $httpClient = $this->getHttpClient();
-
-        $request = $httpClient->post($url, $headers, $arrData, array('exceptions'=>false));
-
+        $request = $httpClient->post($url, $headers, $arrData, ['exceptions' => false]);
         $response = $request->send();
 
-        if ($response->isSuccessful())
-        {
+        if ($response->isSuccessful()) {
             $responseBody = $response->getBody(true);
-
             $arrResponse = json_decode($responseBody, true);
-            if ($arrResponse == null)
-            {
-                $this->getLogger()->error('Failed to decode JSON response: '.$responseBody);
-                throw new \Talis\Babel\ClientException('Failed to decode JSON response: '.$responseBody);
+
+            if ($arrResponse == null) {
+                $msg = "Failed to decode JSON response: $responseBody";
+                $this->getLogger()->error($msg);
+                throw new \Talis\Babel\ClientException($msg);
             }
 
             return $arrResponse;
         }
-        else
-        {
-            /*
-             * Is is a Persona token problem?
-             */
-            $statusCode = $response->getStatusCode();
-            if ($statusCode == 401)
-            {
-                $this->getLogger()->error('Persona token invalid/expired for request: POST '.$url);
-                throw new InvalidPersonaTokenException('Persona token is either invalid or has expired');
-            }
-            else
-            {
-                $errorMessage = 'Unknown error';
-                $responseBody = $response->getBody(true);
-                if ($responseBody)
-                {
-                    $arrResponse = json_decode($responseBody, true);
-                    if (is_array($arrResponse) && array_key_exists('message', $arrResponse))
-                    {
-                        $errorMessage = $arrResponse['message'];
-                    }
-                }
-                $this->getLogger()->error('Babel POST failed for request: '.$url, array('statusCode'=>$statusCode, 'message'=>$response->getMessage(), 'body'=>$responseBody));
-                throw new \Talis\Babel\ClientException("Error ${statusCode} for POST ${url}: ${errorMessage}" , $statusCode);
-            }
-        }
+
+        $this->handleBabelError($url, $response);
     }
 
     /**
@@ -488,8 +398,7 @@ class Client
      */
     protected function getLogger()
     {
-        if ($this->logger == null)
-        {
+        if ($this->logger == null) {
             $this->logger = new Logger('BabelClient');
             $this->logger->pushHandler(new StreamHandler('php://stderr', Logger::DEBUG));
         }
@@ -522,21 +431,76 @@ class Client
      */
     protected function getHttpClient()
     {
-        if ($this->httpClient == null)
-        {
+        if ($this->httpClient == null) {
             $port = $this->getBabelPort();
-            if ($port == null)
-            {
-                $baseUrl = $this->getBabelHost();
-            }
-            else
-            {
-                $baseUrl = $this->getBabelHost().':'.$this->getBabelPort();
+            $baseUrl = $this->getBabelHost();
+
+            if ($port != null) {
+                $baseUrl .= ":$port";
             }
 
             $this->httpClient = new \Guzzle\Http\Client($baseUrl);
         }
 
         return $this->httpClient;
+    }
+
+    /**
+     * Check that all checks exist within array
+     * @param array $keys keys to check for
+     * @param array $array which holds expected keys
+     * @throws \Talis\Babel\ClientException Key missing
+     */
+    protected function checkKeysExist(array $keys, array $array)
+    {
+        foreach ($keys as $key) {
+            if (array_key_exists($key, $array) === false) {
+                throw new \Talis\Babel\ClientException("Missing $key in data array");
+            }
+        }
+    }
+
+    /**
+     * Handle a babel error response
+     * @param string $url babel url which was called
+     * @param mixed $response http response
+     */
+    protected function handleBabelError($url, $response)
+    {
+        $statusCode = $response->getStatusCode();
+
+        switch ($statusCode) {
+            case 401:
+                $this->getLogger()->error("Persona token invalid/expired for request: $url");
+                throw new InvalidPersonaTokenException('Persona token is either invalid or has expired');
+            case 404:
+                $this->getLogger()->error("Nothing found for request: $url");
+                throw new NotFoundException("Nothing found for request: $url");
+            default:
+                $errorMessage = 'Unknown error';
+                $responseBody = $response->getBody(true);
+
+                if ($responseBody) {
+                    $arrResponse = json_decode($responseBody, true);
+
+                    if (is_array($arrResponse) && array_key_exists('message', $arrResponse)) {
+                        $errorMessage = $arrResponse['message'];
+                    }
+                }
+
+                $this->getLogger()->error(
+                    "Babel failed for request: $url",
+                    [
+                        'statusCode' => $statusCode,
+                        'message' => $response->getMessage(),
+                        'body' => $responseBody,
+                    ]
+                );
+
+                throw new \Talis\Babel\ClientException(
+                    "Error {$statusCode} for {$url}: {$errorMessage}",
+                    $statusCode
+                );
+        }
     }
 }

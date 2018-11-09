@@ -11,7 +11,7 @@ require_once $appRoot . '/test/unit/TestBase.php';
 
 class UsersTest extends TestBase
 {
-    function testGetUserByGupidEmptyGupidThrowsException()
+    public function testGetUserByGupidEmptyGupidThrowsException()
     {
         $this->setExpectedException('InvalidArgumentException', 'Invalid gupid');
         $personaClient = new Users(
@@ -24,7 +24,7 @@ class UsersTest extends TestBase
         $personaClient->getUserByGupid('', '');
     }
 
-    function testGetUserByGupidEmptyTokenThrowsException()
+    public function testGetUserByGupidEmptyTokenThrowsException()
     {
         $this->setExpectedException('InvalidArgumentException', 'Invalid token');
         $personaClient = new Users(
@@ -37,7 +37,7 @@ class UsersTest extends TestBase
         $personaClient->getUserByGupid('123', '');
     }
 
-    function testGetUserByGupidThrowsExceptionWhenGupidNotFound()
+    public function testGetUserByGupidThrowsExceptionWhenGupidNotFound()
     {
         $this->setExpectedException('Exception', 'Did not retrieve successful response code');
         $mockClient = $this->getMock('Talis\Persona\Client\Users', ['performRequest'], [
@@ -54,7 +54,7 @@ class UsersTest extends TestBase
         $mockClient->getUserByGupid('123', '456');
     }
 
-    function testGetUserByGupidReturnsUserWhenGupidFound()
+    public function testGetUserByGupidReturnsUserWhenGupidFound()
     {
         $mockClient = $this->getMock('Talis\Persona\Client\Users', ['performRequest'], [
             [
@@ -86,20 +86,7 @@ class UsersTest extends TestBase
         $this->assertEquals('Max Payne', $user['profile']['name']);
     }
 
-    function testGetUserByGuidsInvalidGuidsThrowsException()
-    {
-        $this->setExpectedException('InvalidArgumentException', 'Invalid guids');
-        $personaClient = new Users(
-            [
-                'userAgent' => 'unittest',
-                'persona_host' => 'localhost',
-                'cacheBackend' => $this->cacheBackend,
-            ]
-        );
-        $personaClient->getUserByGuids('', '');
-    }
-
-    function testGetUserByGuidsEmptyTokenThrowsException()
+    public function testGetUserByGuidsEmptyTokenThrowsException()
     {
         $this->setExpectedException('InvalidArgumentException', 'Invalid token');
         $personaClient = new Users(
@@ -112,7 +99,7 @@ class UsersTest extends TestBase
         $personaClient->getUserByGuids(['123'], '');
     }
 
-    function testGetUserByGuidsThrowsExceptionWhenGuidsNotFound()
+    public function testGetUserByGuidsThrowsExceptionWhenGuidsNotFound()
     {
         $this->setExpectedException('Exception', 'Error finding user profiles: Could not retrieve OAuth response code');
         $mockClient = $this->getMock('Talis\Persona\Client\Users', ['performRequest'], [
@@ -129,7 +116,7 @@ class UsersTest extends TestBase
         $mockClient->getUserByGuids(['HK-47'], '456');
     }
 
-    function testGetUserByGuidsReturnsUserWhenGuidsFound()
+    public function testGetUserByGuidsReturnsUserWhenGuidsFound()
     {
         $mockClient = $this->getMock('Talis\Persona\Client\Users', ['performRequest'], [
             [
@@ -164,7 +151,7 @@ class UsersTest extends TestBase
         $this->assertEquals('Max Payne', $users[0]['profile']['name']);
     }
 
-    function testCreateUserEmptyGupid()
+    public function testCreateUserEmptyGupid()
     {
         $this->setExpectedException('InvalidArgumentException', 'Invalid gupid');
         $personaClient = new Users(
@@ -174,10 +161,10 @@ class UsersTest extends TestBase
                 'cacheBackend' => $this->cacheBackend,
             ]
         );
-        $personaClient->createUser('', 'profile', 'token');
+        $personaClient->createUser('', [], 'token');
     }
 
-    function testCreateUserInvalidGupid()
+    public function testCreateUserInvalidGupid()
     {
         $this->setExpectedException('InvalidArgumentException', 'Invalid gupid');
         $personaClient = new Users(
@@ -187,10 +174,10 @@ class UsersTest extends TestBase
                 'cacheBackend' => $this->cacheBackend,
             ]
         );
-        $personaClient->createUser(['gupid'], 'profile', 'token');
+        $personaClient->createUser(['gupid'], [], 'token');
     }
 
-    function testCreateUserEmptyProfile()
+    public function testCreateUserEmptyProfile()
     {
         $mockClient = $this->getMock('Talis\Persona\Client\Users', ['performRequest'], [
             [
@@ -206,20 +193,7 @@ class UsersTest extends TestBase
         $mockClient->createUser('gupid', [], 'token');
     }
 
-    function testCreateUserInvalidProfile()
-    {
-        $this->setExpectedException('InvalidArgumentException', 'Invalid profile');
-        $personaClient = new Users(
-            [
-                'userAgent' => 'unittest',
-                'persona_host' => 'localhost',
-                'cacheBackend' => $this->cacheBackend,
-            ]
-        );
-        $personaClient->createUser('gupid', 'profile', 'token');
-    }
-
-    function testCreateUserEmptyToken()
+    public function testCreateUserEmptyToken()
     {
         $this->setExpectedException('InvalidArgumentException', 'Invalid token');
         $personaClient = new Users(
@@ -232,7 +206,7 @@ class UsersTest extends TestBase
         $personaClient->createUser('gupid', ['email' => ''], '');
     }
 
-    function testCreateUserInvalidToken()
+    public function testCreateUserInvalidToken()
     {
         $this->setExpectedException('InvalidArgumentException', 'Invalid token');
         $personaClient = new Users(
@@ -245,7 +219,7 @@ class UsersTest extends TestBase
         $personaClient->createUser('gupid', ['email' => ''], ['']);
     }
 
-    function testCreateUserPostFails()
+    public function testCreateUserPostFails()
     {
         $this->setExpectedException('Exception', 'Error creating user: Could not retrieve OAuth response code');
         $mockClient = $this->getMock('Talis\Persona\Client\Users', ['performRequest'], [
@@ -261,7 +235,7 @@ class UsersTest extends TestBase
         $mockClient->createUser('gupid', ['email' => ''], '123');
     }
 
-    function testCreateUserPostSucceeds()
+    public function testCreateUserPostSucceeds()
     {
         $mockClient = $this->getMock('Talis\Persona\Client\Users', ['performRequest'], [
             [
@@ -277,7 +251,7 @@ class UsersTest extends TestBase
         $this->assertEquals($expectedResponse, $mockClient->createUser('123', ['email' => ''], '123'));
     }
 
-    function testUpdateUserEmptyGuid()
+    public function testUpdateUserEmptyGuid()
     {
         $this->setExpectedException('Exception', 'Invalid guid');
         $personaClient = new Users(
@@ -290,7 +264,7 @@ class UsersTest extends TestBase
         $personaClient->updateUser('', [], '987');
     }
 
-    function testUpdateUserInvalidGuid()
+    public function testUpdateUserInvalidGuid()
     {
         $this->setExpectedException('Exception', 'Invalid guid');
         $personaClient = new Users(
@@ -303,7 +277,7 @@ class UsersTest extends TestBase
         $personaClient->updateUser([], [], '987');
     }
 
-    function testUpdateUserEmptyProfile()
+    public function testUpdateUserEmptyProfile()
     {
         $this->setExpectedException('Exception', 'Invalid profile');
         $personaClient = new Users(
@@ -316,7 +290,7 @@ class UsersTest extends TestBase
         $personaClient->updateUser('123', [], '987');
     }
 
-    function testUpdateUserInvalidProfile()
+    public function testUpdateUserInvalidProfile()
     {
         $this->setExpectedException('Exception', 'Invalid profile');
         $personaClient = new Users(
@@ -326,10 +300,10 @@ class UsersTest extends TestBase
                 'cacheBackend' => $this->cacheBackend,
             ]
         );
-        $personaClient->updateUser('123', 'PROFILE', '987');
+        $personaClient->updateUser('123', [], '987');
     }
 
-    function testUpdateUserEmptyToken()
+    public function testUpdateUserEmptyToken()
     {
         $this->setExpectedException('Exception', 'Invalid token');
         $personaClient = new Users(
@@ -342,7 +316,7 @@ class UsersTest extends TestBase
         $personaClient->updateUser('123', ['email' => 'PROFILE'], '');
     }
 
-    function testUpdateUserInvalidToken()
+    public function testUpdateUserInvalidToken()
     {
         $this->setExpectedException('Exception', 'Invalid token');
         $personaClient = new Users(
@@ -355,7 +329,7 @@ class UsersTest extends TestBase
         $personaClient->updateUser('123', ['email' => 'PROFILE'], ['']);
     }
 
-    function testUpdateUserPutFails()
+    public function testUpdateUserPutFails()
     {
         $this->setExpectedException('Exception', 'Error updating user: Could not retrieve OAuth response code');
         $mockClient = $this->getMock('Talis\Persona\Client\Users', ['performRequest'], [
@@ -371,7 +345,7 @@ class UsersTest extends TestBase
         $mockClient->updateUser('guid', ['email' => ''], '123');
     }
 
-    function testUpdateUserPutSucceeds()
+    public function testUpdateUserPutSucceeds()
     {
         $mockClient = $this->getMock('Talis\Persona\Client\Users', ['performRequest'], [
             [
@@ -387,7 +361,7 @@ class UsersTest extends TestBase
         $this->assertEquals($expectedResponse, $mockClient->updateUser('123', ['email' => ''], '123'));
     }
 
-    function testAddGupidToUserInvalidGuid()
+    public function testAddGupidToUserInvalidGuid()
     {
         $this->setExpectedException('Exception', 'Invalid guid');
         $personaClient = new Users(
@@ -400,7 +374,7 @@ class UsersTest extends TestBase
         $personaClient->addGupidToUser([], '456', '987');
     }
 
-    function testAddGupidToUserInvalidGupid()
+    public function testAddGupidToUserInvalidGupid()
     {
         $this->setExpectedException('Exception', 'Invalid gupid');
         $personaClient = new Users(
@@ -413,7 +387,7 @@ class UsersTest extends TestBase
         $personaClient->addGupidToUser('123', [], '987');
     }
 
-    function testAddGupidToUserEmptyToken()
+    public function testAddGupidToUserEmptyToken()
     {
         $this->setExpectedException('Exception', 'Invalid token');
         $personaClient = new Users(
@@ -426,7 +400,7 @@ class UsersTest extends TestBase
         $personaClient->addGupidToUser('123', '456', '');
     }
 
-    function testAddGupidToUserInvalidToken()
+    public function testAddGupidToUserInvalidToken()
     {
         $this->setExpectedException('Exception', 'Invalid token');
         $personaClient = new Users(
@@ -439,7 +413,7 @@ class UsersTest extends TestBase
         $personaClient->addGupidToUser('123', '456', []);
     }
 
-    function testAddGupidToUserPatchFails()
+    public function testAddGupidToUserPatchFails()
     {
         $this->setExpectedException('Exception', 'Error adding gupid to user: Could not retrieve OAuth response code');
         $mockClient = $this->getMock('Talis\Persona\Client\Users', ['performRequest'], [
@@ -455,7 +429,7 @@ class UsersTest extends TestBase
         $mockClient->addGupidToUser('123', '456', '987');
     }
 
-    function testAddGupidToUserPutSucceeds()
+    public function testAddGupidToUserPutSucceeds()
     {
         $mockClient = $this->getMock('Talis\Persona\Client\Users', ['performRequest'], [
             [
@@ -471,7 +445,7 @@ class UsersTest extends TestBase
         $this->assertEquals($expectedResponse, $mockClient->addGupidToUser('123', '456', '987'));
     }
 
-    function testMergeUsersInvalidOldGuid()
+    public function testMergeUsersInvalidOldGuid()
     {
         $this->setExpectedException('Exception', 'Invalid oldGuid');
         $personaClient = new Users(
@@ -484,7 +458,7 @@ class UsersTest extends TestBase
         $personaClient->mergeUsers([], '456', '987');
     }
 
-    function testMergeUsersInvalidNewGuid()
+    public function testMergeUsersInvalidNewGuid()
     {
         $this->setExpectedException('Exception', 'Invalid newGuid');
         $personaClient = new Users(
@@ -497,7 +471,7 @@ class UsersTest extends TestBase
         $personaClient->mergeUsers('123', [], '987');
     }
 
-    function testMergeUsersEmptyToken()
+    public function testMergeUsersEmptyToken()
     {
         $this->setExpectedException('Exception', 'Invalid token');
         $personaClient = new Users(
@@ -510,7 +484,7 @@ class UsersTest extends TestBase
         $personaClient->mergeUsers('123', '456', '');
     }
 
-    function testMergeUsersInvalidToken()
+    public function testMergeUsersInvalidToken()
     {
         $this->setExpectedException('Exception', 'Invalid token');
         $personaClient = new Users(
@@ -523,7 +497,7 @@ class UsersTest extends TestBase
         $personaClient->mergeUsers('123', '456', []);
     }
 
-    function testMergeUsersPostFails()
+    public function testMergeUsersPostFails()
     {
         $this->setExpectedException('Exception', 'Error merging users: Could not retrieve OAuth response code');
         $mockClient = $this->getMock('Talis\Persona\Client\Users', ['performRequest'], [
@@ -539,7 +513,7 @@ class UsersTest extends TestBase
         $mockClient->mergeUsers('123', '456', '987');
     }
 
-    function testMergeUsersPostSucceeds()
+    public function testMergeUsersPostSucceeds()
     {
         $mockClient = $this->getMock('Talis\Persona\Client\Users', ['performRequest'], [
             [

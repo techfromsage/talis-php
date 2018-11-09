@@ -1,8 +1,7 @@
 <?php
 namespace Talis\Critic;
 
-if (!defined('APPROOT'))
-{
+if (!defined('APPROOT')) {
     define('APPROOT', dirname(dirname(dirname(__DIR__))));
 }
 
@@ -23,14 +22,15 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $this->criticClient = new \Talis\Critic\Client($this->criticBaseUrl);
 
         $this->cacheDriver = new \Doctrine\Common\Cache\ArrayCache();
-        $this->personaConfig = array(
+        $this->personaConfig = [
             'userAgent' => 'userAgentVal',
             'persona_host' => 'persona_host_val',
             'persona_oauth_route' => 'persona_oauth_route_val',
             'persona_oauth_route' => 'persona_oauth_route_val',
             'cacheBackend' => $this->cacheDriver,
-        );
-        $this->postFields = array('listUri' => 'http://somelist');
+        ];
+
+        $this->postFields = ['listUri' => 'http://somelist'];
     }
 
     /**
@@ -38,21 +38,36 @@ class ClientTest extends \PHPUnit_Framework_TestCase
      *
      * @expectedException \Talis\Critic\Exceptions\ReviewException
      */
-    function testCreateReviewException()
+    public function testCreateReviewException()
     {
         $this->setUp();
 
         $plugin = new \Guzzle\Plugin\Mock\MockPlugin();
-        $plugin->addResponse(new \Guzzle\Http\Message\Response(200, null, json_encode(array())));
+        $plugin->addResponse(new \Guzzle\Http\Message\Response(
+            200,
+            null,
+            json_encode([])
+        ));
+
         $client = new \Guzzle\Http\Client();
         $client->addSubscriber($plugin);
 
         /** @var \Talis\Critic\Client | PHPUnit_Framework_MockObject_MockObject $criticClient */
-        $criticClient = $this->getMock('\Talis\Critic\Client', array('getHTTPClient','getHeaders'), array($this->criticBaseUrl));
-        $criticClient->expects($this->once())->method('getHTTPClient')->will($this->returnValue($client));
-        $criticClient->expects($this->once())->method('getHeaders')->will($this->returnValue([]));
-        $criticClient->setPersonaConnectValues($this->personaConfig);
+        $criticClient = $this->getMock(
+            '\Talis\Critic\Client',
+            ['getHTTPClient','getHeaders'],
+            [$this->criticBaseUrl]
+        );
 
+        $criticClient->expects($this->once())
+            ->method('getHTTPClient')
+            ->will($this->returnValue($client));
+
+        $criticClient->expects($this->once())
+            ->method('getHeaders')
+            ->will($this->returnValue([]));
+
+        $criticClient->setPersonaConnectValues($this->personaConfig);
         $criticClient->createReview($this->postFields, '', '');
     }
 
@@ -61,42 +76,79 @@ class ClientTest extends \PHPUnit_Framework_TestCase
      *
      * @expectedException \Talis\Critic\Exceptions\UnauthorisedAccessException
      */
-    function testCreateReviewGuzzleException()
+    public function testCreateReviewGuzzleException()
     {
         $this->setUp();
 
         $plugin = new \Guzzle\Plugin\Mock\MockPlugin();
-        $plugin->addResponse(new \Guzzle\Http\Message\Response(401, null, json_encode(array())));
+        $plugin->addResponse(new \Guzzle\Http\Message\Response(
+            401,
+            null,
+            json_encode([])
+        ));
+
         $client = new \Guzzle\Http\Client();
         $client->addSubscriber($plugin);
 
         /** @var \Talis\Critic\Client | PHPUnit_Framework_MockObject_MockObject $criticClient */
-        $criticClient = $this->getMock('\Talis\Critic\Client', array('getHTTPClient','getHeaders'), array($this->criticBaseUrl));
-        $criticClient->expects($this->once())->method('getHTTPClient')->will($this->returnValue($client));
-        $criticClient->expects($this->once())->method('getHeaders')->will($this->returnValue([]));
+        $criticClient = $this->getMock(
+            '\Talis\Critic\Client',
+            ['getHTTPClient','getHeaders'],
+            [$this->criticBaseUrl]
+        );
+
+        $criticClient->expects($this->once())
+            ->method('getHTTPClient')
+            ->will($this->returnValue($client));
+
+        $criticClient->expects($this->once())
+            ->method('getHeaders')
+            ->will($this->returnValue([]));
+
         $criticClient->setPersonaConnectValues($this->personaConfig);
 
-        $criticClient->createReview($this->postFields, 'someClientId', 'someClientSecret');
+        $criticClient->createReview(
+            $this->postFields,
+            'someClientId',
+            'someClientSecret'
+        );
     }
 
     /**
      * @expectedException \Exception
      * @expectedExceptionMessage Did not retrieve successful response code from persona: -1
      */
-    function testCreateReviewWithInvalidPersonaConfigFails()
+    public function testCreateReviewWithInvalidPersonaConfigFails()
     {
         $this->setUp();
 
         $plugin = new \Guzzle\Plugin\Mock\MockPlugin();
-        $plugin->addResponse(new \Guzzle\Http\Message\Response(201, null, json_encode(array())));
+        $plugin->addResponse(new \Guzzle\Http\Message\Response(
+            201,
+            null,
+            json_encode([])
+        ));
+
         $client = new \Guzzle\Http\Client();
         $client->addSubscriber($plugin);
 
         /** @var \Talis\Critic\Client | PHPUnit_Framework_MockObject_MockObject $criticClient */
-        $criticClient = $this->getMock('\Talis\Critic\Client', array('getHTTPClient'), array($this->criticBaseUrl));
-        $criticClient->expects($this->once())->method('getHTTPClient')->will($this->returnValue($client));
+        $criticClient = $this->getMock(
+            '\Talis\Critic\Client',
+            ['getHTTPClient'],
+            [$this->criticBaseUrl]
+        );
+
+        $criticClient->expects($this->once())
+            ->method('getHTTPClient')
+            ->will($this->returnValue($client));
+
         $criticClient->setPersonaConnectValues($this->personaConfig);
 
-        $criticClient->createReview($this->postFields, 'someClientId', 'someClientSecret');
+        $criticClient->createReview(
+            $this->postFields,
+            'someClientId',
+            'someClientSecret'
+        );
     }
 }

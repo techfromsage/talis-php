@@ -1,16 +1,22 @@
 <?php
 namespace Talis\Persona\Client;
 
+use Talis\Persona\Client\ValidationResults;
+
 /**
  * Public key used to validate the JWT is considered invalid.
  */
 class InvalidPublicKeyException extends TokenValidationException
 {
-    public function __construct($msg) {
+    /**
+     * Constructor
+     * @param string $msg message
+     */
+    public function __construct($msg)
+    {
         parent::__construct(
             $msg,
-            ValidationResults::InvalidPublicKey
+            ValidationResults::INVALID_PUBLIC_KEY
         );
     }
 }
-

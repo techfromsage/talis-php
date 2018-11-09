@@ -32,6 +32,8 @@ ant build
 # When the above has built you can run the tests
 
 ```bash
+docker-compose run lint
+docker-compose run codecheck
 docker-compose run test
 docker-compose run unittest
 docker-compose run integrationtest

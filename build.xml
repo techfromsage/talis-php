@@ -54,7 +54,25 @@
         </exec>
     </target>
 
-    <target name="test" depends="clean, unittest, integrationtest" description="Run all the tests"/>
+    <target name="test" depends="clean,  unittest, integrationtest" description="Run all the tests"/>
+
+    <target name="lint" depends="clean">
+        <echo>Running PHP Codesniffer for code quality...</echo>
+        <exec dir="." executable="${vendor.dir}/bin/phpcs" failonerror="true">
+          <arg line="-s -p --severity=3 --standard=test/Standards/TalisPHP --extensions=php ./"/>
+        </exec>
+        <echo>Running PHP Lint for code quality...</echo>
+        <exec dir="." executable="${vendor.dir}/bin/phplint" failonerror="true">
+            <arg line="./ --exclude=vendor --no-cache" />
+        </exec>
+    </target>
+
+    <target name="code-check" depends="clean">
+        <echo>Running PHPMD to detect code problems ...</echo>
+        <exec dir="." executable="${vendor.dir}/bin/phpmd" failonerror="true">
+            <arg line="${src.dir} text codesize,unusedcode,naming"/>
+        </exec>
+    </target>
 
     <target name="coverage" depends="clean" description="Run code coverage over the unit tests">
         <exec dir="${test.dir}" executable="${vendor.dir}/bin/phpunit" failonerror="true">

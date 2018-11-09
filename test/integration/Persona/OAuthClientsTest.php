@@ -30,7 +30,7 @@ class OAuthClientsTest extends TestBase
     private $clientId;
     private $clientSecret;
 
-    function setUp()
+    public function setUp()
     {
         parent::setUp();
         $personaConf = $this->getPersonaConfig();
@@ -60,79 +60,117 @@ class OAuthClientsTest extends TestBase
         );
     }
 
-    function testCreateUserThenPatchOAuthClientAddScope()
+    public function testCreateUserThenPatchOAuthClientAddScope()
     {
-        $tokenDetails = $this->personaClientTokens->obtainNewToken($this->clientId, $this->clientSecret,
-            ["useCache" => false]);
+        $tokenDetails = $this->personaClientTokens->obtainNewToken(
+            $this->clientId,
+            $this->clientSecret,
+            ['useCache' => false]
+        );
+
         $this->assertArrayHasKey('access_token', $tokenDetails);
         $token = $tokenDetails['access_token'];
 
         $gupid = uniqid('trapdoor:');
         $email = uniqid() . '@example.com';
-        $userCreate = $this->personaClientUser->createUser($gupid, ['name' => 'Sarah Connor', 'email' => $email],
-            $token);
+        $userCreate = $this->personaClientUser->createUser(
+            $gupid,
+            ['name' => 'Sarah Connor', 'email' => $email],
+            $token
+        );
+
         $user = $this->personaClientUser->getUserByGupid($userCreate['gupids'][0], $token);
         $client = $this->personaClientOAuthClient->getOAuthClient($user['guid'], $token);
         $this->assertNotContains('additional-scope', $client['scope']);
 
         // Update the client
-        $this->personaClientOAuthClient->updateOAuthClient($user['guid'],
-            ['scope' => ['$add' => 'additional-scope']], $token);
+        $this->personaClientOAuthClient->updateOAuthClient(
+            $user['guid'],
+            ['scope' => ['$add' => 'additional-scope']],
+            $token
+        );
 
         // Get the oauth client again to see if scope has been updated
         $client = $this->personaClientOAuthClient->getOAuthClient($user['guid'], $token);
         $this->assertContains('additional-scope', $client['scope']);
     }
 
-    function testCreateUserThenPatchOAuthClientRemoveScope()
+    public function testCreateUserThenPatchOAuthClientRemoveScope()
     {
-        $tokenDetails = $this->personaClientTokens->obtainNewToken($this->clientId, $this->clientSecret,
-            ["useCache" => false]);
+        $tokenDetails = $this->personaClientTokens->obtainNewToken(
+            $this->clientId,
+            $this->clientSecret,
+            ['useCache' => false]
+        );
+
         $this->assertArrayHasKey('access_token', $tokenDetails);
         $token = $tokenDetails['access_token'];
 
         $gupid = uniqid('trapdoor:');
         $email = uniqid() . '@example.com';
-        $userCreate = $this->personaClientUser->createUser($gupid, ['name' => 'Sarah Connor', 'email' => $email],
-            $token);
+        $userCreate = $this->personaClientUser->createUser(
+            $gupid,
+            ['name' => 'Sarah Connor', 'email' => $email],
+            $token
+        );
+
         $user = $this->personaClientUser->getUserByGupid($userCreate['gupids'][0], $token);
         $client = $this->personaClientOAuthClient->getOAuthClient($user['guid'], $token);
         $this->assertNotContains('additional-scope', $client['scope']);
 
         // Add the scope to the client
-        $this->personaClientOAuthClient->updateOAuthClient($user['guid'],
-            ['scope' => ['$add' => 'additional-scope']], $token);
+        $this->personaClientOAuthClient->updateOAuthClient(
+            $user['guid'],
+            ['scope' => ['$add' => 'additional-scope']],
+            $token
+        );
 
         // Get the oauth client again to see if scope has been updated
         $client = $this->personaClientOAuthClient->getOAuthClient($user['guid'], $token);
         $this->assertContains('additional-scope', $client['scope']);
 
         // Remove the scope from the client
-        $this->personaClientOAuthClient->updateOAuthClient($user['guid'],
-            ['scope' => ['$remove' => 'additional-scope']], $token);
+        $this->personaClientOAuthClient->updateOAuthClient(
+            $user['guid'],
+            ['scope' => ['$remove' => 'additional-scope']],
+            $token
+        );
+
         $client = $this->personaClientOAuthClient->getOAuthClient($user['guid'], $token);
         $this->assertNotContains('additional-scope', $client['scope']);
     }
 
-    function testCreateUserThenGetClient()
+    public function testCreateUserThenGetClient()
     {
-        $tokenDetails = $this->personaClientTokens->obtainNewToken($this->clientId, $this->clientSecret,
-            ["useCache" => false]);
+        $tokenDetails = $this->personaClientTokens->obtainNewToken(
+            $this->clientId,
+            $this->clientSecret,
+            ['useCache' => false]
+        );
+
         $this->assertArrayHasKey('access_token', $tokenDetails);
         $token = $tokenDetails['access_token'];
 
         $gupid = uniqid('trapdoor:');
         $email = uniqid() . '@example.com';
-        $userCreate = $this->personaClientUser->createUser($gupid, ['name' => 'Sarah Connor', 'email' => $email],
-            $token);
+        $userCreate = $this->personaClientUser->createUser(
+            $gupid,
+            ['name' => 'Sarah Connor', 'email' => $email],
+            $token
+        );
+
         $user = $this->personaClientUser->getUserByGupid($userCreate['gupids'][0], $token);
         $client = $this->personaClientOAuthClient->getOAuthClient($user['guid'], $token);
         $this->assertArrayHasKey('scope', $client);
     }
 
-    function testGetOAuthClientInvalidTokenThrowsException()
+    public function testGetOAuthClientInvalidTokenThrowsException()
     {
-        $this->setExpectedException('Exception', 'Did not retrieve successful response code');
+        $this->setExpectedException(
+            'Exception',
+            'Did not retrieve successful response code'
+        );
+
         $personaClient = new OAuthClients(
             [
                 'userAgent' => 'integrationtest',
@@ -140,6 +178,7 @@ class OAuthClientsTest extends TestBase
                 'cacheBackend' => $this->cacheBackend,
             ]
         );
+
         $personaClient->getOAuthClient('123', '456');
     }
 }

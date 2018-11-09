@@ -46,6 +46,7 @@ abstract class TestBase extends PHPUnit_Framework_TestCase
                 unlink($file->getRealPath());
             }
         }
+
         rmdir($dir);
     }
 
@@ -56,9 +57,9 @@ abstract class TestBase extends PHPUnit_Framework_TestCase
     protected function getPersonaConfig()
     {
         return [
-            "host" => envvalue("PERSONA_TEST_HOST", "http://persona.talis.local"),
-            "oauthClient" => envvalue("PERSONA_TEST_OAUTH_CLIENT", "primate"),
-            "oauthSecret" => envvalue("PERSONA_TEST_OAUTH_SECRET", "bananas"),
+            'host' => envvalue('PERSONA_TEST_HOST', 'http://persona.talis.local'),
+            'oauthClient' => envvalue('PERSONA_TEST_OAUTH_CLIENT', 'primate'),
+            'oauthSecret' => envvalue('PERSONA_TEST_OAUTH_SECRET', 'bananas'),
         ];
     }
 

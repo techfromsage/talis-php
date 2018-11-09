@@ -12,7 +12,7 @@ require_once $appRoot . '/test/unit/TestBase.php';
 class OAuthClientsTest extends TestBase
 {
     // Get oauth client tests
-    function testGetOAuthClientEmptyClientIdThrowsException()
+    public function testGetOAuthClientEmptyClientIdThrowsException()
     {
         $this->setExpectedException('InvalidArgumentException', 'Invalid clientId');
         $personaClient = new OAuthClients(
@@ -25,7 +25,7 @@ class OAuthClientsTest extends TestBase
         $personaClient->getOAuthClient('', '');
     }
 
-    function testGetOAuthClientEmptyTokenThrowsException()
+    public function testGetOAuthClientEmptyTokenThrowsException()
     {
         $this->setExpectedException('InvalidArgumentException', 'Invalid token');
         $personaClient = new OAuthClients(
@@ -38,7 +38,7 @@ class OAuthClientsTest extends TestBase
         $personaClient->getOAuthClient('123', '');
     }
 
-    function testGetOAuthClientThrowsExceptionWhenClientNotFound()
+    public function testGetOAuthClientThrowsExceptionWhenClientNotFound()
     {
         $this->setExpectedException('Exception', 'Did not retrieve successful response code');
         $mockClient = $this->getMock('Talis\Persona\Client\OAuthClients', ['personaGetOAuthClient'], [
@@ -55,7 +55,7 @@ class OAuthClientsTest extends TestBase
         $mockClient->getOAuthClient('123', '456');
     }
 
-    function testGetOAuthClientReturnsClientWhenGupidFound()
+    public function testGetOAuthClientReturnsClientWhenGupidFound()
     {
         $mockClient = $this->getMock('Talis\Persona\Client\OAuthClients', ['personaGetOAuthClient'], [
             [
@@ -85,7 +85,7 @@ class OAuthClientsTest extends TestBase
         $this->assertEquals($expectedResponse['scope'], $client['scope']);
     }
 
-    function testUpdateOAuthClientEmptyGuid()
+    public function testUpdateOAuthClientEmptyGuid()
     {
         $this->setExpectedException('Exception', 'Invalid guid');
         $personaClient = new OAuthClients(
@@ -98,7 +98,7 @@ class OAuthClientsTest extends TestBase
         $personaClient->updateOAuthClient('', [], '987');
     }
 
-    function testUpdateOAuthClientInvalidGuid()
+    public function testUpdateOAuthClientInvalidGuid()
     {
         $this->setExpectedException('Exception', 'Invalid guid');
         $personaClient = new OAuthClients(
@@ -111,7 +111,7 @@ class OAuthClientsTest extends TestBase
         $personaClient->updateOAuthClient([], [], '987');
     }
 
-    function testUpdateOAuthClientEmptyProperties()
+    public function testUpdateOAuthClientEmptyProperties()
     {
         $this->setExpectedException('Exception', 'Invalid properties');
         $personaClient = new OAuthClients(
@@ -124,20 +124,7 @@ class OAuthClientsTest extends TestBase
         $personaClient->updateOAuthClient('123', [], '987');
     }
 
-    function testUpdateOAuthClientInvalidProperties()
-    {
-        $this->setExpectedException('Exception', 'Invalid properties');
-        $personaClient = new OAuthClients(
-            [
-                'userAgent' => 'unittest',
-                'persona_host' => 'localhost',
-                'cacheBackend' => $this->cacheBackend,
-            ]
-        );
-        $personaClient->updateOAuthClient('123', 'PROPERTIES', '987');
-    }
-
-    function testUpdateOAuthClientInvalidPropertiesKeys()
+    public function testUpdateOAuthClientInvalidPropertiesKeys()
     {
         $this->setExpectedException('Exception', 'Invalid properties');
         $personaClient = new OAuthClients(
@@ -150,7 +137,7 @@ class OAuthClientsTest extends TestBase
         $personaClient->updateOAuthClient('123', ['INVALID' => []], '987');
     }
 
-    function testUpdateOAuthClientInvalidPropertiesScopeKeys1()
+    public function testUpdateOAuthClientInvalidPropertiesScopeKeys1()
     {
         $this->setExpectedException('Exception', 'Invalid properties');
         $personaClient = new OAuthClients(
@@ -163,7 +150,7 @@ class OAuthClientsTest extends TestBase
         $personaClient->updateOAuthClient('123', ['scope' => []], '987');
     }
 
-    function testUpdateOAuthClientInvalidPropertiesScopeKeys2()
+    public function testUpdateOAuthClientInvalidPropertiesScopeKeys2()
     {
         $this->setExpectedException('Exception', 'Invalid properties');
         $personaClient = new OAuthClients(
@@ -176,7 +163,7 @@ class OAuthClientsTest extends TestBase
         $personaClient->updateOAuthClient('123', ['scope' => ['blah' => '']], '987');
     }
 
-    function testUpdateOAuthClientInvalidPropertiesScopeKeys3()
+    public function testUpdateOAuthClientInvalidPropertiesScopeKeys3()
     {
         $this->setExpectedException('Exception', 'Invalid properties');
         $personaClient = new OAuthClients(
@@ -189,7 +176,7 @@ class OAuthClientsTest extends TestBase
         $personaClient->updateOAuthClient('123', ['scope' => ['blah' => '', '$add' => 'test']], '987');
     }
 
-    function testUpdateOAuthClientInvalidPropertiesScopeKeys4()
+    public function testUpdateOAuthClientInvalidPropertiesScopeKeys4()
     {
         $this->setExpectedException('Exception', 'Invalid properties');
         $personaClient = new OAuthClients(
@@ -199,11 +186,20 @@ class OAuthClientsTest extends TestBase
                 'cacheBackend' => $this->cacheBackend,
             ]
         );
-        $personaClient->updateOAuthClient('123',
-            ['scope' => ['blah' => '', '$remove' => 'remove-scope', '$add' => 'add-scope']], '987');
+        $personaClient->updateOAuthClient(
+            '123',
+            [
+                'scope' => [
+                    'blah' => '',
+                    '$remove' => 'remove-scope',
+                    '$add' => 'add-scope'
+                ]
+            ],
+            '987'
+        );
     }
 
-    function testUpdateOAuthClientsEmptyToken()
+    public function testUpdateOAuthClientsEmptyToken()
     {
         $this->setExpectedException('Exception', 'Invalid token');
         $personaClient = new OAuthClients(
@@ -216,7 +212,7 @@ class OAuthClientsTest extends TestBase
         $personaClient->updateOAuthClient('123', ['scope' => ['$add' => 'additional-scope']], '');
     }
 
-    function testUpdateOAuthClientsInvalidToken()
+    public function testUpdateOAuthClientsInvalidToken()
     {
         $this->setExpectedException('Exception', 'Invalid token');
         $personaClient = new OAuthClients(
@@ -229,7 +225,7 @@ class OAuthClientsTest extends TestBase
         $personaClient->updateOAuthClient('123', ['scope' => ['$add' => 'additional-scope']], ['']);
     }
 
-    function testUpdateOAuthClientPutFails()
+    public function testUpdateOAuthClientPutFails()
     {
         $this->setExpectedException('Exception', 'Could not retrieve OAuth response code');
         $mockClient = $this->getMock('Talis\Persona\Client\OAuthClients', ['personaPatchOAuthClient'], [
@@ -246,7 +242,7 @@ class OAuthClientsTest extends TestBase
         $mockClient->updateOAuthClient('guid', ['scope' => ['$add' => 'additional-scope']], '123');
     }
 
-    function testUpdateOAuthClientPutSucceeds()
+    public function testUpdateOAuthClientPutSucceeds()
     {
         $mockClient = $this->getMock('Talis\Persona\Client\OAuthClients', ['personaPatchOAuthClient'], [
             [
@@ -260,7 +256,14 @@ class OAuthClientsTest extends TestBase
         $mockClient->expects($this->once())
             ->method('personaPatchOAuthClient')
             ->will($this->returnValue($expectedResponse));
-        $this->assertEquals($expectedResponse,
-            $mockClient->updateOAuthClient('123', ['scope' => ['$add' => 'additional-scope']], '123'));
+
+        $this->assertEquals(
+            $expectedResponse,
+            $mockClient->updateOAuthClient(
+                '123',
+                ['scope' => ['$add' => 'additional-scope']],
+                '123'
+            )
+        );
     }
 }
