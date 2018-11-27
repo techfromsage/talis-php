@@ -10,7 +10,7 @@ if (!defined('APPROOT')) {
 
 require_once $appRoot . '/test/unit/TestBase.php';
 
-class UsersTest extends TestBase
+class UsersIntegerationTest extends TestBase
 {
 
     /**

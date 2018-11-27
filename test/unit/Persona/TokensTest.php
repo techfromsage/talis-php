@@ -22,9 +22,11 @@ class TokensTest extends TestBase
     public function setUp()
     {
         parent::setUp();
-        $this->_wrongPrivateKey = file_get_contents('../keys/wrong_private_key.pem');
-        $this->privateKey = file_get_contents('../keys/private_key.pem');
-        $this->publicKey = file_get_contents('../keys/public_key.pem');
+
+        global $appRoot;
+        $this->_wrongPrivateKey = file_get_contents("{$appRoot}/test/keys/wrong_private_key.pem");
+        $this->privateKey = file_get_contents("{$appRoot}/test/keys/private_key.pem");
+        $this->publicKey = file_get_contents("{$appRoot}/test/keys/public_key.pem");
     }
 
     public function testEmptyConfigThrowsException()
