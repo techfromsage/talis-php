@@ -36,3 +36,8 @@ services:
     volumes:
       - ".:/var/talis-php"
     command: /bin/bash -c "service redis-server start && source /etc/profile.d/* && ant integrationtest"
+  coverage:
+    image: talis/talis-php
+    volumes:
+      - ".:/var/talis-php"
+    command: /bin/bash -c "service redis-server start && source /etc/profile.d/* && ant coverage"

@@ -11,7 +11,7 @@ if (!defined('APPROOT')) {
 
 require_once $appRoot . '/test/unit/TestBase.php';
 
-class TokensTest extends TestBase
+class TokensIntegrationTest extends TestBase
 {
 
     /**
