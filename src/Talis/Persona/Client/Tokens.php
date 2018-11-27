@@ -143,6 +143,7 @@ class Tokens extends Base
                 'addContentType' => true,
                 'parseJson' => false,
                 'cacheTTL' => $cacheTTL,
+                'skipRevalidation' => true,
             ]
         );
     }
