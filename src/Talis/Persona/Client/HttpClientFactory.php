@@ -9,7 +9,7 @@ use \Guzzle\Plugin\Cache\CachePlugin;
 use \Guzzle\Http\Client;
 use \Doctrine\Common\Cache\CacheProvider;
 
-class HttpClientFactory implements HttpClientFactoryInterface
+class HttpClientFactory
 {
     /** @var CacheProvider Object used to cache responses */
     protected $cacheBackend;

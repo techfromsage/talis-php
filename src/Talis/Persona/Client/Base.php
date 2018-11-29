@@ -33,7 +33,7 @@ abstract class Base
      */
     private $logger;
 
-     /** @var \Talis\Persona\Client\HttpClientFactoryInterface */
+     /** @var \Talis\Persona\Client\HttpClientFactory */
     private $httpClientFactory;
 
     /**
@@ -66,7 +66,7 @@ abstract class Base
      *      cacheBackend: (Doctrine\Common\Cache\CacheProvider) cache storage
      *      cacheKeyPrefix: (string) optional prefix to append to the cache keys
      *      cacheDefaultTTL: (integer) optional cache TTL value
-     *      httpClientFactory: (Talis\Persona\Client\HttpClientFactoryInterface) http client factory
+     *      httpClientFactory: (Talis\Persona\Client\HttpClientFactory) http client factory
      * @throws \InvalidArgumentException If any of the required config parameters are missing
      * @throws \InvalidArgumentException If the user agent format is invalid
      */
