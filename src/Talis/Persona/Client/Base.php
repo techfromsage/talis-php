@@ -3,11 +3,7 @@
 namespace Talis\Persona\Client;
 
 use Monolog\Logger;
-use Guzzle\Http\Client;
 use Guzzle\Http\Exception\RequestException;
-use Guzzle\Cache\DoctrineCacheAdapter;
-use Guzzle\Plugin\Cache\CachePlugin;
-use Guzzle\Plugin\Cache\DefaultCacheStorage;
 use \Domnikl\Statsd\Connection\Socket;
 use \Domnikl\Statsd\Connection\Blackhole;
 
@@ -37,10 +33,8 @@ abstract class Base
      */
     private $logger;
 
-    /**
-     * @var \Guzzle\Http\Client
-     */
-    private $httpClient;
+     /** @var \Talis\Persona\Client\HttpClientFactory */
+    private $httpClientFactory;
 
     /**
      * @var \Doctrine\Common\Cache\CacheProvider
@@ -72,6 +66,7 @@ abstract class Base
      *      cacheBackend: (Doctrine\Common\Cache\CacheProvider) cache storage
      *      cacheKeyPrefix: (string) optional prefix to append to the cache keys
      *      cacheDefaultTTL: (integer) optional cache TTL value
+     *      httpClientFactory: (Talis\Persona\Client\HttpClientFactory) http client factory
      * @throws \InvalidArgumentException If any of the required config parameters are missing
      * @throws \InvalidArgumentException If the user agent format is invalid
      */
@@ -101,9 +96,20 @@ abstract class Base
 
         $this->logger = $this->get($config, 'logger', null);
         $this->cacheBackend = $config['cacheBackend'];
-        $this->keyPrefix = $this->get($config, 'cacheKeyPrefix', '');
-        $this->defaultTtl = $this->get($config, 'cacheDefaultTTL', 3600);
         $this->phpVersion = phpversion();
+
+        if (isset($config['httpClientFactory'])) {
+            $this->httpClientFactory = $config['httpClientFactory'];
+        } else {
+            $this->httpClientFactory = new HttpClientFactory(
+                $config['persona_host'],
+                $this->cacheBackend,
+                [
+                    'keyPrefix' => $this->get($config, 'cacheKeyPrefix', ''),
+                    'defaultTtl' => $this->get($config, 'cacheDefaultTTL', 3600),
+                ]
+            );
+        }
     }
 
     /**
@@ -176,29 +182,7 @@ abstract class Base
      */
     protected function getHTTPClient()
     {
-        if ($this->httpClient === null) {
-            $this->httpClient = new Client(
-                $this->config['persona_host']
-            );
-
-            $adapter = new DoctrineCacheAdapter($this->cacheBackend);
-            $storage = new DefaultCacheStorage(
-                $adapter,
-                $this->keyPrefix,
-                $this->defaultTtl
-            );
-
-            $this->httpClient->addSubscriber(
-                new CachePlugin(
-                    [
-                        'storage' => $storage,
-                        'auto_purge' => true,
-                    ]
-                )
-            );
-        }
-
-        return $this->httpClient;
+        return $this->httpClientFactory->create();
     }
 
     /**
@@ -299,8 +283,7 @@ abstract class Base
             $httpConfig['headers']['Content-Type'] = 'application/x-www-form-urlencoded';
         }
 
-        $client = $this->getHTTPClient();
-        $request = $client->createRequest(
+        $request = $this->getHTTPClient()->createRequest(
             $opts['method'],
             $url,
             $opts['headers'],
