@@ -154,9 +154,10 @@ class HttpClientFactoryTest extends TestBase
         $skipRevalidation = true;
         $httpClient = $factory->create($skipRevalidation);
         $request = $httpClient->createRequest('get', '/test/path');
+
+        // a exception is thrown if Guzzle attempts to make the request
         $response = $request->send();
 
         $this->assertEquals('body', $response->getBody());
     }
-
 }
