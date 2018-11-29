@@ -959,7 +959,6 @@ class TokensTest extends TestBase
 
    public function testRetrieveJWTCertificateSkipsRevalidation()
    {
-
        $cacheBackend = new ArrayCache();
 
        $plugin = new Guzzle\Plugin\Mock\MockPlugin();
