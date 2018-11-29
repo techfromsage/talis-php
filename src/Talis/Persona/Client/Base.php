@@ -3,11 +3,7 @@
 namespace Talis\Persona\Client;
 
 use Monolog\Logger;
-use Guzzle\Http\Client;
 use Guzzle\Http\Exception\RequestException;
-use Guzzle\Cache\DoctrineCacheAdapter;
-use Guzzle\Plugin\Cache\CachePlugin;
-use Guzzle\Plugin\Cache\DefaultCacheStorage;
 use \Domnikl\Statsd\Connection\Socket;
 use \Domnikl\Statsd\Connection\Blackhole;
 
@@ -38,9 +34,9 @@ abstract class Base
     private $logger;
 
     /**
-     * @var \Guzzle\Http\Client
+     * @var \Talis\Persona\Client\HttpClientFactoryInterface
      */
-    private $httpClient;
+    private $httpClientFactory;
 
     /**
      * @var \Doctrine\Common\Cache\CacheProvider
@@ -101,9 +97,20 @@ abstract class Base
 
         $this->logger = $this->get($config, 'logger', null);
         $this->cacheBackend = $config['cacheBackend'];
-        $this->keyPrefix = $this->get($config, 'cacheKeyPrefix', '');
-        $this->defaultTtl = $this->get($config, 'cacheDefaultTTL', 3600);
         $this->phpVersion = phpversion();
+
+        if (isset($config['httpClientFactory'])) {
+            $this->httpClientFactory = $config['httpClientFactory'];
+        } else {
+            $this->httpClientFactory = new HttpClientFactory(
+                $config['persona_host'],
+                $this->cacheBackend,
+                [
+                    'keyPrefix' => $this->get($config, 'cacheKeyPrefix', ''),
+                    'defaultTtl' => $this->get($config, 'cacheDefaultTTL', 3600),
+                ]
+            );
+        }
     }
 
     /**
@@ -169,36 +176,6 @@ abstract class Base
         }
 
         return $this->logger;
-    }
-
-    /**
-     * @return \Guzzle\Http\Client
-     */
-    protected function getHTTPClient()
-    {
-        if ($this->httpClient === null) {
-            $this->httpClient = new Client(
-                $this->config['persona_host']
-            );
-
-            $adapter = new DoctrineCacheAdapter($this->cacheBackend);
-            $storage = new DefaultCacheStorage(
-                $adapter,
-                $this->keyPrefix,
-                $this->defaultTtl
-            );
-
-            $this->httpClient->addSubscriber(
-                new CachePlugin(
-                    [
-                        'storage' => $storage,
-                        'auto_purge' => true,
-                    ]
-                )
-            );
-        }
-
-        return $this->httpClient;
     }
 
     /**
@@ -299,7 +276,7 @@ abstract class Base
             $httpConfig['headers']['Content-Type'] = 'application/x-www-form-urlencoded';
         }
 
-        $client = $this->getHTTPClient();
+        $client = $this->httpClientFactory->create();
         $request = $client->createRequest(
             $opts['method'],
             $url,
