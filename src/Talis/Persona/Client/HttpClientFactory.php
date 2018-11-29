@@ -125,6 +125,7 @@ class HttpClientFactory
             [
                 'storage' => $storage,
                 'auto_purge' => $this->config['autoPurge'],
+                'revalidation' => $revalidation,
             ]
         );
     }

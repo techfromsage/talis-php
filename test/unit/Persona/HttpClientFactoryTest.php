@@ -127,4 +127,36 @@ class HttpClientFactoryTest extends TestBase
 
         $this->assertEquals('body', $response->getBody());
     }
+
+    public function testSkipRevalidation()
+    {
+        $cacheBackend = new ArrayCache();
+
+        $factory = new HttpClientFactory(
+            'http://localhost',
+            $cacheBackend
+        );
+
+        $httpClient = $factory->create();
+        $plugin = new MockPlugin();
+        $plugin->addResponse(new Response(
+            200,
+            ['ETag' => '1c3-54c7d0388d415'],
+            'body'
+        ));
+
+        $httpClient->addSubscriber($plugin);
+
+        $request = $httpClient->createRequest('get', '/test/path');
+        $response = $request->send();
+
+        // create a client that skip revalidation
+        $skipRevalidation = true;
+        $httpClient = $factory->create($skipRevalidation);
+        $request = $httpClient->createRequest('get', '/test/path');
+        $response = $request->send();
+
+        $this->assertEquals('body', $response->getBody());
+    }
+
 }
