@@ -33,9 +33,7 @@ abstract class Base
      */
     private $logger;
 
-    /**
-     * @var \Talis\Persona\Client\HttpClientFactoryInterface
-     */
+     /** @var \Talis\Persona\Client\HttpClientFactoryInterface */
     private $httpClientFactory;
 
     /**
