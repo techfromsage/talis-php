@@ -179,14 +179,15 @@ abstract class Base
 
     /**
      * Create a http client
-     * @param boolean $skipRevalidation whether to skip the validation of the
-     *    remote etag/cache headers to ensure that the cached response is still
-     *    valid, or trust the originally set expiry time
+     * @param boolean $skipRevalidation whether to skip validating a previous
+     *    request that has been cached. The validation uses the remote server
+     *    to retrieve the current etag/cache headers & compare them against the
+     *    original values.
      * @return \Guzzle\Http\Client
      */
     protected function getHTTPClient($skipRevalidation = false)
     {
-        return $this->httpClientFactory->create();
+        return $this->httpClientFactory->create($skipRevalidation);
     }
 
     /**

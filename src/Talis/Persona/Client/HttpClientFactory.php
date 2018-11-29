@@ -3,10 +3,13 @@
 namespace Talis\Persona\Client;
 
 use \Guzzle\Plugin\Cache\CacheStorageInterface;
+use \Guzzle\Plugin\Cache\DefaultRevalidation;
 use \Guzzle\Plugin\Cache\DefaultCacheStorage;
+use \Guzzle\Plugin\Cache\SkipRevalidation;
 use \Guzzle\Cache\DoctrineCacheAdapter;
 use \Guzzle\Plugin\Cache\CachePlugin;
 use \Guzzle\Http\Client;
+
 use \Doctrine\Common\Cache\CacheProvider;
 
 class HttpClientFactory
@@ -54,12 +57,21 @@ class HttpClientFactory
 
     /**
      * Create a http client with caching that adheres to common caching rules
+     *
+     * @param boolean $skipRevalidation whether to skip validating a previous
+     *    request that has been cached. The validation uses the remote server
+     *    to retrieve the current etag/cache headers & compare them against the
+     *    original values.
      * @return \Guzzle\Http\Client
      */
-    public function create()
+    public function create($skipRevalidation = false)
     {
         $httpClient = $this->createGuzzleClient();
-        $cachePlugin = $this->createCachePlugin($this->createStorage());
+        $cachePlugin = $this->createCachePlugin(
+            $this->createStorage(),
+            $skipRevalidation
+        );
+
         $httpClient->addSubscriber($cachePlugin);
         return $httpClient;
     }
@@ -93,10 +105,22 @@ class HttpClientFactory
      * Create a cache plugin which includes mechanisms for caching http calls
      * and revalidation of the original request/responses.
      * @param CacheStorageInterface $storage object to store the cache
+     * @param boolean $skipRevalidation whether to skip validating a previous
+     *     request that has been cached. The validation uses the remote server
+     *     to retrieve the current etag/cache headers & compare them against the
+     *     original values.
      * @return CachePlugin
      */
-    protected function createCachePlugin(CacheStorageInterface $storage)
-    {
+    protected function createCachePlugin(
+        CacheStorageInterface $storage,
+        $skipRevalidation = false
+    ) {
+        if ($skipRevalidation) {
+            $revalidation = new SkipRevalidation();
+        } else {
+            $revalidation = new DefaultRevalidation($storage);
+        }
+
         return new CachePlugin(
             [
                 'storage' => $storage,
