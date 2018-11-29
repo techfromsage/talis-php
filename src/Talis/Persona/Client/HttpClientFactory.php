@@ -3,14 +3,15 @@
 namespace Talis\Persona\Client;
 
 use \Guzzle\Plugin\Cache\CacheStorageInterface;
-use Guzzle\Plugin\Cache\DefaultCacheStorage;
-use Guzzle\Cache\DoctrineCacheAdapter;
+use \Guzzle\Plugin\Cache\DefaultCacheStorage;
+use \Guzzle\Cache\DoctrineCacheAdapter;
 use \Guzzle\Plugin\Cache\CachePlugin;
 use \Guzzle\Http\Client;
+use \Doctrine\Common\Cache\CacheProvider;
 
 class HttpClientFactory implements HttpClientFactoryInterface
 {
-    /** @var CacheStorageInterface Object used to cache responses */
+    /** @var CacheProvider Object used to cache responses */
     protected $cacheBackend;
 
     /** @var string endpoint to contact */
@@ -23,15 +24,15 @@ class HttpClientFactory implements HttpClientFactoryInterface
      * Constructor
      *
      * @param string $host http endpoint (format: 'protocol://host')
-     * @param CacheStorageInterface $cacheBackend cache for http responses
+     * @param DoctrineCachePlugin $cacheBackend cache for http responses
      * @param array $opts configuration options
      *      keyPrefix: prefix for the cache key (default: '')
      *      defaultTtl: time to live for the cache (default: 3600)
      *      autoPurge: automatically clear out old cache (default: true)
      */
-    public function __constructor(
+    public function __construct(
         $host,
-        CacheStorageInterface $cacheBackend,
+        CacheProvider $cacheBackend,
         array $opts = []
     ) {
         if (empty($host) || empty($cacheBackend)) {
@@ -40,9 +41,6 @@ class HttpClientFactory implements HttpClientFactoryInterface
 
         $this->host = $host;
         $this->cacheBackend = $cacheBackend;
-        print_r('>>>>>>>>>>>>>>>>>>>>>>');
-        print_r($cacheBackend);
-        print_r(' <>>>>>>>>>>>>>>>>>>>>>>');
 
         $this->config = array_merge(
             [

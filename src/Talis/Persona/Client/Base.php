@@ -68,6 +68,7 @@ abstract class Base
      *      cacheBackend: (Doctrine\Common\Cache\CacheProvider) cache storage
      *      cacheKeyPrefix: (string) optional prefix to append to the cache keys
      *      cacheDefaultTTL: (integer) optional cache TTL value
+     *      httpClientFactory: (Talis\Persona\Client\HttpClientFactoryInterface) http client factory
      * @throws \InvalidArgumentException If any of the required config parameters are missing
      * @throws \InvalidArgumentException If the user agent format is invalid
      */
@@ -179,6 +180,14 @@ abstract class Base
     }
 
     /**
+     * @return \Guzzle\Http\Client
+     */
+    protected function getHTTPClient()
+    {
+        return $this->httpClientFactory->create();
+    }
+
+    /**
      * Retrieve the Persona client version
      * @return string Persona client version
      */
@@ -276,8 +285,7 @@ abstract class Base
             $httpConfig['headers']['Content-Type'] = 'application/x-www-form-urlencoded';
         }
 
-        $client = $this->httpClientFactory->create();
-        $request = $client->createRequest(
+        $request = $this->getHTTPClient()->createRequest(
             $opts['method'],
             $url,
             $opts['headers'],
