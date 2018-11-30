@@ -128,6 +128,20 @@ class HttpClientFactoryTest extends TestBase
         $this->assertEquals('body', $response->getBody());
     }
 
+    /**
+     * Test that when retrieving the public certificate used for verifying the
+     * JWT tokens that the revalidation routine is skipped. The reason for this
+     * configuration is that we know that we want to cache the certificate for a
+     * fixed amount of time. The default configuration will attempt to
+     * revalidate the original request by calling the remote endpoint to verify
+     * the cache/etag headers.
+     *
+     * The test below registers a single response within the mock framework in
+     * Guzzle. The first request will consume the response and the plugin will
+     * be left empty. The expectation is that the second request will use the
+     * cache. If the cache is not used the mock framework will throw a exception
+     * as there are no more responses registered.
+     */
     public function testSkipRevalidation()
     {
         $cacheBackend = new ArrayCache();
@@ -155,7 +169,8 @@ class HttpClientFactoryTest extends TestBase
         $httpClient = $factory->create($skipRevalidation);
         $request = $httpClient->createRequest('get', '/test/path');
 
-        // a exception is thrown if Guzzle attempts to make the request
+        // a exception is thrown by the MockPlugin if Guzzle attempts to make
+        // the request
         $response = $request->send();
 
         $this->assertEquals('body', $response->getBody());
