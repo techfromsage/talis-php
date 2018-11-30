@@ -178,11 +178,16 @@ abstract class Base
     }
 
     /**
+     * Create a http client
+     * @param boolean $skipRevalidation whether to skip validating a previous
+     *    request that has been cached. The validation uses the remote server
+     *    to retrieve the current etag/cache headers & compare them against the
+     *    original values.
      * @return \Guzzle\Http\Client
      */
-    protected function getHTTPClient()
+    protected function getHTTPClient($skipRevalidation = false)
     {
-        return $this->httpClientFactory->create();
+        return $this->httpClientFactory->create($skipRevalidation);
     }
 
     /**
@@ -254,6 +259,7 @@ abstract class Base
                 'addContentType' => true,
                 'parseJson' => true,
                 'cacheTTL' => $this->defaultTtl,
+                'skipRevalidation' => false,
             ],
             $opts
         );
@@ -283,7 +289,8 @@ abstract class Base
             $httpConfig['headers']['Content-Type'] = 'application/x-www-form-urlencoded';
         }
 
-        $request = $this->getHTTPClient()->createRequest(
+        $client = $this->getHTTPClient($opts['skipRevalidation']);
+        $request = $client->createRequest(
             $opts['method'],
             $url,
             $opts['headers'],
@@ -309,6 +316,9 @@ abstract class Base
      *      addContentType: (default true) add type application/x-www-form-urlencoded
      *      parseJson: (default true) parse the response as JSON
      *      cacheTTL: optional TTL for this request only
+     *      skipRevalidation: (default false) whether to skip http cache
+     *          validation of the etags/cache headers and only use the expiry
+     *          time which was set from the original request
      * @return array|null response body
      * @throws NotFoundException If the http status was a 404
      * @throws \Exception If response not 200 and valid JSON
