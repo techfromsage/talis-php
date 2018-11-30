@@ -39,7 +39,7 @@ class HttpClientFactory
         array $opts = []
     ) {
         if (empty($host) || empty($cacheBackend)) {
-            throw new InvalidArgumentException('invalid arguments');
+            throw new \InvalidArgumentException('invalid arguments');
         }
 
         $this->host = $host;

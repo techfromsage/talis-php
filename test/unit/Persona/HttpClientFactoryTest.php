@@ -175,4 +175,16 @@ class HttpClientFactoryTest extends TestBase
 
         $this->assertEquals('body', $response->getBody());
     }
+
+    /**
+     * @expectedException InvalidArgumentException
+     */
+    public function testInvalidHost()
+    {
+        $cacheBackend = new ArrayCache();
+        $factory = new HttpClientFactory(
+            null,
+            $cacheBackend
+        );
+    }
 }
