@@ -231,7 +231,7 @@ class Tokens extends Base
      *
      * @throws TokenValidationException Invalid signature, key or token
      */
-    public function listScopes($tokenInArray, $pubCertCacheTTL = 300)
+    public function listScopes(array $tokenInArray, $pubCertCacheTTL = 300)
     {
         if (!isset($tokenInArray['access_token'])) {
             throw new TokenValidationException('missing access token');
