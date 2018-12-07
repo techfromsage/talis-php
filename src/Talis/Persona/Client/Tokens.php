@@ -225,21 +225,21 @@ class Tokens extends Base
 
     /**
      * List all scopes that belong to a given token
-     * @param string $token JWT token
+     * @param array $tokenInArray An array containing a JWT under the key `access_token`
      * @param integer $pubCertCacheTTL optional JWT public certificate time-to-live
      * @return array list of scopes
      *
      * @throws TokenValidationException Invalid signature, key or token
      */
-    public function listScopes($token, $pubCertCacheTTL = 300)
+    public function listScopes($tokenInArray, $pubCertCacheTTL = 300)
     {
-        if (!isset($token['access_token'])) {
+        if (!isset($tokenInArray['access_token'])) {
             throw new TokenValidationException('missing access token');
         }
 
         $publicCert = $this->retrieveJWTCertificate($pubCertCacheTTL);
 
-        $encodedToken = $token['access_token'];
+        $encodedToken = $tokenInArray['access_token'];
         $decodedToken = $this->decodeToken($encodedToken, $publicCert);
 
         if (isset($decodedToken['scopes']) && is_array($decodedToken['scopes'])) {
