@@ -6,6 +6,7 @@ use Monolog\Logger;
 use Guzzle\Http\Exception\RequestException;
 use \Domnikl\Statsd\Connection\Socket;
 use \Domnikl\Statsd\Connection\Blackhole;
+use \Guzzle\Http\Client as GuzzleClient;
 
 abstract class Base
 {
@@ -178,19 +179,6 @@ abstract class Base
     }
 
     /**
-     * Create a http client
-     * @param boolean $skipRevalidation whether to skip validating a previous
-     *    request that has been cached. The validation uses the remote server
-     *    to retrieve the current etag/cache headers & compare them against the
-     *    original values.
-     * @return \Guzzle\Http\Client
-     */
-    protected function getHTTPClient($skipRevalidation = false)
-    {
-        return $this->httpClientFactory->create($skipRevalidation);
-    }
-
-    /**
      * Retrieve the Persona client version
      * @return string Persona client version
      */
@@ -258,8 +246,6 @@ abstract class Base
                 'expectResponse' => true,
                 'addContentType' => true,
                 'parseJson' => true,
-                'cacheTTL' => $this->defaultTtl,
-                'skipRevalidation' => false,
             ],
             $opts
         );
@@ -289,7 +275,8 @@ abstract class Base
             $httpConfig['headers']['Content-Type'] = 'application/x-www-form-urlencoded';
         }
 
-        $client = $this->getHTTPClient($opts['skipRevalidation']);
+        // TODO: turn off all caching
+        $client = new GuzzleClient($this->config['persona_host']);
         $request = $client->createRequest(
             $opts['method'],
             $url,
@@ -304,8 +291,6 @@ abstract class Base
     /**
      * Perform the request according to the $curlOptions. Only
      * GET and HEAD requests are cached.
-     * tip: turn off caching by defining the 'Cache-Control'
-     *      header with a value of 'max-age=0, no-cache'
      * @param string $url request url
      * @param array $opts configuration / options:
      *      timeout: (30 seconds) HTTP timeout
@@ -315,10 +300,6 @@ abstract class Base
      *      expectResponse: (default true) parse the http response
      *      addContentType: (default true) add type application/x-www-form-urlencoded
      *      parseJson: (default true) parse the response as JSON
-     *      cacheTTL: optional TTL for this request only
-     *      skipRevalidation: (default false) whether to skip http cache
-     *          validation of the etags/cache headers and only use the expiry
-     *          time which was set from the original request
      * @return array|null response body
      * @throws NotFoundException If the http status was a 404
      * @throws \Exception If response not 200 and valid JSON
@@ -326,11 +307,6 @@ abstract class Base
     protected function performRequest($url, array $opts)
     {
         $request = $this->createRequest($url, $opts);
-        // Only caches GET & HEAD requests, see
-        // \Doctrine\Common\Cache\DefaultCanCacheStrategy
-        if (isset($opts['cacheTTL'])) {
-            $request->getParams()->set('cache.override_ttl', $opts['cacheTTL']);
-        }
 
         try {
             $response = $request->send();

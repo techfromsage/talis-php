@@ -12,11 +12,13 @@ use \Talis\Persona\Client\InvalidTokenException;
 use \Talis\Persona\Client\TokenValidationException;
 use \Talis\Persona\Client\UnauthorisedException;
 use \Talis\Persona\Client\UnknownException;
+use \Talis\Persona\Client\CertificateCache;
 use \Talis\Persona\Client\TokenCache;
 
 class Tokens extends Base
 {
     use TokenCache;
+    use CertificateCache;
 
     /**
      * Validates the supplied token using JWT or a remote Persona server.
@@ -136,16 +138,22 @@ class Tokens extends Base
      */
     public function retrieveJWTCertificate($cacheTTL = 300)
     {
-        return $this->performRequest(
-            '/oauth/keys',
-            [
-                'expectResponse' => true,
-                'addContentType' => true,
-                'parseJson' => false,
-                'cacheTTL' => $cacheTTL,
-                'skipRevalidation' => true,
-            ]
-        );
+        $certificate = $this->getCachedCertificate();
+
+        if (is_null($certificate)) {
+            $certificate = $this->performRequest(
+                '/oauth/keys',
+                [
+                    'expectResponse' => true,
+                    'addContentType' => true,
+                    'parseJson' => false,
+                ]
+            );
+
+            $this->cacheCertificate($certificate, $cacheTTL);
+        }
+
+        return $certificate;
     }
 
     /**
