@@ -9,12 +9,11 @@ class OAuthClients extends Base
      *
      * @param string $clientId Persona client id
      * @param string $token Persona client token
-     * @param integer $cacheTTL time to live in seconds value for cached request
      * @return array response from Persona
      * @throws \InvalidArgumentException Invalid arguments
      * @throws \Exception Persona communication issues
      */
-    public function getOAuthClient($clientId, $token, $cacheTTL = 300)
+    public function getOAuthClient($clientId, $token)
     {
         if (!is_string($clientId) || empty(trim($clientId))) {
             $this->getLogger()->error("Invalid clientId '$clientId'");
@@ -27,7 +26,7 @@ class OAuthClients extends Base
         }
 
         $url = $this->getPersonaHost() . '/clients/' . $clientId;
-        return $this->personaGetOAuthClient($url, $token, $cacheTTL);
+        return $this->personaGetOAuthClient($url, $token);
     }
 
     /**
@@ -99,18 +98,11 @@ class OAuthClients extends Base
      * Get an OAuth Client
      * @param string $url Persona url
      * @param string $token Persona oauth token
-     * @param integer $cacheTTL time to live in seconds value for cached request
      * @return array Persona response
      * @throws \Exception Persona communication issues
      */
-    protected function personaGetOAuthClient($url, $token, $cacheTTL = 300)
+    protected function personaGetOAuthClient($url, $token)
     {
-        return $this->performRequest(
-            $url,
-            [
-                'bearerToken' => $token,
-                'cacheTTL' => $cacheTTL,
-            ]
-        );
+        return $this->performRequest($url, ['bearerToken' => $token]);
     }
 }

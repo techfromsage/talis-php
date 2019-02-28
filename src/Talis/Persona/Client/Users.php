@@ -8,12 +8,11 @@ class Users extends Base
      *
      * @param string $gupid user's gupid
      * @param string $token Persona oauth token
-     * @param integer $cacheTTL amount of time to cache the request
      * @return mixed response from Persona
      * @throws \InvalidArgumentException either gupid or token is invalid
      * @throws \Exception Http communication error
      */
-    public function getUserByGupid($gupid, $token, $cacheTTL = 300)
+    public function getUserByGupid($gupid, $token)
     {
         $this->validateStringParam('gupid', $gupid);
         $this->validateStringParam('token', $token);
@@ -21,25 +20,18 @@ class Users extends Base
         $queryParams = http_build_query(['gupid' => $gupid]);
         $url = $this->getPersonaHost() . "/users?$queryParams";
 
-        return $this->performRequest(
-            $url,
-            [
-                'bearerToken' => $token,
-                'cacheTTL' => $cacheTTL,
-            ]
-        );
+        return $this->performRequest($url, ['bearerToken' => $token]);
     }
 
     /**
      * Get user profiles based off an array of guids
      * @param array $guids guids to find the user with
      * @param string $token Persona oauth token
-     * @param integer $cacheTTL amount of time to cache the request
      * @return array response from Persona
      * @throws \InvalidArgumentException Invalid guids or token arguments
      * @throws \Exception Persona communication error
      */
-    public function getUserByGuids(array $guids, $token, $cacheTTL = 300)
+    public function getUserByGuids(array $guids, $token)
     {
         $this->validateArrayParam('guids', $guids);
         $this->validateStringParam('token', $token);
@@ -48,13 +40,7 @@ class Users extends Base
         $url = $this->getPersonaHost() . "/users?$queryParams";
 
         try {
-            return $this->performRequest(
-                $url,
-                [
-                    'bearerToken' => $token,
-                    'cacheTTL' => $cacheTTL,
-                ]
-            );
+            return $this->performRequest($url, ['bearerToken' => $token]);
         } catch (\Exception $e) {
             $msg = $e->getMessage();
 

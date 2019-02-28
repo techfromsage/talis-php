@@ -224,7 +224,9 @@ abstract class Base
 
         $opts = array_merge(
             [
-                'headers' => [],
+                'headers' => [
+                    'Cache-Control' => 'max-age=0, no-cache',
+                ],
                 'method' => 'GET',
                 'expectResponse' => true,
                 'addContentType' => true,
@@ -272,8 +274,8 @@ abstract class Base
     }
 
     /**
-     * Perform the request according to the $curlOptions. Only
-     * GET and HEAD requests are cached.
+     * Perform the request according to the $curlOptions.
+     *
      * @param string $url request url
      * @param array $opts configuration / options:
      *      timeout: (30 seconds) HTTP timeout

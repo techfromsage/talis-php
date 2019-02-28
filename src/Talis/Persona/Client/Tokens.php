@@ -63,14 +63,13 @@ class Tokens extends Base
      * @param string $token a token to validate explicitly, if you do not
      *      specify one the method tries to find one
      * @param array|null $scopes specify this if you wish to validate a scoped token
-     * @param integer $cacheTTL time to live value in seconds for the certificate to stay within cache
      * @return integer ValidationResults enum
      * @throws ScopesNotDefinedException If the JWT token doesn't include the user's scopes
      * @throws Exception If not able to communicate with Persona to retrieve the public certificate
      */
-    protected function validateTokenUsingJWT($token, array $scopes = null, $cacheTTL = 300)
+    protected function validateTokenUsingJWT($token, array $scopes = null)
     {
-        $publicCert = $this->retrieveJWTCertificate($cacheTTL);
+        $publicCert = $this->retrieveJWTCertificate();
 
         try {
             $decodedToken = $this->decodeToken($token, $publicCert);
@@ -234,18 +233,18 @@ class Tokens extends Base
     /**
      * List all scopes that belong to a given token
      * @param array $tokenInArray An array containing a JWT under the key `access_token`
-     * @param integer $pubCertCacheTTL optional JWT public certificate time-to-live
      * @return array list of scopes
      *
      * @throws TokenValidationException Invalid signature, key or token
+     * @throws \Exception If not able to communicate with Persona to retrieve the public certificate
      */
-    public function listScopes(array $tokenInArray, $pubCertCacheTTL = 300)
+    public function listScopes(array $tokenInArray)
     {
         if (!isset($tokenInArray['access_token'])) {
             throw new TokenValidationException('missing access token');
         }
 
-        $publicCert = $this->retrieveJWTCertificate($pubCertCacheTTL);
+        $publicCert = $this->retrieveJWTCertificate();
 
         $encodedToken = $tokenInArray['access_token'];
         $decodedToken = $this->decodeToken($encodedToken, $publicCert);
@@ -290,14 +289,7 @@ class Tokens extends Base
     protected function makePersonaHttpRequest($url)
     {
         try {
-            $body = $this->performRequest(
-                $url,
-                [
-                    'headers' => [
-                        'Cache-Control' => 'max-age=0, no-cache',
-                    ],
-                ]
-            );
+            $body = $this->performRequest($url);
         } catch (\Exception $e) {
             $this->getLogger()->error(
                 'unable to retrieve token metadata',
