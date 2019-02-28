@@ -212,6 +212,16 @@ abstract class Base
     }
 
     /**
+     * Create a http client
+     * @param string $host host to send a request to
+     * @return \Guzzle\Http\Client http client
+     */
+    protected function getHTTPClient($host)
+    {
+        return new GuzzleClient($host);
+    }
+
+    /**
      * Create a HTTP request with a predefined set of headers
      * @param string $url url to request
      * @param array $opts options
@@ -261,7 +271,7 @@ abstract class Base
         }
 
         // TODO: turn off all caching
-        $client = new GuzzleClient($this->config['persona_host']);
+        $client = $this->getHTTPClient($this->config['persona_host']);
         $request = $client->createRequest(
             $opts['method'],
             $url,
