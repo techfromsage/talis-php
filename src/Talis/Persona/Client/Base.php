@@ -289,7 +289,7 @@ abstract class Base
      * @throws NotFoundException If the http status was a 404
      * @throws \Exception If response not 200 and valid JSON
      */
-    protected function performRequest($url, array $opts)
+    protected function performRequest($url, array $opts = [])
     {
         $request = $this->createRequest($url, $opts);
 

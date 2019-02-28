@@ -6,7 +6,6 @@ use \Talis\Persona\Client\ValidationResults;
 use \Talis\Persona\Client\ScopesNotDefinedException;
 use \Talis\Persona\Client\TokenValidationException;
 use \Talis\Persona\Client\InvalidTokenException;
-use \Talis\Persona\Client\HttpClientFactory;
 use \Doctrine\Common\Cache\ArrayCache;
 
 $appRoot = dirname(dirname(dirname(__DIR__)));
@@ -956,45 +955,4 @@ class TokensTest extends TestBase
         $this->setExpectedException(InvalidTokenException::class);
         $mockClient->listScopes($accessToken);
     }
-
-   public function testRetrieveJWTCertificateSkipsRevalidation()
-   {
-       $cacheBackend = new ArrayCache();
-
-       $plugin = new Guzzle\Plugin\Mock\MockPlugin();
-       $plugin->addResponse(new Guzzle\Http\Message\Response(
-           200,
-           ['ETag' => '1c3-54c7d0388d415'],
-           'certificate body'
-       ));
-
-       $httpClient = new Guzzle\Http\Client('http://localhost');
-       $httpClient->addSubscriber($plugin);
-
-       $httpClientFactory = $this->getMock(
-           '\Talis\Persona\Client\HttpClientFactory',
-           ['create'],
-           [
-               'http://localhost',
-               $cacheBackend
-           ]
-       );
-
-       $httpClientFactory->expects($this->once())
-           ->method('create')
-           ->with(true) // check the skipRevalidation is set
-           ->willReturn($httpClient);
-
-       $client = new Tokens(
-            [
-                'userAgent' => 'unittest',
-                'persona_host' => 'localhost',
-                'cacheBackend' => $this->cacheBackend,
-                'httpClientFactory' => $httpClientFactory,
-            ]
-       );
-
-       $cert = $client->retrieveJWTCertificate();
-       $this->assertEquals('certificate body', $cert);
-   }
 }
