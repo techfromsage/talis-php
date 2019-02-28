@@ -313,7 +313,7 @@ class TokensTest extends TestBase
     {
         $mockClient = $this->getMock(
             'Talis\Persona\Client\Tokens',
-            ['getHTTPClient'],
+            ['getHTTPClient', 'validateTokenUsingJWT'],
             [
                 [
                     'userAgent' => 'unittest',
@@ -344,18 +344,22 @@ class TokensTest extends TestBase
             ->method('getHTTPClient')
             ->will($this->returnValue($httpClient));
 
-        try {
-            $mockClient->validateToken(
-                [
-                    'access_token' => $jwt,
-                    'scope' => 'su',
-                ]
+        $mockClient->expects($this->once())
+            ->method('validateTokenUsingJWT')
+            ->will(
+                $this->throwException(
+                    new ScopesNotDefinedException('too many scopes')
+                )
             );
 
-            $this->fail('Exception not thrown');
-        } catch (\Exception $exception) {
-            $this->assertEquals(202, $exception->getCode());
-        }
+        $result = $mockClient->validateToken(
+            [
+                'access_token' => $jwt,
+                'scope' => 'su',
+            ]
+        );
+
+        $this->assertEquals(ValidationResults::UNKNOWN, $result);
     }
 
     /**

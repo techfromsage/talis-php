@@ -173,7 +173,7 @@ class Tokens extends Base
         $success = $this->personaCheckTokenIsValid($token, $scopes);
         $this->getStatsD()->endTiming('validateToken.rest.get');
 
-        if ($success === true) {
+        if ($success === ValidationResults::SUCCESS) {
             $this->getStatsD()->increment('validateToken.rest.valid');
         } else {
             $this->getStatsD()->increment('validateToken.rest.invalid');
