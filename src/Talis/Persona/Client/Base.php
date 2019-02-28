@@ -34,9 +34,6 @@ abstract class Base
      */
     private $logger;
 
-     /** @var \Talis\Persona\Client\HttpClientFactory */
-    private $httpClientFactory;
-
     /**
      * @var \Doctrine\Common\Cache\CacheProvider
      */
@@ -67,7 +64,6 @@ abstract class Base
      *      cacheBackend: (Doctrine\Common\Cache\CacheProvider) cache storage
      *      cacheKeyPrefix: (string) optional prefix to append to the cache keys
      *      cacheDefaultTTL: (integer) optional cache TTL value
-     *      httpClientFactory: (Talis\Persona\Client\HttpClientFactory) http client factory
      * @throws \InvalidArgumentException If any of the required config parameters are missing
      * @throws \InvalidArgumentException If the user agent format is invalid
      */
@@ -98,19 +94,6 @@ abstract class Base
         $this->logger = $this->get($config, 'logger', null);
         $this->cacheBackend = $config['cacheBackend'];
         $this->phpVersion = phpversion();
-
-        if (isset($config['httpClientFactory'])) {
-            $this->httpClientFactory = $config['httpClientFactory'];
-        } else {
-            $this->httpClientFactory = new HttpClientFactory(
-                $config['persona_host'],
-                $this->cacheBackend,
-                [
-                    'keyPrefix' => $this->get($config, 'cacheKeyPrefix', ''),
-                    'defaultTtl' => $this->get($config, 'cacheDefaultTTL', 3600),
-                ]
-            );
-        }
     }
 
     /**
