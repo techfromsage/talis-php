@@ -71,6 +71,8 @@ class Tokens extends Base
     {
         $publicCert = $this->retrieveJWTCertificate();
 
+        // TODO: check certificate?
+
         try {
             $decodedToken = $this->decodeToken($token, $publicCert);
         } catch (TokenValidationException $e) {
@@ -139,7 +141,7 @@ class Tokens extends Base
     {
         $certificate = $this->getCachedCertificate();
 
-        if (is_null($certificate)) {
+        if (empty($certificate)) {
             $certificate = $this->performRequest(
                 '/oauth/keys',
                 [
@@ -245,7 +247,6 @@ class Tokens extends Base
         }
 
         $publicCert = $this->retrieveJWTCertificate();
-
         $encodedToken = $tokenInArray['access_token'];
         $decodedToken = $this->decodeToken($encodedToken, $publicCert);
 
