@@ -4,8 +4,6 @@ namespace Talis\Persona\Client;
 
 trait ClientVersionCache
 {
-    const COMPOSER_VERSION_CACHE_KEY = 'composer_version';
-    const COMPOSER_VERSION_CACHE_TTL_SEC = 3600; // 1 hour
 
     /**
      * Retrieve the Persona client version
@@ -52,11 +50,7 @@ trait ClientVersionCache
     private function saveClientVersion($version)
     {
         try {
-            $cacheBackend->save(
-                self::COMPOSER_VERSION_CACHE_KEY,
-                $version,
-                self::COMPOSER_VERSION_CACHE_TTL_SEC
-            );
+            $cacheBackend->save('composer_version', $version, 3600);
         } catch (\Exception $e) {
             $this->getLogger()->warning(
                 'unable to save client version to cache',
@@ -77,7 +71,7 @@ trait ClientVersionCache
         $cacheBackend = $this->getCacheBackend();
 
         try {
-            return $cacheBackend->fetch(self::COMPOSER_VERSION_CACHE_KEY);
+            return $cacheBackend->fetch('composer_version');
         } catch (\Exception $e) {
             $this->getLogger()->warning(
                 'cannot get version from cache',
