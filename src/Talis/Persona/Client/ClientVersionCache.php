@@ -13,35 +13,81 @@ trait ClientVersionCache
      */
     protected function getClientVersion()
     {
-        $cacheBackend = $this->getCacheBackend();
-        $version = $cacheBackend->fetch(self::COMPOSER_VERSION_CACHE_KEY);
+        $version = $this->getVersionFromCache();
 
-        if ($version) {
-            return $version;
+        if (empty($version)) {
+            $version = $this->getVersionFromComposeFile();
+            $this->saveClientVersion($version);
         }
 
+        return $version;
+    }
+
+    /**
+     * Parse this package version from the composer.json file
+     * @return string package version, or 'unknown'
+     */
+    private function getVersionFromComposeFile()
+    {
+        $version = 'unknown';
         $composerFileContent = file_get_contents(
             __DIR__ . '/../../../../composer.json'
         );
 
-        if ($composerFileContent === false) {
-            return 'unknown';
+        if (is_string($composerFileContent)) {
+            $composer = json_decode($composerFileContent, true);
+
+            if (isset($composer['version'])) {
+                $version = $composer['version'];
+            }
         }
-
-        $composer = json_decode($composerFileContent, true);
-
-        $version = 'unknown';
-        if (isset($composer['version'])) {
-            $version = $composer['version'];
-        }
-
-        $cacheBackend->save(
-            self::COMPOSER_VERSION_CACHE_KEY,
-            $version,
-            self::COMPOSER_VERSION_CACHE_TTL_SEC
-        );
 
         return $version;
+    }
+
+    /**
+     * Save the client version to cache
+     * @param string $version version to cache
+     */
+    private function saveClientVersion($version)
+    {
+        try {
+            $cacheBackend->save(
+                self::COMPOSER_VERSION_CACHE_KEY,
+                $version,
+                self::COMPOSER_VERSION_CACHE_TTL_SEC
+            );
+        } catch (\Exception $e) {
+            $this->getLogger()->warning(
+                'unable to save client version to cache',
+                [
+                    'version' => $version,
+                    'exception' => $e,
+                ]
+            );
+        }
+    }
+
+    /**
+     * Load the version from cache
+     * @return string|null version string
+     */
+    private function getVersionFromCache()
+    {
+        $cacheBackend = $this->getCacheBackend();
+
+        try {
+            return $cacheBackend->fetch(self::COMPOSER_VERSION_CACHE_KEY);
+        } catch (\Exception $e) {
+            $this->getLogger()->warning(
+                'cannot get version from cache',
+                [
+                    'exception' => $e,
+                ]
+            );
+        }
+
+        return null;
     }
 
     /**
@@ -49,4 +95,10 @@ trait ClientVersionCache
      * @return \Doctrine\Common\Cache\CacheProvider
      */
     abstract protected function getCacheBackend();
+
+    /**
+     * Retrieve logger
+     * @return Logger|\Psr\Log\LoggerInterface
+     */
+    abstract protected function getLogger();
 }
