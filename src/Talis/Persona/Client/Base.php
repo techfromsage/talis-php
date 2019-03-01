@@ -262,7 +262,7 @@ abstract class Base
      *      expectResponse: (default true) parse the http response
      *      addContentType: (default true) add type application/x-www-form-urlencoded
      *      parseJson: (default true) parse the response as JSON
-     * @return array|null response body
+     * @return array|null|string response body
      * @throws NotFoundException If the http status was a 404
      * @throws \Exception If response not 200 and valid JSON
      */

@@ -47,11 +47,18 @@ class Tokens extends Base
 
         $scope = isset($params['scope']) ? $params['scope'] : null;
         $scope = is_null($scope) || is_array($scope) ? $scope : [$scope];
+        $scope = is_null($scope) ? [] : $scope;
 
         try {
             return $this->validateTokenUsingJWT($token, $scope);
-        } catch (ScopesNotDefinedException $exception) {
-            return $this->validateTokenUsingPersona($token, $scope);
+        } catch (\Exception $e) {
+            if ($e instanceof ScopesNotDefinedException
+                || $e instanceof CommunicationException
+            ) {
+                return $this->validateTokenUsingPersona($token, $scope);
+            }
+
+            throw $e;
         }
     }
 
@@ -62,16 +69,17 @@ class Tokens extends Base
      *
      * @param string $token a token to validate explicitly, if you do not
      *      specify one the method tries to find one
-     * @param array|null $scopes specify this if you wish to validate a scoped token
-     * @return integer ValidationResults enum
      * @throws ScopesNotDefinedException If the JWT token doesn't include the user's scopes
-     * @throws Exception If not able to communicate with Persona to retrieve the public certificate
+     * @throws CommunicationException Cannot communicate with Persona
+     * @throws \Exception If not able to communicate with Persona to retrieve the public certificate
      */
     protected function validateTokenUsingJWT($token, array $scopes = null)
     {
         $publicCert = $this->retrieveJWTCertificate();
 
-        // TODO: check certificate?
+        if (empty($publicCert)) {
+            throw new CommunicationException('cannot retrieve certificate');
+        }
 
         try {
             $decodedToken = $this->decodeToken($token, $publicCert);
@@ -135,7 +143,7 @@ class Tokens extends Base
      * the integrity & authentication of a given JWT
      * @param integer $cacheTTL time to live in seconds for cached responses
      * @return string certificate
-     * @throws Exception Cannot comminucate with Persona or Redis
+     * @throws \Exception Cannot comminucate with Persona or Redis
      */
     public function retrieveJWTCertificate($cacheTTL = 300)
     {
@@ -323,7 +331,7 @@ class Tokens extends Base
      * able to validate the token.
      *
      * @param string $token token to validate
-     * @param array $scopes optional scopes to validate
+     * @param array|null $scopes optional scopes to validate
      * @return integer ValidationResults enum
      */
     protected function personaCheckTokenIsValid($token, array $scopes = [])
