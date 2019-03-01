@@ -94,7 +94,7 @@ trait ClientVersionCache
 
     /**
      * Retrieve logger
-     * @return Logger|\Psr\Log\LoggerInterface
+     * @return \Psr\Log\LoggerInterface
      */
     abstract protected function getLogger();
 }

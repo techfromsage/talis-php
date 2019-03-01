@@ -49,7 +49,7 @@ trait CertificateCache
                     'certificate' => $certificate,
                     'expiry' => $expiry,
                     'id' => $id,
-                    'exception' => $exception,
+                    'exception' => $e,
                 ]
             );
         }
@@ -68,7 +68,7 @@ trait CertificateCache
 
     /**
      * Retrieve logger
-     * @return Logger|\Psr\Log\LoggerInterface
+     * @return \Psr\Log\LoggerInterface
      */
     abstract protected function getLogger();
 }

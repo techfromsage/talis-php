@@ -151,7 +151,7 @@ abstract class Base
     }
 
     /**
-     * @return Logger|\Psr\Log\LoggerInterface
+     * @return \Psr\Log\LoggerInterface
      */
     protected function getLogger()
     {
