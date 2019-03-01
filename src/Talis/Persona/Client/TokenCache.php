@@ -44,7 +44,7 @@ trait TokenCache
             $expiresIn = intval($token['expires_in'], 10) - 60;
 
             if ($expiresIn > 0) {
-                $this->saveToken();
+                $this->saveToken($clientId, $token, $expiresIn);
             }
         }
     }
