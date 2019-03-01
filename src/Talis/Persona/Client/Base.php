@@ -7,14 +7,15 @@ use Guzzle\Http\Exception\RequestException;
 use \Domnikl\Statsd\Connection\Socket;
 use \Domnikl\Statsd\Connection\Blackhole;
 use \Guzzle\Http\Client as GuzzleClient;
+use \Talis\Persona\Client\ClientVersionCache;
 
 abstract class Base
 {
+    use ClientVersionCache;
+
     const STATSD_CONN = 'STATSD_CONN';
     const STATSD_PREFIX = 'STATSD_PREFIX';
     const LOGGER_NAME = 'PERSONA';
-    const COMPOSER_VERSION_CACHE_KEY = 'composer_version';
-    const COMPOSER_VERSION_CACHE_TTL_SEC = 3600; // 1 hour
     const PERSONA_API_VERSION = '3';
 
     /**
@@ -159,40 +160,6 @@ abstract class Base
         }
 
         return $this->logger;
-    }
-
-    /**
-     * Retrieve the Persona client version
-     * @return string Persona client version
-     */
-    protected function getClientVersion()
-    {
-        $version = $this->getCacheBackend()->fetch(self::COMPOSER_VERSION_CACHE_KEY);
-
-        if ($version) {
-            return $version;
-        }
-
-        $composerFileContent = file_get_contents(
-            __DIR__ . '/../../../../composer.json'
-        );
-
-        if ($composerFileContent === false) {
-            return 'unknown';
-        }
-
-        $composer = json_decode($composerFileContent, true);
-        if (isset($composer['version']) === false) {
-            return 'unknown';
-        }
-
-        $this->getCacheBackend()->save(
-            self::COMPOSER_VERSION_CACHE_KEY,
-            $composer['version'],
-            self::COMPOSER_VERSION_CACHE_TTL_SEC
-        );
-
-        return $composer['version'];
     }
 
     /**
