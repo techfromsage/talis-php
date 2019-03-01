@@ -49,6 +49,8 @@ trait ClientVersionCache
      */
     private function saveClientVersion($version)
     {
+        $cacheBackend = $this->getCacheBackend();
+
         try {
             $cacheBackend->save('composer_version', $version, 3600);
         } catch (\Exception $e) {
