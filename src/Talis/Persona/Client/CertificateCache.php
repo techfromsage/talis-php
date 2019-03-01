@@ -11,9 +11,21 @@ trait CertificateCache
      */
     protected function getCachedCertificate($id='pub')
     {
-        return $this->getCacheBackend()->fetch(
-            $this->getCertificateCacheKey($id)
-        );
+        try {
+            return $this->getCacheBackend()->fetch(
+                $this->getCertificateCacheKey($id)
+            );
+        } catch (\Exception $e) {
+            $this->getLogger()->warning(
+                'unable to get cached certificate',
+                [
+                    'id' => $id,
+                    'exception' => $e,
+                ]
+            );
+        }
+
+        return null;
     }
 
     /**
@@ -24,11 +36,23 @@ trait CertificateCache
      */
     protected function cacheCertificate($certificate, $expiry, $id='pub')
     {
-        $this->getCacheBackend()->save(
-            $this->getCertificateCacheKey($id),
-            $certificate,
-            $expiry
-        );
+        try {
+            $this->getCacheBackend()->save(
+                $this->getCertificateCacheKey($id),
+                $certificate,
+                $expiry
+            );
+        } catch (\Exception $e) {
+            $this->getLogger()->warning(
+                'unable to cache certificate',
+                [
+                    'certificate' => $certificate,
+                    'expiry' => $expiry,
+                    'id' => $id,
+                    'exception' => $exception,
+                ]
+            );
+        }
     }
 
     protected function getCertificateCacheKey($id='pub')
@@ -41,4 +65,10 @@ trait CertificateCache
      * @return \Doctrine\Common\Cache\CacheProvider
      */
     abstract protected function getCacheBackend();
+
+    /**
+     * Retrieve logger
+     * @return Logger|\Psr\Log\LoggerInterface
+     */
+    abstract protected function getLogger();
 }
