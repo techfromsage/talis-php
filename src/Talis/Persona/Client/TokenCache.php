@@ -12,7 +12,21 @@ trait TokenCache
     protected function getCachedToken($clientId)
     {
         $cacheKey = $this->getAccessTokenCacheKey($clientId);
-        return $this->getCacheBackend()->fetch($cacheKey);
+
+        try {
+            return $this->getCacheBackend()->fetch($cacheKey);
+        } catch (\Exception $e) {
+            $this->getLogger()->warning(
+                'unable to fetch cached token',
+                [
+                    'clientId' => $clientId,
+                    'cacheKey' => $cacheKey,
+                    'exception' => $e,
+                ]
+            );
+        }
+
+        return null;
     }
 
     /**
@@ -30,12 +44,34 @@ trait TokenCache
             $expiresIn = intval($token['expires_in'], 10) - 60;
 
             if ($expiresIn > 0) {
-                $this->getCacheBackend()->save(
-                    $this->getAccessTokenCacheKey($clientId),
-                    $token,
-                    $expiresIn
-                );
+                $this->saveToken();
             }
+        }
+    }
+
+    /**
+     * Save token within the cache
+     * @param string $clientId client id that the token belongs to
+     * @param array $token access token to store
+     * @param integer $expiresIn expiry time in seconds
+     */
+    private function saveToken($clientId, array $token, $expiresIn)
+    {
+        try {
+            $this->getCacheBackend()->save(
+                $this->getAccessTokenCacheKey($clientId),
+                $token,
+                $expiresIn
+            );
+        } catch (\Exception $e) {
+            $this->getLogger()->warning(
+                'unable to save token to cache',
+                [
+                    'clientId' => $clientId,
+                    'expiresIn' => $expiresIn,
+                    'exception' => $e,
+                ]
+            );
         }
     }
 
@@ -54,4 +90,10 @@ trait TokenCache
      * @return \Doctrine\Common\Cache\CacheProvider
      */
     abstract protected function getCacheBackend();
+
+    /**
+     * Retrieve logger
+     * @return Logger|\Psr\Log\LoggerInterface
+     */
+    abstract protected function getLogger();
 }
