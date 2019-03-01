@@ -149,8 +149,29 @@ class Tokens extends Base
     {
         $certificate = $this->getCachedCertificate();
 
-        if (empty($certificate)) {
-            $certificate = $this->performRequest(
+        if (!empty($certificate)) {
+            return $certificate;
+        }
+
+        $certificate = $this->retrievePublicKeyFromPersona();
+
+        if (!empty($certificate)) {
+            $this->cacheCertificate($certificate, $cacheTTL);
+        }
+
+        return $certificate;
+    }
+
+    /**
+     * Retrieve Persona's public key
+     * @throws \Talis\Persona\Client\CommunicationException Could not retrieve
+     *      Persona's public key
+     * @return string public key
+     */
+    protected function retrievePublicKeyFromPersona()
+    {
+        try {
+            return $this->performRequest(
                 '/oauth/keys',
                 [
                     'expectResponse' => true,
@@ -158,11 +179,13 @@ class Tokens extends Base
                     'parseJson' => false,
                 ]
             );
+        } catch (\Exception $e) {
+            $this->getLogger()->warning(
+                'could not retrieve persona public certificate'
+            );
 
-            $this->cacheCertificate($certificate, $cacheTTL);
+            throw new CommunicationException('cannot retrieve certificate');
         }
-
-        return $certificate;
     }
 
     /**

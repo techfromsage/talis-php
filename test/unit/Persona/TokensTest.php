@@ -958,4 +958,147 @@ class TokensTest extends TestBase
         $this->setExpectedException(InvalidTokenException::class);
         $mockClient->listScopes($accessToken);
     }
+
+    /**
+     * Simulates issue with Redis
+     */
+    public function testCachedTokenFailure()
+    {
+        $cacheBackend = $this->getMockBuilder('Doctrine\Common\Cache\FilesystemCache')
+            ->disableOriginalConstructor()
+            ->setMethods(['doFetch'])
+            ->getMock();
+
+        $cacheBackend->expects($this->atLeastOnce())
+            ->method('doFetch')
+            ->will($this->throwException(new \Exception('I failed')));
+
+        $tokens = $this->getMock(
+            'Talis\Persona\Client\Tokens',
+            ['personaObtainNewToken'],
+            [
+                [
+                    'userAgent' => 'unittest',
+                    'persona_host' => 'localhost',
+                    'cacheBackend' => $cacheBackend,
+                ]
+            ]
+        );
+
+        $tokens->expects($this->once())
+            ->method('personaObtainNewToken')
+            ->willReturn(
+                [
+                    'access_token' => 'foo',
+                    'expires_in' => '100',
+                    'scopes' => 'su'
+                ]
+            );
+
+        $tokens->obtainNewToken('id', 'secret');
+    }
+
+    public function testCachingTokenFailure()
+    {
+        $cacheBackend = $this->getMockBuilder('Doctrine\Common\Cache\FilesystemCache')
+            ->disableOriginalConstructor()
+            ->setMethods(['doFetch', 'doSave'])
+            ->getMock();
+
+        $cacheBackend->expects($this->atLeastOnce())
+            ->method('doFetch')
+            ->willReturn(null);
+
+        $cacheBackend->expects($this->once())
+            ->method('doSave')
+            ->will($this->throwException(new \Exception('cannot save')));
+
+        $tokens = $this->getMock(
+            'Talis\Persona\Client\Tokens',
+            ['personaObtainNewToken'],
+            [
+                [
+                    'userAgent' => 'unittest',
+                    'persona_host' => 'localhost',
+                    'cacheBackend' => $cacheBackend,
+                ]
+            ]
+        );
+
+        $tokens->expects($this->once())
+            ->method('personaObtainNewToken')
+            ->willReturn(
+                [
+                    'access_token' => 'foo',
+                    'expires_in' => '100',
+                    'scopes' => 'su'
+                ]
+            );
+
+        $tokens->obtainNewToken('id', 'secret');
+    }
+
+    public function testCachedCertificateFailure()
+    {
+        $cacheBackend = $this->getMockBuilder('Doctrine\Common\Cache\FilesystemCache')
+            ->disableOriginalConstructor()
+            ->setMethods(['doFetch'])
+            ->getMock();
+
+        $cacheBackend->expects($this->atLeastOnce())
+            ->method('doFetch')
+            ->will($this->throwException(new \Exception('I failed')));
+
+        $tokens = $this->getMock(
+            'Talis\Persona\Client\Tokens',
+            ['retrievePublicKeyFromPersona'],
+            [
+                [
+                    'userAgent' => 'unittest',
+                    'persona_host' => 'localhost',
+                    'cacheBackend' => $cacheBackend,
+                ]
+            ]
+        );
+
+        $tokens->expects($this->once())
+            ->method('retrievePublicKeyFromPersona')
+            ->willReturn('cert');
+
+        $tokens->retrieveJWTCertificate();
+    }
+
+    public function testCachingCertificateFailure()
+    {
+        $cacheBackend = $this->getMockBuilder('Doctrine\Common\Cache\FilesystemCache')
+            ->disableOriginalConstructor()
+            ->setMethods(['doSave', 'doFetch'])
+            ->getMock();
+
+        $cacheBackend->expects($this->atLeastOnce())
+            ->method('doSave')
+            ->will($this->throwException(new \Exception('I failed')));
+
+        $cacheBackend->expects($this->atLeastOnce())
+            ->method('doFetch')
+            ->willReturn(null);
+
+        $tokens = $this->getMock(
+            'Talis\Persona\Client\Tokens',
+            ['retrievePublicKeyFromPersona'],
+            [
+                [
+                    'userAgent' => 'unittest',
+                    'persona_host' => 'localhost',
+                    'cacheBackend' => $cacheBackend,
+                ]
+            ]
+        );
+
+        $tokens->expects($this->once())
+            ->method('retrievePublicKeyFromPersona')
+            ->willReturn('cert');
+
+        $tokens->retrieveJWTCertificate();
+    }
 }
