@@ -171,7 +171,7 @@ class Tokens extends Base
     protected function retrievePublicKeyFromPersona()
     {
         try {
-            return $this->performRequest(
+            $response = $this->performRequest(
                 '/oauth/keys',
                 [
                     'expectResponse' => true,
@@ -179,6 +179,8 @@ class Tokens extends Base
                     'parseJson' => false,
                 ]
             );
+
+            return $response->__toString();
         } catch (\Exception $e) {
             $this->getLogger()->warning(
                 'could not retrieve persona public certificate'

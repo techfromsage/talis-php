@@ -179,6 +179,56 @@ class TokensTest extends TestBase
         $this->assertEquals(ValidationResults::SUCCESS, $result);
     }
 
+    public function testPersonaFallbackWhenUnableToGetPublicCert()
+    {
+        $mockClient = $this->getMock(
+            'Talis\Persona\Client\Tokens',
+            [
+                'getCacheClient',
+                'personaObtainNewToken',
+                'retrieveJWTCertificate',
+                'cacheToken',
+                'performRequest',
+            ],
+            [
+                [
+                    'userAgent' => 'unittest',
+                    'persona_host' => 'localhost',
+                    'cacheBackend' => $this->cacheBackend,
+                ]
+            ]
+        );
+
+        $jwt = JWT::encode(
+            [
+                'jwtid' => time(),
+                'exp' => time() + 60 * 60,
+                'nbf' => time() - 1,
+                'audience' => 'standard_user',
+                'scopeCount' => 30,
+            ],
+            $this->privateKey,
+            'RS256'
+        );
+
+        $mockClient->expects($this->once())
+            ->method('retrieveJWTCertificate')
+            ->will($this->returnValue(null));
+
+        $mockClient->expects($this->once())
+            ->method('performRequest')
+            ->will($this->returnValue(true));
+
+        $result = $mockClient->validateToken(
+            [
+                'access_token' => $jwt,
+                'scope' => 'su',
+            ]
+        );
+
+        $this->assertEquals(ValidationResults::SUCCESS, $result);
+    }
+
     /**
      * A expired token should fail
      */
@@ -1098,6 +1148,150 @@ class TokensTest extends TestBase
         $tokens->expects($this->once())
             ->method('retrievePublicKeyFromPersona')
             ->willReturn('cert');
+
+        $tokens->retrieveJWTCertificate();
+    }
+
+    public function testRetrieveJWTCertificateCaching()
+    {
+        $cacheBackend = $this->getMockBuilder('Doctrine\Common\Cache\FilesystemCache')
+            ->disableOriginalConstructor()
+            ->setMethods(['doFetch', 'doSave'])
+            ->getMock();
+
+        $cacheBackend->expects($this->atLeastOnce())
+            ->method('doFetch')
+            ->willReturn(null);
+
+        $cacheBackend->expects($this->exactly(2))
+            ->method('doSave')
+            ->withConsecutive(
+                ['[composer_version][1]', '0.0.1', 3600],
+                ['[cert_pub][1]', 'cert', 300]
+            );
+
+        $plugin = new Guzzle\Plugin\Mock\MockPlugin();
+        $plugin->addResponse(new Guzzle\Http\Message\Response(200, null, 'cert'));
+        $httpClient = new Guzzle\Http\Client();
+        $httpClient->addSubscriber($plugin);
+
+        $tokens = $this->getMock(
+            'Talis\Persona\Client\Tokens',
+            ['getHTTPClient', 'getVersionFromComposeFile'],
+            [
+                [
+                    'userAgent' => 'unittest',
+                    'persona_host' => 'localhost',
+                    'cacheBackend' => $cacheBackend,
+                ]
+            ]
+        );
+
+        $tokens->expects($this->once())
+            ->method('getHTTPClient')
+            ->willReturn($httpClient);
+
+        $tokens->expects($this->once())
+            ->method('getVersionFromComposeFile')
+            ->willReturn('0.0.1');
+
+        $tokens->retrieveJWTCertificate();
+    }
+
+    public function testRetrieveJWTCertificateCachingFetchingFailure()
+    {
+        $cacheBackend = $this->getMockBuilder('Doctrine\Common\Cache\FilesystemCache')
+            ->disableOriginalConstructor()
+            ->setMethods(['doFetch', 'doSave'])
+            ->getMock();
+
+        $cacheBackend->expects($this->exactly(3))
+            ->method('doFetch')
+            ->will(
+                $this->onConsecutiveCalls(
+                    $this->throwException(new \Exception('blah')),
+                    null,
+                    $this->throwException(new \Exception('blah'))
+                )
+            );
+
+        $cacheBackend->expects($this->exactly(2))
+            ->method('doSave')
+            ->withConsecutive(
+                ['[composer_version][1]', '0.0.1', 3600],
+                ['[cert_pub][1]', 'cert', 300]
+            );
+
+        $plugin = new Guzzle\Plugin\Mock\MockPlugin();
+        $plugin->addResponse(new Guzzle\Http\Message\Response(200, null, 'cert'));
+        $httpClient = new Guzzle\Http\Client();
+        $httpClient->addSubscriber($plugin);
+
+        $tokens = $this->getMock(
+            'Talis\Persona\Client\Tokens',
+            ['getHTTPClient', 'getVersionFromComposeFile'],
+            [
+                [
+                    'userAgent' => 'unittest',
+                    'persona_host' => 'localhost',
+                    'cacheBackend' => $cacheBackend,
+                ]
+            ]
+        );
+
+        $tokens->expects($this->once())
+            ->method('getHTTPClient')
+            ->willReturn($httpClient);
+
+        $tokens->expects($this->once())
+            ->method('getVersionFromComposeFile')
+            ->willReturn('0.0.1');
+
+        $tokens->retrieveJWTCertificate();
+    }
+
+    public function testRetrieveJWTCertificateCachingSaveFailure()
+    {
+        $cacheBackend = $this->getMockBuilder('Doctrine\Common\Cache\FilesystemCache')
+            ->disableOriginalConstructor()
+            ->setMethods(['doFetch', 'doSave'])
+            ->getMock();
+
+        $cacheBackend->expects($this->atLeastOnce())
+            ->method('doFetch');
+
+        $cacheBackend->expects($this->exactly(2))
+            ->method('doSave')
+            ->withConsecutive(
+                ['[composer_version][1]', '0.0.1', 3600],
+                ['[cert_pub][1]', 'cert', 300]
+            )
+            ->will($this->throwException(new \Exception('oh no')));
+
+        $plugin = new Guzzle\Plugin\Mock\MockPlugin();
+        $plugin->addResponse(new Guzzle\Http\Message\Response(200, null, 'cert'));
+        $httpClient = new Guzzle\Http\Client();
+        $httpClient->addSubscriber($plugin);
+
+        $tokens = $this->getMock(
+            'Talis\Persona\Client\Tokens',
+            ['getHTTPClient', 'getVersionFromComposeFile'],
+            [
+                [
+                    'userAgent' => 'unittest',
+                    'persona_host' => 'localhost',
+                    'cacheBackend' => $cacheBackend,
+                ]
+            ]
+        );
+
+        $tokens->expects($this->once())
+            ->method('getHTTPClient')
+            ->willReturn($httpClient);
+
+        $tokens->expects($this->once())
+            ->method('getVersionFromComposeFile')
+            ->willReturn('0.0.1');
 
         $tokens->retrieveJWTCertificate();
     }

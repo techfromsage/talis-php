@@ -25,7 +25,7 @@ trait ClientVersionCache
      * Parse this package version from the composer.json file
      * @return string package version, or 'unknown'
      */
-    private function getVersionFromComposeFile()
+    protected function getVersionFromComposeFile()
     {
         $version = 'unknown';
         $composerFileContent = file_get_contents(
