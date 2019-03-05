@@ -237,7 +237,6 @@ abstract class Base
             $httpConfig['headers']['Content-Type'] = 'application/x-www-form-urlencoded';
         }
 
-        // TODO: turn off all caching
         $client = $this->getHTTPClient($this->config['persona_host']);
         $request = $client->createRequest(
             $opts['method'],
