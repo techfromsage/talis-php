@@ -6,14 +6,16 @@ use Monolog\Logger;
 use Guzzle\Http\Exception\RequestException;
 use \Domnikl\Statsd\Connection\Socket;
 use \Domnikl\Statsd\Connection\Blackhole;
+use \Guzzle\Http\Client as GuzzleClient;
+use \Talis\Persona\Client\ClientVersionCache;
 
 abstract class Base
 {
+    use ClientVersionCache;
+
     const STATSD_CONN = 'STATSD_CONN';
     const STATSD_PREFIX = 'STATSD_PREFIX';
     const LOGGER_NAME = 'PERSONA';
-    const COMPOSER_VERSION_CACHE_KEY = 'composer_version';
-    const COMPOSER_VERSION_CACHE_TTL_SEC = 3600; // 1 hour
     const PERSONA_API_VERSION = '3';
 
     /**
@@ -32,9 +34,6 @@ abstract class Base
      * @var \Psr\Log\LoggerInterface
      */
     private $logger;
-
-     /** @var \Talis\Persona\Client\HttpClientFactory */
-    private $httpClientFactory;
 
     /**
      * @var \Doctrine\Common\Cache\CacheProvider
@@ -66,7 +65,6 @@ abstract class Base
      *      cacheBackend: (Doctrine\Common\Cache\CacheProvider) cache storage
      *      cacheKeyPrefix: (string) optional prefix to append to the cache keys
      *      cacheDefaultTTL: (integer) optional cache TTL value
-     *      httpClientFactory: (Talis\Persona\Client\HttpClientFactory) http client factory
      * @throws \InvalidArgumentException If any of the required config parameters are missing
      * @throws \InvalidArgumentException If the user agent format is invalid
      */
@@ -97,19 +95,6 @@ abstract class Base
         $this->logger = $this->get($config, 'logger', null);
         $this->cacheBackend = $config['cacheBackend'];
         $this->phpVersion = phpversion();
-
-        if (isset($config['httpClientFactory'])) {
-            $this->httpClientFactory = $config['httpClientFactory'];
-        } else {
-            $this->httpClientFactory = new HttpClientFactory(
-                $config['persona_host'],
-                $this->cacheBackend,
-                [
-                    'keyPrefix' => $this->get($config, 'cacheKeyPrefix', ''),
-                    'defaultTtl' => $this->get($config, 'cacheDefaultTTL', 3600),
-                ]
-            );
-        }
     }
 
     /**
@@ -166,7 +151,7 @@ abstract class Base
     }
 
     /**
-     * @return Logger|\Psr\Log\LoggerInterface
+     * @return \Psr\Log\LoggerInterface
      */
     protected function getLogger()
     {
@@ -175,53 +160,6 @@ abstract class Base
         }
 
         return $this->logger;
-    }
-
-    /**
-     * Create a http client
-     * @param boolean $skipRevalidation whether to skip validating a previous
-     *    request that has been cached. The validation uses the remote server
-     *    to retrieve the current etag/cache headers & compare them against the
-     *    original values.
-     * @return \Guzzle\Http\Client
-     */
-    protected function getHTTPClient($skipRevalidation = false)
-    {
-        return $this->httpClientFactory->create($skipRevalidation);
-    }
-
-    /**
-     * Retrieve the Persona client version
-     * @return string Persona client version
-     */
-    protected function getClientVersion()
-    {
-        $version = $this->getCacheBackend()->fetch(self::COMPOSER_VERSION_CACHE_KEY);
-
-        if ($version) {
-            return $version;
-        }
-
-        $composerFileContent = file_get_contents(
-            __DIR__ . '/../../../../composer.json'
-        );
-
-        if ($composerFileContent === false) {
-            return 'unknown';
-        }
-
-        $composer = json_decode($composerFileContent, true);
-        if (isset($composer['version']) === false) {
-            return 'unknown';
-        }
-
-        $this->getCacheBackend()->save(
-            self::COMPOSER_VERSION_CACHE_KEY,
-            $composer['version'],
-            self::COMPOSER_VERSION_CACHE_TTL_SEC
-        );
-
-        return $composer['version'];
     }
 
     /**
@@ -241,6 +179,16 @@ abstract class Base
     }
 
     /**
+     * Create a http client
+     * @param string $host host to send a request to
+     * @return \Guzzle\Http\Client http client
+     */
+    protected function getHTTPClient($host)
+    {
+        return new GuzzleClient($host);
+    }
+
+    /**
      * Create a HTTP request with a predefined set of headers
      * @param string $url url to request
      * @param array $opts options
@@ -253,13 +201,13 @@ abstract class Base
 
         $opts = array_merge(
             [
-                'headers' => [],
+                'headers' => [
+                    'Cache-Control' => 'max-age=0, no-cache',
+                ],
                 'method' => 'GET',
                 'expectResponse' => true,
                 'addContentType' => true,
                 'parseJson' => true,
-                'cacheTTL' => $this->defaultTtl,
-                'skipRevalidation' => false,
             ],
             $opts
         );
@@ -289,7 +237,7 @@ abstract class Base
             $httpConfig['headers']['Content-Type'] = 'application/x-www-form-urlencoded';
         }
 
-        $client = $this->getHTTPClient($opts['skipRevalidation']);
+        $client = $this->getHTTPClient($this->config['persona_host']);
         $request = $client->createRequest(
             $opts['method'],
             $url,
@@ -302,10 +250,8 @@ abstract class Base
     }
 
     /**
-     * Perform the request according to the $curlOptions. Only
-     * GET and HEAD requests are cached.
-     * tip: turn off caching by defining the 'Cache-Control'
-     *      header with a value of 'max-age=0, no-cache'
+     * Perform the request according to the $curlOptions.
+     *
      * @param string $url request url
      * @param array $opts configuration / options:
      *      timeout: (30 seconds) HTTP timeout
@@ -315,22 +261,13 @@ abstract class Base
      *      expectResponse: (default true) parse the http response
      *      addContentType: (default true) add type application/x-www-form-urlencoded
      *      parseJson: (default true) parse the response as JSON
-     *      cacheTTL: optional TTL for this request only
-     *      skipRevalidation: (default false) whether to skip http cache
-     *          validation of the etags/cache headers and only use the expiry
-     *          time which was set from the original request
-     * @return array|null response body
+     * @return array|null|string response body
      * @throws NotFoundException If the http status was a 404
      * @throws \Exception If response not 200 and valid JSON
      */
-    protected function performRequest($url, array $opts)
+    protected function performRequest($url, array $opts = [])
     {
         $request = $this->createRequest($url, $opts);
-        // Only caches GET & HEAD requests, see
-        // \Doctrine\Common\Cache\DefaultCanCacheStrategy
-        if (isset($opts['cacheTTL'])) {
-            $request->getParams()->set('cache.override_ttl', $opts['cacheTTL']);
-        }
 
         try {
             $response = $request->send();

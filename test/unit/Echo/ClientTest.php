@@ -40,9 +40,21 @@ class ClientTest extends \PHPUnit_Framework_TestCase
     {
         $this->setRequiredDefines();
 
-        $echoClient = new \Talis\EchoClient\Client();
-        $bSent = $echoClient->createEvent('someClass', 'someSource');
+        $stubPersonaClient = $this->getMock('\Talis\Persona\Client\Tokens', [], [], '', false);
+        $stubPersonaClient->expects($this->once())
+            ->method('obtainNewToken')
+            ->will($this->returnValue(['access_token' => 'some-token']));
 
+        $echoClient = $this->getMock(
+            '\Talis\EchoClient\Client',
+            ['getPersonaClient']
+        );
+
+        $echoClient->expects($this->once())
+            ->method('getPersonaClient')
+            ->will($this->returnValue($stubPersonaClient));
+
+        $bSent = $echoClient->createEvent('someClass', 'someSource');
         $this->assertFalse($bSent);
     }
 

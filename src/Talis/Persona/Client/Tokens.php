@@ -12,11 +12,13 @@ use \Talis\Persona\Client\InvalidTokenException;
 use \Talis\Persona\Client\TokenValidationException;
 use \Talis\Persona\Client\UnauthorisedException;
 use \Talis\Persona\Client\UnknownException;
+use \Talis\Persona\Client\CertificateCache;
 use \Talis\Persona\Client\TokenCache;
 
 class Tokens extends Base
 {
     use TokenCache;
+    use CertificateCache;
 
     /**
      * Validates the supplied token using JWT or a remote Persona server.
@@ -45,11 +47,18 @@ class Tokens extends Base
 
         $scope = isset($params['scope']) ? $params['scope'] : null;
         $scope = is_null($scope) || is_array($scope) ? $scope : [$scope];
+        $scope = is_null($scope) ? [] : $scope;
 
         try {
             return $this->validateTokenUsingJWT($token, $scope);
-        } catch (ScopesNotDefinedException $exception) {
-            return $this->validateTokenUsingPersona($token, $scope);
+        } catch (\Exception $e) {
+            if ($e instanceof ScopesNotDefinedException
+                || $e instanceof CommunicationException
+            ) {
+                return $this->validateTokenUsingPersona($token, $scope);
+            }
+
+            throw $e;
         }
     }
 
@@ -60,15 +69,17 @@ class Tokens extends Base
      *
      * @param string $token a token to validate explicitly, if you do not
      *      specify one the method tries to find one
-     * @param array|null $scopes specify this if you wish to validate a scoped token
-     * @param integer $cacheTTL time to live value in seconds for the certificate to stay within cache
-     * @return integer ValidationResults enum
      * @throws ScopesNotDefinedException If the JWT token doesn't include the user's scopes
-     * @throws Exception If not able to communicate with Persona to retrieve the public certificate
+     * @throws CommunicationException Cannot communicate with Persona
+     * @throws \Exception If not able to communicate with Persona to retrieve the public certificate
      */
-    protected function validateTokenUsingJWT($token, array $scopes = null, $cacheTTL = 300)
+    protected function validateTokenUsingJWT($token, array $scopes = null)
     {
-        $publicCert = $this->retrieveJWTCertificate($cacheTTL);
+        $publicCert = $this->retrieveJWTCertificate();
+
+        if (empty($publicCert)) {
+            throw new CommunicationException('cannot retrieve certificate');
+        }
 
         try {
             $decodedToken = $this->decodeToken($token, $publicCert);
@@ -132,20 +143,51 @@ class Tokens extends Base
      * the integrity & authentication of a given JWT
      * @param integer $cacheTTL time to live in seconds for cached responses
      * @return string certificate
-     * @throws Exception Cannot comminucate with Persona or Redis
+     * @throws \Exception Cannot comminucate with Persona or Redis
      */
     public function retrieveJWTCertificate($cacheTTL = 300)
     {
-        return $this->performRequest(
-            '/oauth/keys',
-            [
-                'expectResponse' => true,
-                'addContentType' => true,
-                'parseJson' => false,
-                'cacheTTL' => $cacheTTL,
-                'skipRevalidation' => true,
-            ]
-        );
+        $certificate = $this->getCachedCertificate();
+
+        if (!empty($certificate)) {
+            return $certificate;
+        }
+
+        $certificate = $this->retrievePublicKeyFromPersona();
+
+        if (!empty($certificate)) {
+            $this->cacheCertificate($certificate, $cacheTTL);
+        }
+
+        return $certificate;
+    }
+
+    /**
+     * Retrieve Persona's public key
+     * @throws \Talis\Persona\Client\CommunicationException Could not retrieve
+     *      Persona's public key
+     * @return string public key
+     */
+    protected function retrievePublicKeyFromPersona()
+    {
+        try {
+            $response = $this->performRequest(
+                '/oauth/keys',
+                [
+                    'expectResponse' => true,
+                    'addContentType' => true,
+                    'parseJson' => false,
+                ]
+            );
+
+            return $response->__toString();
+        } catch (\Exception $e) {
+            $this->getLogger()->warning(
+                'could not retrieve persona public certificate'
+            );
+
+            throw new CommunicationException('cannot retrieve certificate');
+        }
     }
 
     /**
@@ -166,7 +208,7 @@ class Tokens extends Base
         $success = $this->personaCheckTokenIsValid($token, $scopes);
         $this->getStatsD()->endTiming('validateToken.rest.get');
 
-        if ($success === true) {
+        if ($success === ValidationResults::SUCCESS) {
             $this->getStatsD()->increment('validateToken.rest.valid');
         } else {
             $this->getStatsD()->increment('validateToken.rest.invalid');
@@ -226,19 +268,18 @@ class Tokens extends Base
     /**
      * List all scopes that belong to a given token
      * @param array $tokenInArray An array containing a JWT under the key `access_token`
-     * @param integer $pubCertCacheTTL optional JWT public certificate time-to-live
      * @return array list of scopes
      *
      * @throws TokenValidationException Invalid signature, key or token
+     * @throws \Exception If not able to communicate with Persona to retrieve the public certificate
      */
-    public function listScopes(array $tokenInArray, $pubCertCacheTTL = 300)
+    public function listScopes(array $tokenInArray)
     {
         if (!isset($tokenInArray['access_token'])) {
             throw new TokenValidationException('missing access token');
         }
 
-        $publicCert = $this->retrieveJWTCertificate($pubCertCacheTTL);
-
+        $publicCert = $this->retrieveJWTCertificate();
         $encodedToken = $tokenInArray['access_token'];
         $decodedToken = $this->decodeToken($encodedToken, $publicCert);
 
@@ -282,14 +323,7 @@ class Tokens extends Base
     protected function makePersonaHttpRequest($url)
     {
         try {
-            $body = $this->performRequest(
-                $url,
-                [
-                    'headers' => [
-                        'Cache-Control' => 'max-age=0, no-cache',
-                    ],
-                ]
-            );
+            $body = $this->performRequest($url);
         } catch (\Exception $e) {
             $this->getLogger()->error(
                 'unable to retrieve token metadata',
@@ -322,7 +356,7 @@ class Tokens extends Base
      * able to validate the token.
      *
      * @param string $token token to validate
-     * @param array $scopes optional scopes to validate
+     * @param array|null $scopes optional scopes to validate
      * @return integer ValidationResults enum
      */
     protected function personaCheckTokenIsValid($token, array $scopes = [])

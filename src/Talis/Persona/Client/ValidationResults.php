@@ -11,4 +11,5 @@ class ValidationResults
     const UNKNOWN = 4;
     const UNAUTHORISED = 5;
     const INVALID_SIGNATURE = 6;
+    const COMMUNICATION_ISSUE = 7;
 }
