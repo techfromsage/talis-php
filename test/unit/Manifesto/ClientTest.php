@@ -12,7 +12,7 @@ class ClientTest extends TestBase
     public function testSetGetManifestoBaseUrl()
     {
         $baseUrl = 'http://example.com/manifesto';
-        $client = new \Manifesto\Client($baseUrl);
+        $client = new \Talis\Manifesto\Client($baseUrl);
         $this->assertEquals($baseUrl, $client->getManifestoBaseUrl());
         $client->setManifestoBaseUrl('https://example.org/foobar');
         $this->assertEquals('https://example.org/foobar', $client->getManifestoBaseUrl());
@@ -60,9 +60,9 @@ class ClientTest extends TestBase
 
     public function testSuccessfulRequestArchive()
     {
-        /** @var \Manifesto\Client|PHPUnit_Framework_MockObject_MockObject $mockClient */
+        /** @var \Talis\Manifesto\Client|PHPUnit_Framework_MockObject_MockObject $mockClient */
         $mockClient = $this->getMock(
-            '\Manifesto\Client',
+            '\Talis\Manifesto\Client',
             array('getHeaders', 'getHTTPClient'),
             array('https://example.com/manifesto')
         );
@@ -105,7 +105,7 @@ class ClientTest extends TestBase
 
         $mockClient->setPersonaConnectValues($personaOpts);
 
-        $m = new \Manifesto\Manifest();
+        $m = new \Talis\Manifesto\Manifest();
         $m->setFormat(FORMAT_ZIP);
         $files = array();
         $file1 = array('file'=>'/path/to/file1.txt');
@@ -120,10 +120,10 @@ class ClientTest extends TestBase
         $files[] = $file3;
         $m->addFile($file3);
 
-        /** @var \Manifesto\Archive $response */
+        /** @var \Talis\Manifesto\Archive $response */
         $response = $mockClient->requestArchive($m, 'token', 'secret');
 
-        $this->assertInstanceOf('\Manifesto\Archive', $response);
+        $this->assertInstanceOf('\Talis\Manifesto\Archive', $response);
         $this->assertEquals('12345', $response->getId());
         $this->assertEquals('Accepted', $response->getStatus());
         $this->assertEmpty($response->getLocation());
@@ -131,9 +131,9 @@ class ClientTest extends TestBase
 
     public function testGenerateUrlNotAuthorisedResponse()
     {
-        /** @var \Manifesto\Client|PHPUnit_Framework_MockObject_MockObject $mockClient */
+        /** @var \Talis\Manifesto\Client|PHPUnit_Framework_MockObject_MockObject $mockClient */
         $mockClient = $this->getMock(
-            '\Manifesto\Client',
+            '\Talis\Manifesto\Client',
             array('getHeaders', 'getHTTPClient'),
             array('https://example.com/manifesto')
         );
@@ -174,15 +174,15 @@ class ClientTest extends TestBase
 
         $mockClient->setPersonaConnectValues($personaOpts);
 
-        $this->setExpectedException('\Manifesto\Exceptions\UnauthorisedAccessException', 'Client is not authorised for request');
+        $this->setExpectedException('\Talis\Manifesto\Exceptions\UnauthorisedAccessException', 'Client is not authorised for request');
         $response = $mockClient->generateUrl('123', 'token', 'secret');
     }
 
     public function testGenerateUrlReturns404()
     {
-        /** @var \Manifesto\Client|PHPUnit_Framework_MockObject_MockObject $mockClient */
+        /** @var \Talis\Manifesto\Client|PHPUnit_Framework_MockObject_MockObject $mockClient */
         $mockClient = $this->getMock(
-            '\Manifesto\Client',
+            '\Talis\Manifesto\Client',
             array('getHeaders', 'getHTTPClient'),
             array('https://example.com/manifesto')
         );
@@ -222,15 +222,15 @@ class ClientTest extends TestBase
 
         $mockClient->setPersonaConnectValues($personaOpts);
 
-        $this->setExpectedException('\Manifesto\Exceptions\GenerateUrlException', 'Missing archive');
+        $this->setExpectedException('\Talis\Manifesto\Exceptions\GenerateUrlException', 'Missing archive');
         $response = $mockClient->generateUrl('1234', 'token', 'secret');
     }
 
     public function testGenerateUrlJobReadyForDownload()
     {
-        /** @var \Manifesto\Client|PHPUnit_Framework_MockObject_MockObject $mockClient */
+        /** @var \Talis\Manifesto\Client|PHPUnit_Framework_MockObject_MockObject $mockClient */
         $mockClient = $this->getMock(
-            '\Manifesto\Client',
+            '\Talis\Manifesto\Client',
             array('getHeaders', 'getHTTPClient'),
             array('https://example.com/manifesto')
         );
@@ -275,9 +275,9 @@ class ClientTest extends TestBase
 
     public function testRequestArchiveNotAuthorisedResponse()
     {
-        /** @var \Manifesto\Client|PHPUnit_Framework_MockObject_MockObject $mockClient */
+        /** @var \Talis\Manifesto\Client|PHPUnit_Framework_MockObject_MockObject $mockClient */
         $mockClient = $this->getMock(
-            '\Manifesto\Client',
+            '\Talis\Manifesto\Client',
             array('getHeaders', 'getHTTPClient'),
             array('https://example.com/manifesto')
         );
@@ -320,7 +320,7 @@ class ClientTest extends TestBase
 
         $mockClient->setPersonaConnectValues($personaOpts);
 
-        $m = new \Manifesto\Manifest();
+        $m = new \Talis\Manifesto\Manifest();
         $m->setFormat(FORMAT_ZIP);
         $files = array();
         $file1 = array('file'=>'/path/to/file1.txt');
@@ -335,15 +335,15 @@ class ClientTest extends TestBase
         $files[] = $file3;
         $m->addFile($file3);
 
-        $this->setExpectedException('\Manifesto\Exceptions\UnauthorisedAccessException', 'Client is not authorised for request');
+        $this->setExpectedException('\Talis\Manifesto\Exceptions\UnauthorisedAccessException', 'Client is not authorised for request');
         $response = $mockClient->requestArchive($m, 'token', 'secret');
     }
 
     public function testRequestArchiveInvalidManifestResponse()
     {
-        /** @var \Manifesto\Client|PHPUnit_Framework_MockObject_MockObject $mockClient */
+        /** @var \Talis\Manifesto\Client|PHPUnit_Framework_MockObject_MockObject $mockClient */
         $mockClient = $this->getMock(
-            '\Manifesto\Client',
+            '\Talis\Manifesto\Client',
             array('getHeaders', 'getHTTPClient'),
             array('https://example.com/manifesto')
         );
@@ -386,7 +386,7 @@ class ClientTest extends TestBase
 
         $mockClient->setPersonaConnectValues($personaOpts);
 
-        $m = new \Manifesto\Manifest();
+        $m = new \Talis\Manifesto\Manifest();
         $m->setFormat(FORMAT_ZIP);
         $files = array();
         $file1 = array('file'=>'/path/to/file1.txt');
@@ -401,15 +401,15 @@ class ClientTest extends TestBase
         $files[] = $file3;
         $m->addFile($file3);
 
-        $this->setExpectedException('\Manifesto\Exceptions\ManifestValidationException', 'The Manifest is incomplete or contains invalid properties');
+        $this->setExpectedException('\Talis\Manifesto\Exceptions\ManifestValidationException', 'The Manifest is incomplete or contains invalid properties');
         $response = $mockClient->requestArchive($m, 'token', 'secret');
     }
 
     public function testRequestArchiveReturns404()
     {
-        /** @var \Manifesto\Client|PHPUnit_Framework_MockObject_MockObject $mockClient */
+        /** @var \Talis\Manifesto\Client|PHPUnit_Framework_MockObject_MockObject $mockClient */
         $mockClient = $this->getMock(
-            '\Manifesto\Client',
+            '\Talis\Manifesto\Client',
             array('getHeaders', 'getHTTPClient'),
             array('https://example.com/manifesto')
         );
@@ -452,7 +452,7 @@ class ClientTest extends TestBase
 
         $mockClient->setPersonaConnectValues($personaOpts);
 
-        $m = new \Manifesto\Manifest();
+        $m = new \Talis\Manifesto\Manifest();
         $m->setFormat(FORMAT_ZIP);
         $files = array();
         $file1 = array('file'=>'/path/to/file1.txt');
@@ -467,15 +467,15 @@ class ClientTest extends TestBase
         $files[] = $file3;
         $m->addFile($file3);
 
-        $this->setExpectedException('\Manifesto\Exceptions\ArchiveException', 'Misconfigured Manifesto base url');
+        $this->setExpectedException('\Talis\Manifesto\Exceptions\ArchiveException', 'Misconfigured Manifesto base url');
         $response = $mockClient->requestArchive($m, 'token', 'secret');
     }
 
     public function testRequestArchiveUnexpectedClientErrorResponse()
     {
-        /** @var \Manifesto\Client|PHPUnit_Framework_MockObject_MockObject $mockClient */
+        /** @var \Talis\Manifesto\Client|PHPUnit_Framework_MockObject_MockObject $mockClient */
         $mockClient = $this->getMock(
-            '\Manifesto\Client',
+            '\Talis\Manifesto\Client',
             array('getHeaders', 'getHTTPClient'),
             array('https://example.com/manifesto')
         );
@@ -518,7 +518,7 @@ class ClientTest extends TestBase
 
         $mockClient->setPersonaConnectValues($personaOpts);
 
-        $m = new \Manifesto\Manifest();
+        $m = new \Talis\Manifesto\Manifest();
         $m->setFormat(FORMAT_ZIP);
         $files = array();
         $file1 = array('file'=>'/path/to/file1.txt');
@@ -539,9 +539,9 @@ class ClientTest extends TestBase
 
     public function testRequestArchiveUnexpectedServerErrorResponse()
     {
-        /** @var \Manifesto\Client|PHPUnit_Framework_MockObject_MockObject $mockClient */
+        /** @var \Talis\Manifesto\Client|PHPUnit_Framework_MockObject_MockObject $mockClient */
         $mockClient = $this->getMock(
-            '\Manifesto\Client',
+            '\Talis\Manifesto\Client',
             array('getHeaders', 'getHTTPClient'),
             array('https://example.com/manifesto')
         );
@@ -584,7 +584,7 @@ class ClientTest extends TestBase
 
         $mockClient->setPersonaConnectValues($personaOpts);
 
-        $m = new \Manifesto\Manifest();
+        $m = new \Talis\Manifesto\Manifest();
         $m->setFormat(FORMAT_ZIP);
         $files = array();
         $file1 = array('file'=>'/path/to/file1.txt');
@@ -604,7 +604,7 @@ class ClientTest extends TestBase
     }
 }
 
-class TestManifestoClient extends \Manifesto\Client
+class TestManifestoClient extends \Talis\Manifesto\Client
 {
     public function getPersonaConnectValues()
     {

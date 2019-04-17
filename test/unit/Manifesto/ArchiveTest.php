@@ -13,7 +13,7 @@ class ArchiveTest extends TestBase
     {
         $response = array('status'=>'Completed', 'location'=>'http://example.com/1234', 'id'=>"1234");
 
-        $archive = new \Manifesto\Archive();
+        $archive = new \Talis\Manifesto\Archive();
         $archive->loadFromArray($response);
 
         $this->assertEquals("1234", $archive->getId());
@@ -25,7 +25,7 @@ class ArchiveTest extends TestBase
     {
         $response = "{\"status\":\"Completed\", \"location\":\"http:\/\/example.com\/1234\", \"id\":\"1234\"}";
 
-        $archive = new \Manifesto\Archive();
+        $archive = new \Talis\Manifesto\Archive();
         $archive->loadFromJson($response);
 
         $this->assertEquals("1234", $archive->getId());
