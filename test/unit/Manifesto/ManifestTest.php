@@ -1,6 +1,11 @@
 <?php
 
-require_once 'TestBase.php';
+$appRoot = dirname(dirname(dirname(__DIR__)));
+if (!defined('APPROOT')) {
+    define('APPROOT', $appRoot);
+}
+
+require_once $appRoot . '/test/unit/TestBase.php';
 
 class ManifestTest extends TestBase {
     public function testGetSetSafeMode()
