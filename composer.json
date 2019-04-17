@@ -7,6 +7,7 @@
     "echo",
     "babel",
     "critic",
+    "manifesto",
     "php",
     "client library"
   ],
@@ -35,7 +36,9 @@
       "Talis\\Critic\\": "src",
       "Talis\\Critic\\Exceptions\\": "src",
       "Talis\\EchoClient\\": "src",
-      "Talis\\Babel\\": "src"
+      "Talis\\Babel\\": "src",
+      "Talis\\Manifesto\\": "src",
+      "Talis\\Manifesto\\Exceptions": "src"
     }
   }
 }
