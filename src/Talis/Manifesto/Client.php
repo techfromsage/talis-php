@@ -125,13 +125,13 @@ class Client {
 
             if($response->getStatusCode() == 202)
             {
-                $archive = new \Manifesto\Archive();
+                $archive = new \Talis\Manifesto\Archive();
                 $archive->loadFromJson($response->getBody(true));
                 return $archive;
             }
             else
             {
-                throw new \Manifesto\Exceptions\ArchiveException($response->getStatusCode(), $response->getBody(true));
+                throw new \Talis\Manifesto\Exceptions\ArchiveException($response->getStatusCode(), $response->getBody(true));
             }
         }
         /** @var \Guzzle\Http\Exception\ClientErrorResponseException $e */
@@ -188,7 +188,7 @@ class Client {
                 return $body->url;
             } else
             {
-                throw new \Manifesto\Exceptions\GenerateUrlException($response->getStatusCode, $response->getBody(true));
+                throw new \Talis\Manifesto\Exceptions\GenerateUrlException($response->getStatusCode, $response->getBody(true));
             }
 
         } catch(\Guzzle\Http\Exception\ClientErrorResponseException $e){
