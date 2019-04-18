@@ -2,7 +2,7 @@ FROM talis/ubuntu:1404-latest
 
 ENV DEBIAN_FRONTEND noninteractive
 
-#ARG git_oauth_token
+ARG git_oauth_token
 ARG persona_oauth_client
 ARG persona_oauth_secret
 
@@ -32,7 +32,7 @@ RUN apt-get install --no-install-recommends -y \
 # Install composer
 RUN curl https://getcomposer.org/installer | php -- && mv composer.phar /usr/local/bin/composer && chmod +x /usr/local/bin/composer
 
-#RUN composer config -g github-oauth.github.com $git_oauth_token
+RUN composer config -g github-oauth.github.com $git_oauth_token
 
 # Tidy up
 RUN apt-get -y autoremove && apt-get clean && apt-get autoclean && \
