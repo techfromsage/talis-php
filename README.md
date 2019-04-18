@@ -33,8 +33,14 @@ cd talis-php
 Manually run a docker build:
 
 ```bash
-docker build -t "talis/talis-php" --network=host --build-arg persona_oauth_client=<client-name-goes-here> --build-arg persona_oauth_secret=<password-goes-here> .
+docker build -t "talis/talis-php" --network=host --build-arg git_oauth_token=<your-git-oauth-token-goes-here> --build-arg persona_oauth_client=<persona-user-goes-here> --build-arg persona_oauth_secret=<persona-secret-goes-here> .
 ```
+
+`git_oauth_token` = either generate or use an existing git_oauth token. To generate see guide here: https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line
+
+`persona_oauth_client` = the persona user you want to use.
+
+`persona_oauth_secret` =  the password to the user specified.
 
 Initialise the environment. Run the following command which will download the required libraries.
 
