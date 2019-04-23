@@ -23,13 +23,32 @@ up and running to develop and test changes. Follow these steps:
 
 # Build the development image
 
+Clone the repo locally:
+
 ```bash
 git clone https://github.com/talis/talis-php.git
 cd talis-php
-ant build
+```
+
+Manually run a docker build:
+
+```bash
+docker build -t "talis/talis-php" --network=host --build-arg persona_oauth_client=<persona-user-goes-here> --build-arg persona_oauth_secret=<persona-secret-goes-here> .
+```
+
+`persona_oauth_client` = the persona user you want to use.
+
+`persona_oauth_secret` =  the password to the user specified.
+
+Initialise the environment. Run the following command which will download the required libraries.
+
+```bash
+docker-compose run init
 ```
 
 # When the above has built you can run the tests
+
+Available test commands:
 
 ```bash
 docker-compose run lint

@@ -1,12 +1,13 @@
 {
   "name": "talis/talis-php",
   "description": "This is a php client library for talis api's",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "keywords": [
     "persona",
     "echo",
     "babel",
     "critic",
+    "manifesto",
     "php",
     "client library"
   ],
@@ -35,7 +36,9 @@
       "Talis\\Critic\\": "src",
       "Talis\\Critic\\Exceptions\\": "src",
       "Talis\\EchoClient\\": "src",
-      "Talis\\Babel\\": "src"
+      "Talis\\Babel\\": "src",
+      "Talis\\Manifesto\\": "src",
+      "Talis\\Manifesto\\Exceptions": "src"
     }
   }
 }
