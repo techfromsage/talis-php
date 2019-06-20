@@ -181,4 +181,40 @@ class OAuthClientsIntegrationTest extends TestBase
 
         $personaClient->getOAuthClient('123', '456');
     }
+
+    public function testRegenerateSecret()
+    {
+        $tokenDetails = $this->personaClientTokens->obtainNewToken(
+            $this->clientId,
+            $this->clientSecret,
+            ['useCache' => false]
+        );
+
+        $this->assertArrayHasKey('access_token', $tokenDetails);
+        $suToken = $tokenDetails['access_token'];
+
+        $gupid = uniqid('trapdoor:');
+        $email = uniqid() . '@example.com';
+
+        $user = $this->personaClientUser->createUser(
+            $gupid,
+            ['name' => 'Sarah Connor', 'email' => $email],
+            $suToken
+        );
+
+        $guid = $user['guid'];
+
+        $secret = $this->personaClientOAuthClient->regenerateSecret(
+            $guid,
+            $suToken
+        );
+
+        $token = $this->personaClientTokens->obtainNewToken(
+            $guid,
+            $secret,
+            ['useCache' => false]
+        );
+
+        $this->assertArrayHasKey('access_token', $token);
+    }
 }
