@@ -129,7 +129,9 @@ class OAuthClients extends Base
         if (isset($resp['secret'])) {
             return $resp['secret'];
         } else {
-            throw new \Exception('invalid payload format from persona');
+            throw new InvalidConfigurationException(
+                'invalid payload format from persona'
+            );
         }
     }
 }
