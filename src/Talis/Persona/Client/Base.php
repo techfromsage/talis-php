@@ -18,6 +18,7 @@ abstract class Base
     const STATSD_PREFIX = 'STATSD_PREFIX';
     const LOGGER_NAME = 'PERSONA';
     const PERSONA_API_VERSION = '3';
+    const PERSONA_ADMIN_API_VERSION = '1';
 
     /**
      * Configuration object
