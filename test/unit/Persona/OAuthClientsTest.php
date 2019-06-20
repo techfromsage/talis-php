@@ -280,7 +280,7 @@ class OAuthClientsTest extends TestBase
         );
 
         $this->setExpectedException(
-            'InvalidConfigurationException',
+            'Talis\Persona\Client\InvalidConfigurationException',
             'missing persona_admin_host'
         );
 
@@ -353,7 +353,7 @@ class OAuthClientsTest extends TestBase
             ->willReturn(['invalid' => 'body']);
 
         $this->setExpectedException(
-            'InvalidPayloadException',
+            'Talis\Persona\Client\InvalidPayloadException',
             'invalid payload format from persona'
         );
         $oauthClient->regenerateSecret('clientId', 'token');

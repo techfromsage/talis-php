@@ -377,11 +377,12 @@ abstract class Base
      */
     protected function getPersonaAdminHost()
     {
-        if (!isset($this->config['persona_admin_host'])) {
+        if (isset($this->config['persona_admin_host'])) {
+            return $this->config['persona_admin_host'] . '/' . self::PERSONA_ADMIN_API_VERSION;
+        } else {
             throw new InvalidConfigurationException('missing persona_admin_host');
         }
 
-        return $this->config['persona_admin_host'] . '/' . self::PERSONA_ADMIN_API_VERSION;
     }
 
     /**
