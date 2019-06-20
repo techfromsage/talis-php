@@ -300,7 +300,7 @@ class OAuthClientsTest extends TestBase
             ]
         );
 
-        $oauthClient->expect($this->once())
+        $oauthClient->expects($this->once())
             ->method('performRequest')
             ->with(
                 'http://localhost:85/1/clients/clientId/generatesecret',
@@ -338,7 +338,7 @@ class OAuthClientsTest extends TestBase
             ]
         );
 
-        $oauthClient->expect($this->once())
+        $oauthClient->expects($this->once())
             ->method('performRequest')
             ->with(
                 'http://localhost:85/1/clients/clientId/generatesecret',
@@ -372,7 +372,7 @@ class OAuthClientsTest extends TestBase
             ]
         );
 
-        $oauthClient->expect($this->once())
+        $oauthClient->expects($this->once())
             ->method('performRequest')
             ->with(
                 'http://localhost:85/1/clients/clientId/generatesecret',
