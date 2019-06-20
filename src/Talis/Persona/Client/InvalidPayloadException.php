@@ -2,7 +2,7 @@
 namespace Talis\Persona\Client;
 
 /**
- * Response from the server included a empty body.
+ * Payload sent back from Persona is in a unexpected format
  */
 class InvalidPayloadException extends \Exception
 {

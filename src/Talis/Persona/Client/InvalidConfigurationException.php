@@ -2,7 +2,7 @@
 namespace Talis\Persona\Client;
 
 /**
- * Response from the server included a empty body.
+ * Configuration is invalid
  */
 class InvalidConfigurationException extends \Exception
 {
