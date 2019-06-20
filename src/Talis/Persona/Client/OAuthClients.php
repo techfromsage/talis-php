@@ -111,12 +111,14 @@ class OAuthClients extends Base
      * @param string $clientId oauth client (persona user guid is also a oauth client id)
      * @param string $token Persona oauth token
      * @return string new the oauth client secret
+     * @throws \InvalidConfigurationException persona_admin_host not supplied
      * @throws \Exception Persona communication issues
      */
     public function regenerateSecret($clientId, $token)
     {
+        $adminHost = $this->getPersonaAdminHost();
         $resp = $this->performRequest(
-            $this->getPersonaAdminHost() . "/clients/$clientId/generatesecret",
+             "$adminHost/clients/$clientId/generatesecret",
             [
                 'method' => 'PATCH',
                 'bearerToken' => $token,

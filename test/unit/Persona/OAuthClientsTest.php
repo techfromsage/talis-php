@@ -266,4 +266,125 @@ class OAuthClientsTest extends TestBase
             )
         );
     }
+
+    public function testRegenerateSecretInvalidConfigurationException()
+    {
+        $oauthClient = new OAuthClients(
+            [
+                'userAgent' => 'unittest',
+                'persona_host' => 'localhost',
+                'cacheBackend' => $this->cacheBackend,
+            ]
+        );
+
+        $this->setExpectedException(
+            'InvalidConfigurationException',
+            'missing persona_admin_host'
+        );
+
+        $oauthClient->regenerateSecret('', '');
+    }
+
+    public function testRegenerateSecretNon200Exception()
+    {
+        $oauthClient = $this->getMock(
+            'Talis\Persona\Client\OAuthClients',
+            ['performRequest'],
+            [
+                [
+                    'userAgent' => 'unittest',
+                    'persona_host' => 'localhost',
+                    'persona_admin_host' => 'http://localhost:85',
+                    'cacheBackend' => $this->cacheBackend,
+                ]
+            ]
+        );
+
+        $oauthClient->expect($this->once())
+            ->method('performRequest')
+            ->with(
+                'http://localhost:85/1/clients/clientId/generatesecret',
+                [
+                    'method' => 'PATCH',
+                    'bearerToken' => 'token',
+                    'expectResponse' => true,
+                ]
+            )
+            ->will(
+                $this->throwException(
+                    new \Exception('Did not retrieve successful response code')
+                )
+            );
+
+        $this->setExpectedException(
+            'Exception',
+            'Did not retrieve successful response code'
+        );
+        $oauthClient->regenerateSecret('clientId', 'token');
+    }
+
+    public function testRegenerateSecretInvalidResponsePayload()
+    {
+        $oauthClient = $this->getMock(
+            'Talis\Persona\Client\OAuthClients',
+            ['performRequest'],
+            [
+                [
+                    'userAgent' => 'unittest',
+                    'persona_host' => 'localhost',
+                    'persona_admin_host' => 'http://localhost:85',
+                    'cacheBackend' => $this->cacheBackend,
+                ]
+            ]
+        );
+
+        $oauthClient->expect($this->once())
+            ->method('performRequest')
+            ->with(
+                'http://localhost:85/1/clients/clientId/generatesecret',
+                [
+                    'method' => 'PATCH',
+                    'bearerToken' => 'token',
+                    'expectResponse' => true,
+                ]
+            )
+            ->willReturn(['invalid' => 'body']);
+
+        $this->setExpectedException(
+            'InvalidPayloadException',
+            'invalid payload format from persona'
+        );
+        $oauthClient->regenerateSecret('clientId', 'token');
+    }
+
+    public function testRegenerateSecretHappyPath()
+    {
+        $oauthClient = $this->getMock(
+            'Talis\Persona\Client\OAuthClients',
+            ['performRequest'],
+            [
+                [
+                    'userAgent' => 'unittest',
+                    'persona_host' => 'localhost',
+                    'persona_admin_host' => 'http://localhost:85',
+                    'cacheBackend' => $this->cacheBackend,
+                ]
+            ]
+        );
+
+        $oauthClient->expect($this->once())
+            ->method('performRequest')
+            ->with(
+                'http://localhost:85/1/clients/clientId/generatesecret',
+                [
+                    'method' => 'PATCH',
+                    'bearerToken' => 'token',
+                    'expectResponse' => true,
+                ]
+            )
+            ->willReturn(['secret' => 'new secret']);
+
+        $secret = $oauthClient->regenerateSecret('clientId', 'token');
+        $this->assertEquals('new secret', $secret);
+    }
 }
