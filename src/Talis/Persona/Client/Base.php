@@ -373,7 +373,9 @@ abstract class Base
 
     /**
      * Return Persona admin host from the configuration object
-     * @return string
+     * @return string persona admin host
+     * @throws \Talis\Persona\Client\InvalidConfigurationException \
+     *       persona_admin_host not configured
      */
     protected function getPersonaAdminHost()
     {
@@ -382,7 +384,6 @@ abstract class Base
         } else {
             throw new InvalidConfigurationException('missing persona_admin_host');
         }
-
     }
 
     /**

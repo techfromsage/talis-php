@@ -112,8 +112,8 @@ class OAuthClients extends Base
      * Generate and append or replace a oauth client's secret.
      * @param string $clientId oauth client (persona user guid is also a oauth client id)
      * @param string $token Persona oauth token
-     * @return string new the oauth client secret
-     * @throws \InvalidConfigurationException persona_admin_host not supplied
+     * @return string new oauth client secret
+     * @throws \Talis\Persona\Client\InvalidConfigurationException persona_admin_host not configured
      * @throws \Exception Persona communication issues
      */
     public function regenerateSecret($clientId, $token)
