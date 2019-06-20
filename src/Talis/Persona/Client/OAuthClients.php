@@ -2,6 +2,8 @@
 
 namespace Talis\Persona\Client;
 
+use Talis\Persona\Client\InvalidConfigurationException;
+
 class OAuthClients extends Base
 {
     /**

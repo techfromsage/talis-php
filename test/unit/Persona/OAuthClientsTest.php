@@ -1,6 +1,8 @@
 <?php
 
 use Talis\Persona\Client\OAuthClients;
+use Talis\Persona\Client\InvalidPayloadException;
+use Talis\Persona\Client\InvalidConfigurationException;
 
 $appRoot = dirname(dirname(dirname(__DIR__)));
 if (!defined('APPROOT')) {
