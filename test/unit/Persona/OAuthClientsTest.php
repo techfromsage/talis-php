@@ -269,24 +269,6 @@ class OAuthClientsTest extends TestBase
         );
     }
 
-    public function testRegenerateSecretInvalidConfigurationException()
-    {
-        $oauthClient = new OAuthClients(
-            [
-                'userAgent' => 'unittest',
-                'persona_host' => 'localhost',
-                'cacheBackend' => $this->cacheBackend,
-            ]
-        );
-
-        $this->setExpectedException(
-            'Talis\Persona\Client\InvalidConfigurationException',
-            'missing persona_admin_host'
-        );
-
-        $oauthClient->regenerateSecret('', '');
-    }
-
     public function testRegenerateSecretNon200Exception()
     {
         $oauthClient = $this->getMock(
