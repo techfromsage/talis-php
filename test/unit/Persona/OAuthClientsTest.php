@@ -278,7 +278,7 @@ class OAuthClientsTest extends TestBase
                 [
                     'userAgent' => 'unittest',
                     'persona_host' => 'localhost',
-                    'persona_admin_host' => 'localhost:85',
+                    'persona_admin_host' => 'localhost',
                     'cacheBackend' => $this->cacheBackend,
                 ]
             ]
@@ -287,7 +287,7 @@ class OAuthClientsTest extends TestBase
         $oauthClient->expects($this->once())
             ->method('performRequest')
             ->with(
-                'localhost:85/1/clients/clientId/generatesecret',
+                'localhost/3/clients/clientId/generatesecret',
                 [
                     'method' => 'PATCH',
                     'bearerToken' => 'token',
@@ -316,7 +316,7 @@ class OAuthClientsTest extends TestBase
                 [
                     'userAgent' => 'unittest',
                     'persona_host' => 'localhost',
-                    'persona_admin_host' => 'localhost:85',
+                    'persona_admin_host' => 'localhost',
                     'cacheBackend' => $this->cacheBackend,
                 ]
             ]
@@ -325,7 +325,7 @@ class OAuthClientsTest extends TestBase
         $oauthClient->expects($this->once())
             ->method('performRequest')
             ->with(
-                'localhost:85/1/clients/clientId/generatesecret',
+                'localhost/3/clients/clientId/generatesecret',
                 [
                     'method' => 'PATCH',
                     'bearerToken' => 'token',
@@ -350,7 +350,7 @@ class OAuthClientsTest extends TestBase
                 [
                     'userAgent' => 'unittest',
                     'persona_host' => 'localhost',
-                    'persona_admin_host' => 'localhost:85',
+                    'persona_admin_host' => 'localhost',
                     'cacheBackend' => $this->cacheBackend,
                 ]
             ]
@@ -359,7 +359,7 @@ class OAuthClientsTest extends TestBase
         $oauthClient->expects($this->once())
             ->method('performRequest')
             ->with(
-                'localhost:85/1/clients/clientId/generatesecret',
+                'localhost/3/clients/clientId/generatesecret',
                 [
                     'method' => 'PATCH',
                     'bearerToken' => 'token',
