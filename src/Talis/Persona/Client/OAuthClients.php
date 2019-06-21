@@ -118,9 +118,9 @@ class OAuthClients extends Base
      */
     public function regenerateSecret($clientId, $token)
     {
-        $adminHost = $this->getPersonaAdminHost();
+        $host = $this->getPersonaHost();
         $resp = $this->performRequest(
-             "$adminHost/clients/$clientId/generatesecret",
+            "$host/clients/$clientId/generatesecret",
             [
                 'method' => 'PATCH',
                 'bearerToken' => $token,

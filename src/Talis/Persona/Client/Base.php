@@ -62,7 +62,6 @@ abstract class Base
      *
      * @param array $config An array of options with the following keys: <pre>
      *      persona_host: (string) the persona host you'll be making requests to (e.g. 'http://localhost')
-     *      persona_admin_host: (string) optional persona admin host
      *      userAgent: Consuming application user agent string @since 2.0.0
      *            examples: rl/1723-9095ba4, rl/5.2, rl, rl/5, rl/5.2 (php/5.3; linux/2.5)
      *      cacheBackend: (Doctrine\Common\Cache\CacheProvider) cache storage
@@ -369,21 +368,6 @@ abstract class Base
     protected function getCacheBackend()
     {
         return $this->cacheBackend;
-    }
-
-    /**
-     * Return Persona admin host from the configuration object
-     * @return string persona admin host
-     * @throws \Talis\Persona\Client\InvalidConfigurationException \
-     *       persona_admin_host not configured
-     */
-    protected function getPersonaAdminHost()
-    {
-        if (isset($this->config['persona_admin_host'])) {
-            return $this->config['persona_admin_host'] . '/' . self::PERSONA_ADMIN_API_VERSION;
-        } else {
-            throw new InvalidConfigurationException('missing persona_admin_host');
-        }
     }
 
     /**
