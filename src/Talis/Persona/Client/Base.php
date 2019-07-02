@@ -8,7 +8,6 @@ use \Domnikl\Statsd\Connection\Socket;
 use \Domnikl\Statsd\Connection\Blackhole;
 use \Guzzle\Http\Client as GuzzleClient;
 use \Talis\Persona\Client\ClientVersionCache;
-use \Talis\Persona\Client\InvalidConfigurationException;
 
 abstract class Base
 {
@@ -18,7 +17,6 @@ abstract class Base
     const STATSD_PREFIX = 'STATSD_PREFIX';
     const LOGGER_NAME = 'PERSONA';
     const PERSONA_API_VERSION = '3';
-    const PERSONA_ADMIN_API_VERSION = '1';
 
     /**
      * Configuration object
