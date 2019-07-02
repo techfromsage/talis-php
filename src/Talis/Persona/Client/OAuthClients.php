@@ -120,9 +120,9 @@ class OAuthClients extends Base
     {
         $host = $this->getPersonaHost();
         $resp = $this->performRequest(
-            "$host/clients/$clientId/generatesecret",
+            "$host/clients/$clientId/secret",
             [
-                'method' => 'PATCH',
+                'method' => 'POST',
                 'bearerToken' => $token,
                 'expectResponse' => true,
             ]

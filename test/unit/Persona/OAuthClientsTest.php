@@ -287,9 +287,9 @@ class OAuthClientsTest extends TestBase
         $oauthClient->expects($this->once())
             ->method('performRequest')
             ->with(
-                'localhost/3/clients/clientId/generatesecret',
+                'localhost/3/clients/clientId/secret',
                 [
-                    'method' => 'PATCH',
+                    'method' => 'POST',
                     'bearerToken' => 'token',
                     'expectResponse' => true,
                 ]
@@ -325,9 +325,9 @@ class OAuthClientsTest extends TestBase
         $oauthClient->expects($this->once())
             ->method('performRequest')
             ->with(
-                'localhost/3/clients/clientId/generatesecret',
+                'localhost/3/clients/clientId/secret',
                 [
-                    'method' => 'PATCH',
+                    'method' => 'POST',
                     'bearerToken' => 'token',
                     'expectResponse' => true,
                 ]
@@ -359,9 +359,9 @@ class OAuthClientsTest extends TestBase
         $oauthClient->expects($this->once())
             ->method('performRequest')
             ->with(
-                'localhost/3/clients/clientId/generatesecret',
+                'localhost/3/clients/clientId/secret',
                 [
-                    'method' => 'PATCH',
+                    'method' => 'POST',
                     'bearerToken' => 'token',
                     'expectResponse' => true,
                 ]
