@@ -1,6 +1,7 @@
 <?php
 
 use Talis\Persona\Client\OAuthClients;
+use Talis\Persona\Client\InvalidPayloadException;
 
 $appRoot = dirname(dirname(dirname(__DIR__)));
 if (!defined('APPROOT')) {
@@ -265,5 +266,108 @@ class OAuthClientsTest extends TestBase
                 '123'
             )
         );
+    }
+
+    public function testRegenerateSecretNon200Exception()
+    {
+        $oauthClient = $this->getMock(
+            'Talis\Persona\Client\OAuthClients',
+            ['performRequest'],
+            [
+                [
+                    'userAgent' => 'unittest',
+                    'persona_host' => 'localhost',
+                    'persona_admin_host' => 'localhost',
+                    'cacheBackend' => $this->cacheBackend,
+                ]
+            ]
+        );
+
+        $oauthClient->expects($this->once())
+            ->method('performRequest')
+            ->with(
+                'localhost/3/clients/clientId/secret',
+                [
+                    'method' => 'POST',
+                    'bearerToken' => 'token',
+                    'expectResponse' => true,
+                ]
+            )
+            ->will(
+                $this->throwException(
+                    new \Exception('Did not retrieve successful response code')
+                )
+            );
+
+        $this->setExpectedException(
+            'Exception',
+            'Did not retrieve successful response code'
+        );
+        $oauthClient->regenerateSecret('clientId', 'token');
+    }
+
+    public function testRegenerateSecretInvalidResponsePayload()
+    {
+        $oauthClient = $this->getMock(
+            'Talis\Persona\Client\OAuthClients',
+            ['performRequest'],
+            [
+                [
+                    'userAgent' => 'unittest',
+                    'persona_host' => 'localhost',
+                    'persona_admin_host' => 'localhost',
+                    'cacheBackend' => $this->cacheBackend,
+                ]
+            ]
+        );
+
+        $oauthClient->expects($this->once())
+            ->method('performRequest')
+            ->with(
+                'localhost/3/clients/clientId/secret',
+                [
+                    'method' => 'POST',
+                    'bearerToken' => 'token',
+                    'expectResponse' => true,
+                ]
+            )
+            ->willReturn(['invalid' => 'body']);
+
+        $this->setExpectedException(
+            'Talis\Persona\Client\InvalidPayloadException',
+            'invalid payload format from persona'
+        );
+        $oauthClient->regenerateSecret('clientId', 'token');
+    }
+
+    public function testRegenerateSecretHappyPath()
+    {
+        $oauthClient = $this->getMock(
+            'Talis\Persona\Client\OAuthClients',
+            ['performRequest'],
+            [
+                [
+                    'userAgent' => 'unittest',
+                    'persona_host' => 'localhost',
+                    'persona_admin_host' => 'localhost',
+                    'cacheBackend' => $this->cacheBackend,
+                ]
+            ]
+        );
+
+        $oauthClient->expects($this->once())
+            ->method('performRequest')
+            ->with(
+                'localhost/3/clients/clientId/secret',
+                [
+                    'method' => 'POST',
+                    'bearerToken' => 'token',
+                    'expectResponse' => true,
+                ]
+            )
+            ->willReturn(['secret' => 'new secret']);
+
+        $secret = $oauthClient->regenerateSecret('clientId', 'token');
+        $this->assertEquals('new secret', $secret);
     }
 }

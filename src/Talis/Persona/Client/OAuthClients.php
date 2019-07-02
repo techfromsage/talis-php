@@ -105,4 +105,37 @@ class OAuthClients extends Base
     {
         return $this->performRequest($url, ['bearerToken' => $token]);
     }
+
+    /**
+     * Generate and append or replace a oauth client's secret.
+     * @param string $clientId oauth client (persona user guid is also a oauth client id)
+     * @param string $token Persona oauth token
+     * @return string new oauth client secret
+     * @throws \Exception Persona communication issues
+     */
+    public function regenerateSecret($clientId, $token)
+    {
+        $host = $this->getPersonaHost();
+        $resp = $this->performRequest(
+            "$host/clients/$clientId/secret",
+            [
+                'method' => 'POST',
+                'bearerToken' => $token,
+                'expectResponse' => true,
+            ]
+        );
+
+        if (isset($resp['secret'])) {
+            return $resp['secret'];
+        } else {
+            $this->getLogger()->error(
+                'invalid payload format from persona',
+                ['payload' => $resp]
+            );
+
+            throw new InvalidPayloadException(
+                'invalid payload format from persona'
+            );
+        }
+    }
 }
