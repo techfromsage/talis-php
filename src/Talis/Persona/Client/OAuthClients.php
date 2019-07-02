@@ -128,6 +128,11 @@ class OAuthClients extends Base
         if (isset($resp['secret'])) {
             return $resp['secret'];
         } else {
+            $this->getLogger()->error(
+                'invalid payload format from persona',
+                ['payload' => $resp]
+            );
+
             throw new InvalidPayloadException(
                 'invalid payload format from persona'
             );
