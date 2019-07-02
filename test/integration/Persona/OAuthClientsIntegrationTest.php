@@ -213,7 +213,7 @@ class OAuthClientsIntegrationTest extends TestBase
 
         $userTokenDetails = $this->personaClientTokens->obtainNewToken(
             $user['guid'],
-            $secret['secret'],
+            $secret,
             ['useCache' => false]
         );
 
