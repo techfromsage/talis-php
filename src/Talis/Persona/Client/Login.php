@@ -6,6 +6,16 @@ class Login extends Base
 {
     const LOGIN_PREFIX = 'PERSONA';
 
+    private $provider;
+    private $appId;
+    private $appSecret;
+    private $loginSSO = [];
+
+    public function getLoginSSO()
+    {
+        return $this->loginSSO;
+    }
+
     /**
      * Require authentication on your route
      * @param string $provider The login provider name you want to authenticate against - e.g. 'google'
@@ -45,9 +55,9 @@ class Login extends Base
             throw new \InvalidArgumentException('Invalid redirectUri');
         }
 
-        $_SESSION[self::LOGIN_PREFIX . ':loginAppId'] = $appId;
-        $_SESSION[self::LOGIN_PREFIX . ':loginProvider'] = $provider;
-        $_SESSION[self::LOGIN_PREFIX . ':loginAppSecret'] = $appSecret;
+        $this->appId = $appId;
+        $this->provider = $provider;
+        $this->appSecret = $appSecret;
 
         $this->login($redirectUri, $query);
     }
@@ -57,7 +67,7 @@ class Login extends Base
      * @return boolean true if authenticated
      * @throws \Exception Invalid signature
      */
-    public function validateAuth()
+    public function validateAuth($provider, $appId, $appSecret)
     {
         if (!isset($_POST['persona:payload'])) {
             $this->getLogger()->error('Payload not set');
@@ -79,33 +89,36 @@ class Login extends Base
             throw new \Exception('Payload not json');
         }
 
-        if (!isset($_SESSION[self::LOGIN_PREFIX . ':loginState'])
+        $loginState = $this->getCacheBackend()->fetch(self::LOGIN_PREFIX . ':loginState');
+
+        if (!isset($loginState)
             || !isset($payload['state'])
-            || $payload['state'] !== $_SESSION[self::LOGIN_PREFIX . ':loginState']
+            || $payload['state'] !== $loginState
         ) {
             // Error with state - not authenticated
             $this->getLogger()->error('Login state does not match');
-            unset($_SESSION[self::LOGIN_PREFIX . ':loginState']);
+            $this->getCacheBackend()->delete(self::LOGIN_PREFIX . ':loginState');
             throw new \Exception('Login state does not match');
         }
 
         $signature = hash_hmac(
             'sha256',
             $encodedPayload,
-            $_SESSION[self::LOGIN_PREFIX . ':loginAppSecret']
+            $appSecret
         );
 
+
         if ($payloadSignature !== $signature) {
-            unset($_SESSION[self::LOGIN_PREFIX . ':loginState']);
+            $this->getCacheBackend()->delete(self::LOGIN_PREFIX . ':loginState');
             $this->getLogger()->error('Signature does not match');
             throw new \Exception('Signature does not match');
         }
 
         // Delete the login state ready for next login
-        unset($_SESSION[self::LOGIN_PREFIX . ':loginState']);
+        $this->getCacheBackend()->delete(self::LOGIN_PREFIX . ':loginState');
 
         // Final step - validate the token
-        $_SESSION[self::LOGIN_PREFIX . ':loginSSO'] = array_merge(
+        $this->loginSSO = array_merge(
             [
                 'token' => false,
                 'guid' => '',
@@ -125,17 +138,17 @@ class Login extends Base
      */
     public function getPersistentId()
     {
-        if (!isset($_SESSION[self::LOGIN_PREFIX . ':loginProvider'])) {
+        if (!isset($this->provider)) {
             return false;
         }
 
-        if (isset($_SESSION[self::LOGIN_PREFIX . ':loginSSO']['gupid'])
-            && !empty($_SESSION[self::LOGIN_PREFIX . ':loginSSO']['gupid'])
+        if (isset($this->loginSSO['gupid'])
+            && !empty($this->loginSSO['gupid'])
         ) {
             // Loop through all gupids and match against the login provider - it should be
             // the prefix of the persona profile
-            foreach ($_SESSION[self::LOGIN_PREFIX . ':loginSSO']['gupid'] as $gupid) {
-                $loginProvider = $_SESSION[self::LOGIN_PREFIX . ':loginProvider'];
+            foreach ($this->loginSSO['gupid'] as $gupid) {
+                $loginProvider = $this->provider;
                 if (strpos($gupid, $loginProvider) === 0) {
                     return str_replace("$loginProvider:", '', $gupid);
                 }
@@ -151,10 +164,10 @@ class Login extends Base
      */
     public function getRedirectUrl()
     {
-        if (isset($_SESSION[self::LOGIN_PREFIX . ':loginSSO']['redirect'])
-            && !empty($_SESSION[self::LOGIN_PREFIX . ':loginSSO']['redirect'])
+        if (isset($this->loginSSO['redirect'])
+            && !empty($this->loginSSO['redirect'])
         ) {
-            return $_SESSION[self::LOGIN_PREFIX . ':loginSSO']['redirect'];
+            return $this->loginSSO['redirect'];
         }
 
         return false;
@@ -166,11 +179,11 @@ class Login extends Base
      */
     public function getScopes()
     {
-        if (isset($_SESSION[self::LOGIN_PREFIX . ':loginSSO'])
-            && isset($_SESSION[self::LOGIN_PREFIX . ':loginSSO']['token'])
-            && isset($_SESSION[self::LOGIN_PREFIX . ':loginSSO']['token']['scope'])
+        if (isset($this->loginSSO)
+            && isset($this->loginSSO['token'])
+            && isset($this->loginSSO['token']['scope'])
         ) {
-            return $_SESSION[self::LOGIN_PREFIX . ':loginSSO']['token']['scope'];
+            return $this->loginSSO['token']['scope'];
         }
 
         return false;
@@ -182,10 +195,10 @@ class Login extends Base
      */
     public function getProfile()
     {
-        if (isset($_SESSION[self::LOGIN_PREFIX . ':loginSSO'])
-            && isset($_SESSION[self::LOGIN_PREFIX . ':loginSSO']['profile'])
+        if (isset($this->loginSSO)
+            && isset($this->loginSSO['profile'])
         ) {
-            return $_SESSION[self::LOGIN_PREFIX . ':loginSSO']['profile'];
+            return $this->loginSSO['profile'];
         }
 
         return [];
@@ -197,7 +210,7 @@ class Login extends Base
      */
     protected function isLoggedIn()
     {
-        return isset($_SESSION[self::LOGIN_PREFIX . ':loginSSO']);
+        return isset($this->loginSSO['guid']);
     }
 
     /**
@@ -213,13 +226,13 @@ class Login extends Base
         // Create a uniq ID for state - prefixed with md5 hash of app ID
         $loginState = $this->getLoginState();
 
-        // Save login state in session
-        $_SESSION[self::LOGIN_PREFIX . ':loginState'] = $loginState;
+        // Save login state in cache
+        $this->getCacheBackend()->save(self::LOGIN_PREFIX . ':loginState', $loginState);
 
         // Log user in
         $redirect = $this->getPersonaHost()
             . '/auth/providers/'
-            . $_SESSION[self::LOGIN_PREFIX . ':loginProvider']
+            . $this->provider
             . '/login';
 
         if (empty($query)) {
@@ -231,7 +244,7 @@ class Login extends Base
         }
 
         $query['state'] = $loginState;
-        $query['app'] = $_SESSION[self::LOGIN_PREFIX . ':loginAppId'];
+        $query['app'] = $this->appId;
 
         $redirect .= '?' . http_build_query($query);
         $this->redirect($redirect);
@@ -242,8 +255,7 @@ class Login extends Base
      */
     protected function getLoginState()
     {
-        $appId = $_SESSION[self::LOGIN_PREFIX . ':loginAppId'];
-        $seed = md5("$appId::");
+        $seed = md5($this->appId . "::");
         return uniqid($seed, true);
     }
 
