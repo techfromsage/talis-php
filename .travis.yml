@@ -2,6 +2,7 @@ services:
 - redis-server
 sudo: false
 language: php
+dist: trusty
 addons:
   apt:
     packages:
