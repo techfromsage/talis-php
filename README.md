@@ -30,15 +30,47 @@ git clone https://github.com/talis/talis-php.git
 cd talis-php
 ```
 
+# Run Persona Locally
+
+Integration tests run locally will make requests to Persona at `http://persona.talis.local`.
+
+Before you begin, ensure you have established `DEVELOPMENT_WORK_DIR` and the `infra` repository, as per [the shared project instructions](https://github.com/talis/infra/wiki).
+
+Manually run persona locally:
+
+```bash
+./docker-compose-dev.sh persona-server
+```
+
+# Create an OAuth Client and Secret
+
+To build the talis-php docker container, you need to specify an oauth client and secret to use. This client should have `su` scope. It's not possibe to create a client with `su` scope via the API.
+
+First - create a client:
+
+```bash
+curl -v -H "Authorization:Bearer $LOCAL_TOKEN" -d "{\"scope\":[\"su@test\"]}" http://persona.talis.local/clients
+```
+
+This will return a client:
+
+```json
+{"client_id":"BXLmKR79","client_secret":"zdlbESLEFGvxBw8k"}
+```
+
+Then connect to the mongo database the local persona is using and manually give the client `su` scope.
+
+# Build talis-php Docker Container
+
 Manually run a docker build:
 
 ```bash
 docker build -t "talis/talis-php" --network=host --build-arg persona_oauth_client=<persona-user-goes-here> --build-arg persona_oauth_secret=<persona-secret-goes-here> .
 ```
 
-`persona_oauth_client` = the persona user you want to use.
+`persona_oauth_client` = the persona user you want to use, "BXLmKR79" from the above example.
 
-`persona_oauth_secret` =  the password to the user specified.
+`persona_oauth_secret` =  the password to the user specified, "zdlbESLEFGvxBw8k" from the above example.
 
 Initialise the environment. Run the following command which will download the required libraries.
 
@@ -56,4 +88,23 @@ docker-compose run codecheck
 docker-compose run test
 docker-compose run unittest
 docker-compose run integrationtest
+```
+
+To create a docker container where you can run commands directly, for example to run individual tests:
+
+```bash
+docker-compose run local-dev
+```
+
+When connected run:
+
+```bash
+service redis-server start
+source /etc/profile.d/*
+```
+
+You can the bun ant commands individually or run individual tests:
+
+```bash
+/vendor/bin/phpunit --filter testCreateUserThenPatchOAuthClientAddScope test/integration/
 ```
