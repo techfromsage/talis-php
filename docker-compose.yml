@@ -23,21 +23,31 @@ services:
     command: /bin/bash -c "service redis-server start && source /etc/profile.d/* && ant code-check"
   test:
     image: talis/talis-php
+    network_mode: host
     volumes:
       - ".:/var/talis-php"
     command: /bin/bash -c "service redis-server start && source /etc/profile.d/* && ant test"
   unittest:
     image: talis/talis-php
+    network_mode: host
     volumes:
       - ".:/var/talis-php"
     command: /bin/bash -c "service redis-server start && source /etc/profile.d/* && ant unittest"
   integrationtest:
     image: talis/talis-php
+    network_mode: host
     volumes:
       - ".:/var/talis-php"
     command: /bin/bash -c "service redis-server start && source /etc/profile.d/* && ant integrationtest"
+  local-dev:
+    image: talis/talis-php
+    network_mode: host
+    volumes:
+      - ".:/var/talis-php"
+    command: /bin/bash
   coverage:
     image: talis/talis-php
+    network_mode: host
     volumes:
       - ".:/var/talis-php"
     command: /bin/bash -c "service redis-server start && source /etc/profile.d/* && ant coverage"
