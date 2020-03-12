@@ -2,6 +2,10 @@ services:
 - redis-server
 sudo: false
 language: php
+addons:
+  apt:
+    packages:
+      ant
 php:
 - 7.2
 - 7.1
