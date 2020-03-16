@@ -93,6 +93,10 @@ abstract class Base
         }
 
         $this->logger = $this->get($config, 'logger', null);
+/* echo "\n\n== data fetch =========\n\n"; */
+/* var_dump($config); */
+/* echo "\n\n===========\n\n"; */
+/* die(); */
         $this->cacheBackend = $config['cacheBackend'];
         $this->phpVersion = phpversion();
     }

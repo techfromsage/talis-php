@@ -14,14 +14,37 @@ class Login extends Base
     const NONCE_TIMESTAMP = "NONCE_TIMESTAMP";
     const LOGIN_PREFIX = 'PERSONA';
 
+    // Insyance of simple nonce class
+    private $simpleNonce;
+
+    /**
+     * Constructor
+     *
+     * @param array $config An array of options with the following keys: <pre>
+     *      persona_host: (string) the persona host you'll be making requests to (e.g. 'http://localhost')
+     *      userAgent: Consuming application user agent string @since 2.0.0
+     *            examples: rl/1723-9095ba4, rl/5.2, rl, rl/5, rl/5.2 (php/5.3; linux/2.5)
+     *      cacheBackend: (Doctrine\Common\Cache\CacheProvider) cache storage
+     *      cacheKeyPrefix: (string) optional prefix to append to the cache keys
+     *      cacheDefaultTTL: (integer) optional cache TTL value
+     * @throws \InvalidArgumentException If any of the required config parameters are missing
+     * @throws \InvalidArgumentException If the user agent format is invalid
+     */
+    public function __construct(array $config)
+    {
+        parent::__construct($config);
+
+        $this->simpleNonce = new \SoftSmart\Utilities\SimpleNonce();
+    }
+
     /**
      * Require authentication on your route
      * @param string $provider The login provider name you want to authenticate against - e.g. 'google'
      * @param string $appId The ID of the persona application (http://docs.talispersona.apiary.io/#applications)
      * @param string $appSecret The secret of the persona application (http://docs.talispersona.apiary.io/#applications)
+     * @param string $nonce
      * @param string $redirectUri Origin of the request - used to send a user back to where they originated from
      * @param array $query parameters passed to Persona (currently supports require=profile)
-     * @param string $nonce
      * @return string New nonce
      * @throws \InvalidArgumentException Invalid arguments
      */
@@ -29,9 +52,9 @@ class Login extends Base
         $provider,
         $appId,
         $appSecret,
+        $nonce,
         $redirectUri = '',
-        array $query = null,
-        string $nonce = null
+        array $query = null
     ) {
         if (!is_string($nonce)) {
             $this->getLogger()->error('Invalid nonce');
@@ -62,9 +85,12 @@ class Login extends Base
             throw new \InvalidArgumentException('Invalid redirectUri');
         }
  
-        $nonceValues = \SoftSmart\Utilities\SimpleNonce::GenerateNonce(self::LOGIN_STATE_ACTION, [self::NONCE_SALT]);
+        $nonceValues = $this->generateNonce();
+/* echo "\n\n==nonceValues=========\n\n"; */
+/* var_dump($nonceValues); */
+/* echo "\n\n===========\n\n"; */
         $nonce = $nonceValues['nonce'];
-        $nonceTimestamp = $nonceValues['timestamp'];
+        $nonceTimestamp = $nonceValues['timeStamp'];
         $data = [
           self::NONCE_TIMESTAMP => $nonceTimestamp,
           self::LOGIN_PREFIX . ':loginAppId' => $appId,
@@ -73,8 +99,14 @@ class Login extends Base
         ];
 
         $cacheBackend = $this->getCacheBackend();
+/* echo "\n\n==cacheBackend=========\n\n"; */
+/* var_dump($cacheBackend); */
+/* echo "\n\n===========\n\n"; */
         try {
             // Save this to the cache with the same expiry as the nonce.
+/* echo "\n\n==data=========\n\n"; */
+/* var_dump($data); */
+/* echo "\n\n===========\n\n"; */
             $cacheBackend->save($nonce, $data, self::NONCE_EXPIRY_TIME_SECONDS);
         } catch (\Exception $e) {
             $this->getLogger()->error('Unable to write to cache');
@@ -92,7 +124,7 @@ class Login extends Base
         /*     return; */
         /* } */
 
-        $this->login($redirectUri, $nonce, $provider, $query);
+        $this->login($redirectUri, $nonce, $appId, $provider, $query);
 
         return $nonce;
     }
@@ -222,7 +254,7 @@ class Login extends Base
      * @param string $nonce
      * @return string|boolean redirect url else boolean false
      */
-    public function getRedirectUrl()
+    public function getRedirectUrl($nonce)
     {
         $cacheBackend = $this->getCacheBackend();
         $data = $cacheBackend->fetch($nonce);
@@ -312,7 +344,7 @@ class Login extends Base
 
         // If the nonce is older than the expiry time, then
         // the user is no longer logged in.
-        $validWithinExpiryTime = SimpleNonce::VerifyNonce(
+        $validWithinExpiryTime = $this->simpleNonce->verifyNonce(
             $nonce,
             self::LOGIN_STATE_ACTION,
             $data[self::NONCE_TIMESTAMP],
@@ -393,9 +425,9 @@ class Login extends Base
             throw new \InvalidArgumentException('Invalid nonce');
         }
 
-        $newNonceValues = \SoftSmart\Utilities\SimpleNonce::GenerateNonce(self::LOGIN_STATE_ACTION, [self::NONCE_SALT]);
+        $newNonceValues = $this->generateNonce();
         $newNonce = $newNonceValues['nonce'];
-        $newNonceTimestamp = $newNonceValues['timestamp'];
+        $newNonceTimestamp = $newNonceValues['timeStamp'];
         
         $newData = [
           self::NONCE_TIMESTAMP => $newNonceTimestamp,
@@ -425,10 +457,11 @@ class Login extends Base
      *
      * @param string $redirectUri where to return to once login has completed
      * @param string $nonce
+     * @param string $appId
      * @param string $loginProvider
      * @param array $query parameters passed in Persona (currently supports require=profile)
      */
-    protected function login($redirectUri = '', string $nonce, string $loginProvider, array $query = null)
+    protected function login($redirectUri = '', $nonce, $appId, $loginProvider, array $query = null)
     {
         // TODO Remove - we no longer store login state in the session?
         /* // Create a uniq ID for state - prefixed with md5 hash of app ID */
@@ -455,7 +488,7 @@ class Login extends Base
 
         // TODO Replaced State with Nonce - remove this
         // $query['state'] = $loginState;
-        $query['app'] = $_SESSION[self::LOGIN_PREFIX . ':loginAppId'];
+        $query['app'] = $appId;
         $query['nonce'] = $nonce;
 
         $redirect .= '?' . http_build_query($query);
@@ -482,5 +515,15 @@ class Login extends Base
     {
         header("Location: $location");
         exit;
+    }
+
+    /**
+     * Generate a nonce
+     *
+     * @return array - array containing nonce and nonceTimeStamp
+     */
+    protected function generateNonce()
+    {
+        return $this->simpleNonce->generateNonce(self::LOGIN_STATE_ACTION, [self::NONCE_SALT]);
     }
 }

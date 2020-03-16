@@ -12,6 +12,20 @@ require_once $appRoot . '/test/unit/TestBase.php';
 
 class LoginTest extends TestBase
 {
+    public function testRequireAuthInvalidNonce()
+    {
+        $this->setExpectedException('InvalidArgumentException', 'Invalid nonce');
+
+        $personaClient = new Login(
+            [
+                'userAgent' => 'unittest',
+                'persona_host' => 'localhost',
+                'cacheBackend' => $this->cacheBackend,
+            ]
+        );
+        $personaClient->requireAuth(['trapdoor'], 'appid', 'appsecret', null, '', null);
+    }
+
     public function testRequireAuthInvalidProvider()
     {
         $this->setExpectedException('InvalidArgumentException', 'Invalid provider');
@@ -23,7 +37,7 @@ class LoginTest extends TestBase
                 'cacheBackend' => $this->cacheBackend,
             ]
         );
-        $personaClient->requireAuth(['test'], 'appid', 'appsecret');
+        $personaClient->requireAuth(['test'], 'appid', 'appsecret', 'nonce', '', null);
     }
 
     public function testRequireAuthInvalidAppId()
@@ -37,7 +51,7 @@ class LoginTest extends TestBase
                 'cacheBackend' => $this->cacheBackend,
             ]
         );
-        $personaClient->requireAuth('trapdoor', ['appid'], 'appsecret');
+        $personaClient->requireAuth('trapdoor', ['appid'], 'appsecret', 'nonce');
     }
 
     public function testRequireAuthInvalidAppSecret()
@@ -51,7 +65,7 @@ class LoginTest extends TestBase
                 'cacheBackend' => $this->cacheBackend,
             ]
         );
-        $personaClient->requireAuth('trapdoor', 'appid', ['appsecret']);
+        $personaClient->requireAuth('trapdoor', 'appid', ['appsecret'], 'nonce');
     }
 
     public function testRequireAuthNoRedirectUri()
@@ -67,10 +81,20 @@ class LoginTest extends TestBase
             ->method('login')
             ->will($this->returnValue(null));
 
-        $mockClient->requireAuth('trapdoor', 'appid', 'appsecret');
-        $this->assertEquals('appid', $_SESSION[Login::LOGIN_PREFIX . ':loginAppId']);
-        $this->assertEquals('appsecret', $_SESSION[Login::LOGIN_PREFIX . ':loginAppSecret']);
-        $this->assertEquals('trapdoor', $_SESSION[Login::LOGIN_PREFIX . ':loginProvider']);
+        $mockClient->requireAuth('trapdoor', 'appid', 'appsecret', 'nonce');
+/* $this->cacheBackend->save('debug',['bob'=>'bob']); */
+/* $debug = $this->cacheBackend->fetch('debug'); */
+/* echo "\n\n== debug fetch =========\n\n"; */
+/* var_dump($debug); */
+/* echo "\n\n===========\n\n"; */
+
+        $data = $this->cacheBackend->fetch('nonce');
+/* echo "\n\n== data fetch =========\n\n"; */
+/* var_dump($data); */
+/* echo "\n\n===========\n\n"; */
+        $this->assertEquals('appid', $data[Login::LOGIN_PREFIX . ':loginAppId']);
+        $this->assertEquals('appsecret', $data[Login::LOGIN_PREFIX . ':loginAppSecret']);
+        $this->assertEquals('trapdoor', $data[Login::LOGIN_PREFIX . ':loginProvider']);
     }
 
     public function testRequireAuthInvalidRedirectUri()
@@ -84,7 +108,7 @@ class LoginTest extends TestBase
                 'cacheBackend' => $this->cacheBackend,
             ]
         );
-        $personaClient->requireAuth('trapdoor', 'appid', 'appsecret', ['redirectUri']);
+        $personaClient->requireAuth('trapdoor', 'appid', 'appsecret', 'nonce', ['redirectUri']);
     }
 
     public function testRequireAuthWithRedirectUri()
@@ -100,11 +124,12 @@ class LoginTest extends TestBase
             ->method('login')
             ->will($this->returnValue(null));
 
-        $mockClient->requireAuth('trapdoor', 'appid', 'appsecret', 'redirecturi');
+        $mockClient->requireAuth('trapdoor', 'appid', 'appsecret', 'nonce', 'redirecturi');
 
-        $this->assertEquals('appid', $_SESSION[Login::LOGIN_PREFIX . ':loginAppId']);
-        $this->assertEquals('appsecret', $_SESSION[Login::LOGIN_PREFIX . ':loginAppSecret']);
-        $this->assertEquals('trapdoor', $_SESSION[Login::LOGIN_PREFIX . ':loginProvider']);
+        $data = $this->cacheBackend->fetch('nonce');
+        $this->assertEquals('appid', $data[Login::LOGIN_PREFIX . ':loginAppId']);
+        $this->assertEquals('appsecret', $data[Login::LOGIN_PREFIX . ':loginAppSecret']);
+        $this->assertEquals('trapdoor', $data[Login::LOGIN_PREFIX . ':loginProvider']);
     }
 
     public function testRequireAuthAlreadyLoggedIn()
@@ -122,8 +147,9 @@ class LoginTest extends TestBase
         $mockClient->expects($this->never())
             ->method('login');
 
-        $mockClient->requireAuth('trapdoor', 'appid', 'appsecret');
-        $this->assertFalse(isset($_SESSION));
+        $mockClient->requireAuth('trapdoor', 'appid', 'appsecret', 'nonce');
+        $data = $this->cacheBackend->fetch('nonce');
+        $this->assertFalse($data);
     }
 
     public function testRequireAuthNotAlreadyLoggedIn()
@@ -142,11 +168,12 @@ class LoginTest extends TestBase
             ->method('login')
             ->will($this->returnValue(true));
 
-        $mockClient->requireAuth('trapdoor', 'appid', 'appsecret', 'redirect');
+        $mockClient->requireAuth('trapdoor', 'appid', 'appsecret', 'nonce', 'redirect');
 
-        $this->assertEquals('appid', $_SESSION[Login::LOGIN_PREFIX . ':loginAppId']);
-        $this->assertEquals('appsecret', $_SESSION[Login::LOGIN_PREFIX . ':loginAppSecret']);
-        $this->assertEquals('trapdoor', $_SESSION[Login::LOGIN_PREFIX . ':loginProvider']);
+        $data = $this->cacheBackend->fetch('nonce');
+        $this->assertEquals('appid', $data[Login::LOGIN_PREFIX . ':loginAppId']);
+        $this->assertEquals('appsecret', $data[Login::LOGIN_PREFIX . ':loginAppSecret']);
+        $this->assertEquals('trapdoor', $data[Login::LOGIN_PREFIX . ':loginProvider']);
     }
 
     // validateAuth tests
@@ -161,7 +188,7 @@ class LoginTest extends TestBase
             ]
         );
         $_POST['persona:payload'] = '';
-        $personaClient->validateAuth();
+        $personaClient->validateAuth('nonce');
     }
 
     public function testValidateAuthThrowsExceptionWhenPayloadDoesNotExist()
@@ -175,7 +202,7 @@ class LoginTest extends TestBase
             ]
         );
         $_POST['persona:signature'] = 'DummySignature';
-        $personaClient->validateAuth();
+        $personaClient->validateAuth('nonce');
     }
 
     public function testValidateAuthThrowsExceptionWhenPayloadIsAString()
@@ -190,7 +217,7 @@ class LoginTest extends TestBase
         );
         $_POST['persona:signature'] = 'DummySignature';
         $_POST['persona:payload'] = 'YouShallNotPass';
-        $personaClient->validateAuth();
+        $personaClient->validateAuth('nonce');
     }
 
     public function testValidateAuthThrowsExceptionWhenPayloadIsMissingState()
@@ -206,7 +233,7 @@ class LoginTest extends TestBase
         $_SESSION[Login::LOGIN_PREFIX . ':loginState'] = 'Tennessee';
         $_POST['persona:signature'] = 'DummySignature';
         $_POST['persona:payload'] = base64_encode(json_encode(['test' => 'YouShallNotPass']));
-        $personaClient->validateAuth();
+        $personaClient->validateAuth('nonce');
     }
 
     public function testValidateAuthPayloadMismatchingSignature()
@@ -230,7 +257,7 @@ class LoginTest extends TestBase
         $_POST['persona:signature'] = $signature;
 
         $_POST['persona:payload'] = base64_encode(json_encode($payload));
-        $personaClient->validateAuth();
+        $personaClient->validateAuth('nonce');
     }
 
     public function testValidateAuthPayloadContainsStateAndSignatureNoOtherPayload()
@@ -242,8 +269,19 @@ class LoginTest extends TestBase
                 'cacheBackend' => $this->cacheBackend,
             ]
         );
-        $_SESSION[Login::LOGIN_PREFIX . ':loginState'] = 'Tennessee';
-        $_SESSION[Login::LOGIN_PREFIX . ':loginAppSecret'] = 'appsecret';
+
+        $simpleNonce = new \SoftSmart\Utilities\SimpleNonce();
+        $nonceValues = $simpleNonce->generateNonce(Login::LOGIN_STATE_ACTION, [Login::NONCE_SALT]);
+
+        $data = [
+            Login::NONCE_TIMESTAMP => $nonceValues['timeStamp'],
+            Login::LOGIN_PREFIX . ':loginAppSecret' => 'appsecret'
+            // TODO login state?
+            /* Login::LOGIN_PREFIX . ':loginState' = 'Tennessee'; */
+        ];
+        $this->cacheBackend->save($nonceValues['nonce'], $data);
+        /* $_SESSION[Login::LOGIN_PREFIX . ':loginState'] = 'Tennessee'; */
+        /* $_SESSION[Login::LOGIN_PREFIX . ':loginAppSecret'] = 'appsecret'; */
         $payload = [
             'state' => 'Tennessee'
         ];
@@ -254,15 +292,16 @@ class LoginTest extends TestBase
         $signature = hash_hmac('sha256', $encodedPayload, 'appsecret');
         $_POST['persona:signature'] = $signature;
 
-        $this->assertTrue($personaClient->validateAuth());
+        $this->assertTrue($personaClient->validateAuth($nonceValues['nonce']));
 
-        $this->assertEquals('appsecret', $_SESSION[Login::LOGIN_PREFIX . ':loginAppSecret']);
-        $this->assertArrayHasKey(Login::LOGIN_PREFIX . ':loginSSO', $_SESSION);
-        $this->assertArrayHasKey('token', $_SESSION[Login::LOGIN_PREFIX . ':loginSSO']);
-        $this->assertArrayHasKey('guid', $_SESSION[Login::LOGIN_PREFIX . ':loginSSO']);
-        $this->assertArrayHasKey('gupid', $_SESSION[Login::LOGIN_PREFIX . ':loginSSO']);
-        $this->assertArrayHasKey('profile', $_SESSION[Login::LOGIN_PREFIX . ':loginSSO']);
-        $this->assertArrayHasKey('redirect', $_SESSION[Login::LOGIN_PREFIX . ':loginSSO']);
+        $data = $this->cacheBackend->fetch('nonce');
+        $this->assertEquals('appsecret', $data[Login::LOGIN_PREFIX . ':loginAppSecret']);
+        $this->assertArrayHasKey(Login::LOGIN_PREFIX . ':loginSSO', $data);
+        $this->assertArrayHasKey('token', $data[Login::LOGIN_PREFIX . ':loginSSO']);
+        $this->assertArrayHasKey('guid', $data[Login::LOGIN_PREFIX . ':loginSSO']);
+        $this->assertArrayHasKey('gupid', $data[Login::LOGIN_PREFIX . ':loginSSO']);
+        $this->assertArrayHasKey('profile', $data[Login::LOGIN_PREFIX . ':loginSSO']);
+        $this->assertArrayHasKey('redirect', $data[Login::LOGIN_PREFIX . ':loginSSO']);
     }
 
     public function testValidateAuthPayloadContainsStateAndSignatureFullPayload()
@@ -274,8 +313,19 @@ class LoginTest extends TestBase
                 'cacheBackend' => $this->cacheBackend,
             ]
         );
-        $_SESSION[Login::LOGIN_PREFIX . ':loginState'] = 'Tennessee';
-        $_SESSION[Login::LOGIN_PREFIX . ':loginAppSecret'] = 'appsecret';
+
+        $simpleNonce = new \SoftSmart\Utilities\SimpleNonce();
+        $nonceValues = $simpleNonce->generateNonce(Login::LOGIN_STATE_ACTION, [Login::NONCE_SALT]);
+
+        $data = [
+            Login::NONCE_TIMESTAMP => $nonceValues['timeStamp'],
+            Login::LOGIN_PREFIX . ':loginAppSecret' => 'appsecret'
+            // TODO login state?
+            /* Login::LOGIN_PREFIX . ':loginState' = 'Tennessee'; */
+        ];
+        $this->cacheBackend->save($nonceValues['nonce'], $data);
+        /* $_SESSION[Login::LOGIN_PREFIX . ':loginState'] = 'Tennessee'; */
+        /* $_SESSION[Login::LOGIN_PREFIX . ':loginAppSecret'] = 'appsecret'; */
         $payload = [
             'token' => [
                 'access_token' => '987',
@@ -301,21 +351,22 @@ class LoginTest extends TestBase
         $signature = hash_hmac('sha256', $encodedPayload, 'appsecret');
         $_POST['persona:signature'] = $signature;
 
-        $this->assertTrue($personaClient->validateAuth());
+        $this->assertTrue($personaClient->validateAuth('nonce'));
 
-        $this->assertEquals('appsecret', $_SESSION[Login::LOGIN_PREFIX . ':loginAppSecret']);
-        $this->assertArrayHasKey(Login::LOGIN_PREFIX . ':loginSSO', $_SESSION);
-        $this->assertArrayHasKey('token', $_SESSION[Login::LOGIN_PREFIX . ':loginSSO']);
-        $this->assertEquals('987', $_SESSION[Login::LOGIN_PREFIX . ':loginSSO']['token']['access_token']);
-        $this->assertEquals(1800, $_SESSION[Login::LOGIN_PREFIX . ':loginSSO']['token']['expires_in']);
-        $this->assertEquals('bearer', $_SESSION[Login::LOGIN_PREFIX . ':loginSSO']['token']['token_type']);
-        $this->assertEquals('919191', $_SESSION[Login::LOGIN_PREFIX . ':loginSSO']['token']['scope'][0]);
-        $this->assertEquals('123', $_SESSION[Login::LOGIN_PREFIX . ':loginSSO']['guid']);
-        $this->assertEquals('trapdoor:123', $_SESSION[Login::LOGIN_PREFIX . ':loginSSO']['gupid'][0]);
-        $this->assertArrayHasKey('profile', $_SESSION[Login::LOGIN_PREFIX . ':loginSSO']);
-        $this->assertEquals('Alex Murphy', $_SESSION[Login::LOGIN_PREFIX . ':loginSSO']['profile']['name']);
-        $this->assertEquals('alexmurphy@detroit.pd', $_SESSION[Login::LOGIN_PREFIX . ':loginSSO']['profile']['email']);
-        $this->assertEquals('http://example.com/wherever', $_SESSION[Login::LOGIN_PREFIX . ':loginSSO']['redirect']);
+        $data = $this->cacheBackend->fetch('nonce');
+        $this->assertEquals('appsecret', $data[Login::LOGIN_PREFIX . ':loginAppSecret']);
+        $this->assertArrayHasKey(Login::LOGIN_PREFIX . ':loginSSO', $data);
+        $this->assertArrayHasKey('token', $data[Login::LOGIN_PREFIX . ':loginSSO']);
+        $this->assertEquals('987', $data[Login::LOGIN_PREFIX . ':loginSSO']['token']['access_token']);
+        $this->assertEquals(1800, $data[Login::LOGIN_PREFIX . ':loginSSO']['token']['expires_in']);
+        $this->assertEquals('bearer', $data[Login::LOGIN_PREFIX . ':loginSSO']['token']['token_type']);
+        $this->assertEquals('919191', $data[Login::LOGIN_PREFIX . ':loginSSO']['token']['scope'][0]);
+        $this->assertEquals('123', $data[Login::LOGIN_PREFIX . ':loginSSO']['guid']);
+        $this->assertEquals('trapdoor:123', $data[Login::LOGIN_PREFIX . ':loginSSO']['gupid'][0]);
+        $this->assertArrayHasKey('profile', $data[Login::LOGIN_PREFIX . ':loginSSO']);
+        $this->assertEquals('Alex Murphy', $data[Login::LOGIN_PREFIX . ':loginSSO']['profile']['name']);
+        $this->assertEquals('alexmurphy@detroit.pd', $data[Login::LOGIN_PREFIX . ':loginSSO']['profile']['email']);
+        $this->assertEquals('http://example.com/wherever', $data[Login::LOGIN_PREFIX . ':loginSSO']['redirect']);
     }
 
     public function testValidateAuthPayloadContainsStateAndSignatureFullPayloadCheckLoginIsCalled()
@@ -331,8 +382,14 @@ class LoginTest extends TestBase
             ->method('isLoggedIn')
             ->will($this->returnValue(true));
 
-        $_SESSION[Login::LOGIN_PREFIX . ':loginState'] = 'Tennessee';
-        $_SESSION[Login::LOGIN_PREFIX . ':loginAppSecret'] = 'appsecret';
+        $data = [
+            Login::LOGIN_PREFIX . ':loginAppSecret' => 'appsecret'
+            // TODO login state?
+            /* Login::LOGIN_PREFIX . ':loginState' = 'Tennessee'; */
+        ];
+        $this->cacheBackend->save('nonce', $data);
+        /* $_SESSION[Login::LOGIN_PREFIX . ':loginState'] = 'Tennessee'; */
+        /* $_SESSION[Login::LOGIN_PREFIX . ':loginAppSecret'] = 'appsecret'; */
         $payload = [
             'token' => [
                 'access_token' => '987',
@@ -358,7 +415,7 @@ class LoginTest extends TestBase
         $signature = hash_hmac('sha256', $encodedPayload, 'appsecret');
         $_POST['persona:signature'] = $signature;
 
-        $mockClient->validateAuth();
+        $mockClient->validateAuth('nonce');
     }
 
     public function testValidateAuthAfterRequireAuth()
@@ -378,10 +435,16 @@ class LoginTest extends TestBase
             ->method('login')
             ->will($this->returnValue(['guid' => '123']));
 
-        $_SESSION[Login::LOGIN_PREFIX . ':loginState'] = 'Tennessee';
-        $_SESSION[Login::LOGIN_PREFIX . ':loginAppSecret'] = 'appsecret';
+        $data = [
+            Login::LOGIN_PREFIX . ':loginAppSecret' => 'appsecret'
+            // TODO login state?
+            /* Login::LOGIN_PREFIX . ':loginState' = 'Tennessee'; */
+        ];
+        $this->cacheBackend->save('nonce', $data);
+        /* $_SESSION[Login::LOGIN_PREFIX . ':loginState'] = 'Tennessee'; */
+        /* $_SESSION[Login::LOGIN_PREFIX . ':loginAppSecret'] = 'appsecret'; */
 
-        $mockClient->requireAuth('trapdoor', 'appid', 'appsecret');
+        $mockClient->requireAuth('trapdoor', 'appid', 'appsecret', 'nonce');
 
         $payload = [
             'token' => [
@@ -408,11 +471,11 @@ class LoginTest extends TestBase
         $signature = hash_hmac('sha256', $encodedPayload, 'appsecret');
         $_POST['persona:signature'] = $signature;
 
-        $this->assertTrue($mockClient->validateAuth());
+        $this->assertTrue($mockClient->validateAuth('nonce'));
 
-        $this->assertEquals('123', $mockClient->getPersistentId());
-        $this->assertEquals(['919191'], $mockClient->getScopes());
-        $this->assertEquals('http://example.com/wherever', $mockClient->getRedirectUrl());
+        $this->assertEquals('123', $mockClient->getPersistentId('nonce'));
+        $this->assertEquals(['919191'], $mockClient->getScopes('nonce'));
+        $this->assertEquals('http://example.com/wherever', $mockClient->getRedirectUrl('nonce'));
     }
 
     // getPersistentId tests
@@ -425,7 +488,7 @@ class LoginTest extends TestBase
                 'cacheBackend' => $this->cacheBackend,
             ]
         );
-        $this->assertFalse($personaClient->getPersistentId());
+        $this->assertFalse($personaClient->getPersistentId('nonce'));
     }
 
     public function testGetPersistentIdNoGupidInSession()
@@ -438,7 +501,7 @@ class LoginTest extends TestBase
             ]
         );
         $_SESSION[Login::LOGIN_PREFIX . ':loginSSO'] = [];
-        $this->assertFalse($personaClient->getPersistentId());
+        $this->assertFalse($personaClient->getPersistentId('nonce'));
     }
 
     public function testGetPersistentIdNoLoginProviderInSession()
@@ -451,7 +514,7 @@ class LoginTest extends TestBase
             ]
         );
         $_SESSION[Login::LOGIN_PREFIX . ':loginSSO'] = [];
-        $this->assertFalse($personaClient->getPersistentId());
+        $this->assertFalse($personaClient->getPersistentId('nonce'));
     }
 
     public function testGetPersistentIdEmptyGupids()
@@ -466,7 +529,7 @@ class LoginTest extends TestBase
         $_SESSION[Login::LOGIN_PREFIX . ':loginProvider'] = 'trapdoor';
         $_SESSION[Login::LOGIN_PREFIX . ':loginSSO'] = ['gupid' => []];
 
-        $this->assertFalse($personaClient->getPersistentId());
+        $this->assertFalse($personaClient->getPersistentId('nonce'));
     }
 
     public function testGetPersistentIdNoMatchingGupid()
@@ -485,7 +548,7 @@ class LoginTest extends TestBase
                 'twitter:456'
             ]
         ];
-        $this->assertFalse($personaClient->getPersistentId());
+        $this->assertFalse($personaClient->getPersistentId('nonce'));
     }
 
     public function testGetPersistentIdFoundMatchingGupid()
@@ -504,7 +567,7 @@ class LoginTest extends TestBase
                 'trapdoor:456'
             ]
         ];
-        $this->assertEquals('456', $personaClient->getPersistentId());
+        $this->assertEquals('456', $personaClient->getPersistentId('nonce'));
     }
 
     // getRedirectUrl tests
@@ -517,7 +580,7 @@ class LoginTest extends TestBase
                 'cacheBackend' => $this->cacheBackend,
             ]
         );
-        $this->assertFalse($personaClient->getRedirectUrl());
+        $this->assertFalse($personaClient->getRedirectUrl('nonce'));
     }
 
     public function testGetRedirectUrlNoRedirectInSession()
@@ -529,8 +592,11 @@ class LoginTest extends TestBase
                 'cacheBackend' => $this->cacheBackend,
             ]
         );
-        $_SESSION[Login::LOGIN_PREFIX . ':loginSSO'] = [];
-        $this->assertFalse($personaClient->getRedirectUrl());
+        $data = [
+            Login::LOGIN_PREFIX . ':loginSSO' => []
+        ];
+        $this->cacheBackend->save('nonce', $data);
+        $this->assertFalse($personaClient->getRedirectUrl('nonce'));
     }
 
     public function testGetRedirectUrlFoundRedirectInSession()
@@ -542,12 +608,15 @@ class LoginTest extends TestBase
                 'cacheBackend' => $this->cacheBackend,
             ]
         );
-        $_SESSION[Login::LOGIN_PREFIX . ':loginSSO'] = ['redirect' => 'http://example.com/path/to/redirect'];
-        $this->assertEquals('http://example.com/path/to/redirect', $personaClient->getRedirectUrl());
+        $data = [
+            Login::LOGIN_PREFIX . ':loginSSO' => ['redirect' => 'http://example.com/path/to/redirect']
+        ];
+        $this->cacheBackend->save('nonce', $data);
+        $this->assertEquals('http://example.com/path/to/redirect', $personaClient->getRedirectUrl('nonce'));
     }
 
     // getScopes tests
-    public function testGetScopesUserNoSession()
+    public function testGetScopesUserNoDataInCache()
     {
         $personaClient = new Login(
             [
@@ -556,10 +625,10 @@ class LoginTest extends TestBase
                 'cacheBackend' => $this->cacheBackend,
             ]
         );
-        $this->assertFalse($personaClient->getScopes());
+        $this->assertFalse($personaClient->getScopes('nonce'));
     }
 
-    public function testGetScopesNoProfileInSession()
+    public function testGetScopesNoProfileInCache()
     {
         $personaClient = new Login(
             [
@@ -568,8 +637,11 @@ class LoginTest extends TestBase
                 'cacheBackend' => $this->cacheBackend,
             ]
         );
-        $_SESSION[Login::LOGIN_PREFIX . ':loginSSO'] = [];
-        $this->assertFalse($personaClient->getScopes());
+        $data = [
+            Login::LOGIN_PREFIX . ':loginSSO' => []
+        ];
+        $this->cacheBackend->save('nonce',$data);
+        $this->assertFalse($personaClient->getScopes('nonce'));
     }
 
     public function testGetScopes()
@@ -581,8 +653,11 @@ class LoginTest extends TestBase
                 'cacheBackend' => $this->cacheBackend,
             ]
         );
-        $_SESSION[Login::LOGIN_PREFIX . ':loginSSO'] = ['token' => ['scope' => ['919191']]];
-        $this->assertEquals(['919191'], $personaClient->getScopes());
+        $data = [
+            Login::LOGIN_PREFIX . ':loginSSO' => ['token' => ['scope' => ['919191']]]
+        ];
+        $this->cacheBackend->save('nonce',$data);
+        $this->assertEquals(['919191'], $personaClient->getScopes('nonce'));
     }
 
     public function testGetProfileNoSession()
@@ -594,7 +669,7 @@ class LoginTest extends TestBase
                 'cacheBackend' => $this->cacheBackend,
             ]
         );
-        $this->assertEquals([], $personaClient->getProfile());
+        $this->assertEquals([], $personaClient->getProfile('nonce'));
     }
 
     public function testGetProfileNoProfileInSession()
@@ -606,8 +681,11 @@ class LoginTest extends TestBase
                 'cacheBackend' => $this->cacheBackend,
             ]
         );
-        $_SESSION[Login::LOGIN_PREFIX . ':loginSSO'] = [];
-        $this->assertEquals([], $personaClient->getProfile());
+        $data = [
+            Login::LOGIN_PREFIX . ':loginSSO' => []
+        ];
+        $this->cacheBackend->save('nonce',$data);
+        $this->assertEquals([], $personaClient->getProfile('nonce'));
     }
 
     public function testGetProfile()
@@ -620,8 +698,11 @@ class LoginTest extends TestBase
             ]
         );
         $profile = ['name' => '', 'email' => ''];
-        $_SESSION[Login::LOGIN_PREFIX . ':loginSSO'] = ['profile' => $profile];
-        $this->assertEquals($profile, $personaClient->getProfile());
+        $data = [
+            Login::LOGIN_PREFIX . ':loginSSO' => ['profile' => $profile]
+        ];
+        $this->cacheBackend->save('nonce',$data);
+        $this->assertEquals($profile, $personaClient->getProfile('nonce'));
     }
 
     public function testRequireAuthRequireProfile()
@@ -636,13 +717,13 @@ class LoginTest extends TestBase
 
         $client = $this->getMock(
             'Talis\Persona\Client\Login',
-            ['redirect', 'getLoginState'],
+            ['redirect', 'getLoginState', 'generateNonce'],
             $arguments
         );
 
         $client->expects($this->once())
-            ->method('getLoginState')
-            ->will($this->returnValue('loginState'));
+            ->method('generateNonce')
+            ->will($this->returnValue(['nonce' => 'returnedNonce', 'timeStamp' => 'bob']));
 
         $client->expects($this->once())
             ->method('redirect')
@@ -650,8 +731,8 @@ class LoginTest extends TestBase
                 'http://' . $this->versionedPersonaHost() . '/auth/providers/trapdoor/login' .
                 '?require=profile' .
                 '&redirectUri=http%3A%2F%2Fexample.com' .
-                '&state=loginState' .
-                '&app=test_client'
+                '&app=test_client' .
+                '&nonce=returnedNonce'
             )
             ->will($this->returnValue(null));
 
@@ -659,6 +740,7 @@ class LoginTest extends TestBase
             'trapdoor',
             'test_client',
             'secret',
+            'nonce',
             'http://example.com',
             ['require' => 'profile']
         );
