@@ -4,8 +4,6 @@ namespace Talis\Persona\Client;
 
 use Monolog\Logger;
 use Guzzle\Http\Exception\RequestException;
-use \Domnikl\Statsd\Connection\Socket;
-use \Domnikl\Statsd\Connection\Blackhole;
 use \Guzzle\Http\Client as GuzzleClient;
 use \Talis\Persona\Client\ClientVersionCache;
 
@@ -13,8 +11,6 @@ abstract class Base
 {
     use ClientVersionCache;
 
-    const STATSD_CONN = 'STATSD_CONN';
-    const STATSD_PREFIX = 'STATSD_PREFIX';
     const LOGGER_NAME = 'PERSONA';
     const PERSONA_API_VERSION = '3';
 
@@ -23,12 +19,6 @@ abstract class Base
      * @var Array
      */
     protected $config = null;
-
-    /**
-     * StatsD client
-     * @var \Domnikl\Statsd\Client
-     */
-    private $statsD;
 
     /**
      * @var \Psr\Log\LoggerInterface
@@ -95,35 +85,6 @@ abstract class Base
         $this->logger = $this->get($config, 'logger', null);
         $this->cacheBackend = $config['cacheBackend'];
         $this->phpVersion = phpversion();
-    }
-
-    /**
-     * Lazy-load statsD
-     * @return \Domnikl\Statsd\Client
-     */
-    public function getStatsD()
-    {
-        if (is_null($this->statsD)) {
-            $connStr = getenv(self::STATSD_CONN);
-
-            if (!empty($connStr) && !empty(strpos($connStr, ':'))) {
-                list($host, $port) = explode(':', $connStr);
-                $conn = new Socket($host, $port);
-            } else {
-                $conn = new Blackhole();
-            }
-
-            $this->statsD = new \Domnikl\Statsd\Client($conn);
-            $prefix = getenv(self::STATSD_PREFIX);
-
-            if (empty($prefix)) {
-                $prefix = 'persona.php.client';
-            }
-
-            $this->statsD->setNamespace($prefix);
-        }
-
-        return $this->statsD;
     }
 
     /**
