@@ -25,8 +25,6 @@ class Signing extends Base
      */
     public function presignUrl($url, $secret, $expiry = null)
     {
-        $this->getStatsD()->increment('presignUrl');
-
         if (empty($url) || empty($secret)) {
             throw new \InvalidArgumentException('invalid url or secret');
         }
@@ -44,9 +42,7 @@ class Signing extends Base
             $url .= $expParam;
         }
 
-        $this->getStatsD()->startTiming('presignUrl.sign');
         $sig = $this->getSignature($url, $secret);
-        $this->getStatsD()->endTiming('presignUrl.sign');
 
         $sigParam = strpos($url, '?') === false ? "?signature=$sig" : "&signature=$sig";
 
@@ -83,11 +79,9 @@ class Signing extends Base
         $signature = $this->getSignature($urlWithoutSignature, $secret);
 
         if ($query['signature'] === $signature) {
-            $this->getStatsD()->increment('presignUrl.valid');
             return true;
         }
 
-        $this->getStatsD()->increment('presignUrl.invalid');
         return false;
     }
 

@@ -202,17 +202,7 @@ class Tokens extends Base
     protected function validateTokenUsingPersona($token, array $scopes = [])
     {
         // verify against persona
-        $this->getStatsD()->increment('validateToken.cache.miss');
-
-        $this->getStatsD()->startTiming('validateToken.rest.get');
         $success = $this->personaCheckTokenIsValid($token, $scopes);
-        $this->getStatsD()->endTiming('validateToken.rest.get');
-
-        if ($success === ValidationResults::SUCCESS) {
-            $this->getStatsD()->increment('validateToken.rest.valid');
-        } else {
-            $this->getStatsD()->increment('validateToken.rest.invalid');
-        }
 
         return $success;
     }
@@ -233,8 +223,6 @@ class Tokens extends Base
      */
     public function obtainNewToken($clientId, $clientSecret, array $params = [])
     {
-        $this->getStatsD()->increment('obtainNewToken');
-
         if (empty($clientId) || empty($clientSecret)) {
             throw new \Exception('You must specify clientId, and clientSecret to obtain a new token');
         }
@@ -257,9 +245,7 @@ class Tokens extends Base
         }
 
         $url = $this->getPersonaHost() . $this->config['persona_oauth_route'];
-        $this->getStatsD()->startTiming('obtainNewToken.rest.get');
         $token = $this->personaObtainNewToken($url, $query);
-        $this->getStatsD()->endTiming('obtainNewToken.rest.get');
 
         $this->cacheToken($clientId, $token);
         return $token;
