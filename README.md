@@ -10,7 +10,7 @@ changes.
 
 Before releasing for general usage there will be major changes to the API. The library will move
 away from the use of internal Talis project names like Persona, Critic, Babel and Echo etc.
-Instead it will use more externally relavant names like ```ListReviews``` and ```Files```.
+Instead it will use more externally relevant names like ```ListReviews``` and ```Files```.
 The API will also move to a more domain driven design rather than the service driven design
 of the individual libraries
 
@@ -44,7 +44,7 @@ Manually run persona locally:
 
 # Create an OAuth Client and Secret
 
-To build the talis-php docker container, you need to specify an oauth client and secret to use. This client should have `su` scope. It's not possibe to create a client with `su` scope via the API.
+To build the talis-php docker container, you need to specify an oauth client and secret to use. This client should have `su` scope. It's not possible to create a client with `su` scope via the API.
 
 First - create a client:
 
@@ -103,7 +103,7 @@ service redis-server start
 source /etc/profile.d/*
 ```
 
-You can the bun ant commands individually or run individual tests:
+You can then run ant commands individually or run individual tests:
 
 ```bash
 /vendor/bin/phpunit --filter testCreateUserThenPatchOAuthClientAddScope test/integration/
