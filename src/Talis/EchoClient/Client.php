@@ -212,66 +212,40 @@ class Client extends Base
         }
 
         $eventUrl = "$baseUrl/events?" . http_build_query($params);
-        $response = null;
 
         try {
-            $request = $this->getHttpClient()->get(
-                $eventUrl,
-                $this->getHeaders(),
-                ['connect_timeout' => 2]
-            );
-
-            $response = $request->send();
-        } catch (\Exception $e) {
-            // For any exception issue, just log the issue and fail silently.
-            // E.g. failure to connect to echo server, or whatever.
-            $this->getLogger()->warning(
-                "Failed getting events from echo - $class",
-                [
-                    'exception' => get_class($e),
-                    'message' => $e->getMessage(),
-                ]
-            );
-
-            throw $e;
+            $response = $this->getHttpClient()->get($eventUrl, [
+                \GuzzleHttp\RequestOptions::HEADERS => $this->getHeaders(),
+                \GuzzleHttp\RequestOptions::CONNECT_TIMEOUT => 2,
+            ]);
+        } catch (\Exception $exception) {
+            $this->logException($exception, 'Failed getting events from echo - ' . $class);
+            throw $exception;
         }
 
         $body = $this->parseBody($response, $format);
-        if ($body) {
-            return $body;
-        }
 
-        $this->getLogger()->warning(
-            "Failed getting events from echo - $class",
-            [
-                'responseCode' => $response->getStatusCode(),
-                'responseBody' => $response->getBody(true),
-            ]
-        );
-
-        throw new \Exception('Failed getting events from echo');
+        return $body;
     }
 
     /**
      * Parse the response from Echo
-     * @param mixed $response http response from echo
+     * @param \Psr\Http\Message\ResponseInterface $response http response from echo
      * @param string $format csv or json (default json)
      * @return mixed list of events or csv string
      */
-    protected function parseBody($response, $format)
+    protected function parseBody(\Psr\Http\Message\ResponseInterface $response, $format)
     {
-        if ($response->isSuccessful()) {
-            $body = $response->getBody(true);
+        $body = (string) $response->getBody();
 
-            if ($format === 'csv') {
-                if ($body) {
-                    return $body;
-                }
-            } else {
-                $parsedBody = json_decode($body, true);
-                if (isset($parsedBody['events'])) {
-                    return $parsedBody['events'];
-                }
+        if ($format === 'csv') {
+            if ($body) {
+                return $body;
+            }
+        } else {
+            $parsedBody = json_decode($body, true);
+            if (isset($parsedBody['events'])) {
+                return $parsedBody['events'];
             }
         }
 
@@ -395,67 +369,58 @@ class Client extends Base
     ) {
         $class = ECHO_CLASS_PREFIX . $class;
 
-        $request = $this->getHttpClient()->get(
-            $this->buildAnalyticsUrl($type, $class, $opts),
-            $this->getHeaders($noCache),
-            ['connect_timeout' => 10]
+        try {
+            $analyticsUrl = $this->buildAnalyticsUrl($type, $class, $opts);
+            $response = $this->getHttpClient()->get($analyticsUrl, [
+                \GuzzleHttp\RequestOptions::HEADERS => $this->getHeaders($noCache),
+                \GuzzleHttp\RequestOptions::CONNECT_TIMEOUT => 10,
+            ]);
+        } catch (\Exception $exception) {
+            $this->logException($exception, 'Failed getting analytics from echo - ' . $class, [
+                'requestClass' => $class,
+                'requestType' => $type,
+                'requestOpts' => $opts,
+            ]);
+            throw $exception;
+        }
+
+        $this->getLogger()->debug(
+            "Success getting analytics from echo - $type",
+            $opts
         );
 
-        $response = $request->send();
-        if ($response->isSuccessful()) {
-            $this->getLogger()->debug(
-                "Success getting analytics from echo - $type",
-                $opts
-            );
+        $responseBody = (string) $response->getBody();
+        $format = isset($opts['format']) ? $opts['format'] : 'json';
+        switch ($format) {
+            case 'csv':
+                $result = $responseBody;
+                if ($result) {
+                    return $result;
+                }
 
-            $format = isset($opts['format']) ? $opts['format'] : 'json';
-            switch ($format) {
-                case 'csv':
-                    $result = $response->getBody(true);
-                    if ($result) {
-                        return $result;
-                    }
+                break;
+            default:
+                $json = json_decode($responseBody, true);
+                if ($json) {
+                    return $json;
+                }
 
-                    break;
-                default:
-                    $json = json_decode($response->getBody(true), true);
-                    if ($json) {
-                        return $json;
-                    }
+                $this->getLogger()->warning(
+                    "Failed getting analytics from echo, json did not decode - $class",
+                    [
+                        'body' => $responseBody,
+                        'responseCode' => $response->getStatusCode(),
+                        'responseBody' => $responseBody,
+                        'requestClass' => $class,
+                        'requestType' => $type,
+                        'requestOpts' => $opts,
+                    ]
+                );
 
-                    $this->getLogger()->warning(
-                        "Failed getting analytics from echo, json did not decode - $class",
-                        [
-                            'body' => $response->getBody(true),
-                            'responseCode' => $response->getStatusCode(),
-                            'responseBody' => $response->getBody(true),
-                            'requestClass' => $class,
-                            'requestType' => $type,
-                            'requestOpts' => $opts,
-                        ]
-                    );
-
-                    throw new \Exception(
-                        'Could not get analytics from echo, json did not decode: '
-                            . $response->getBody(true)
-                    );
-            }
-        } else {
-            $this->getLogger()->warning(
-                'Failed getting analytics from echo - ' . $class,
-                [
-                    'responseCode' => $response->getStatusCode(),
-                    'responseBody' => $response->getBody(true),
-                    'requestClass' => $class,
-                    'requestType' => $type,
-                    'requestOpts' => $opts,
-                ]
-            );
-
-            throw new \Exception(
-                'Could not get analytics from echo, statusCode: '
-                    . $response->getStatusCode()
-            );
+                throw new \Exception(
+                    'Could not get analytics from echo, json did not decode: '
+                        . $responseBody
+                );
         }
     }
 
@@ -489,8 +454,8 @@ class Client extends Base
      *
      * @param string $eventsData The json encoded events data to send
      * @return boolean True if successful
-     * @throws EchoHttpException If the server responded with an error
-     * @throws EchoCouldNotSendException If we were unable to send data to the Echo server
+     * @throws CouldNotSendDataException If we were unable to send data to the Echo server
+     * @throws HttpException If the server responded with an incorrect status
      */
     protected function sendJsonEventDataToEcho($eventsData)
     {
@@ -510,51 +475,33 @@ class Client extends Base
         $eventUrl = "$baseUrl/events";
 
         try {
-            $client = $this->getHttpClient();
-            $request = $client->post(
-                $eventUrl,
-                $this->getHeaders(),
-                $eventsData,
-                ['connect_timeout' => 2]
-            );
-
-            $response = $request->send();
-        } catch (\Exception $e) {
-            $this->getLogger()->warning(
-                'Failed sending events to echo',
-                [
-                    'exception' => get_class($e),
-                    'message' => $e->getMessage(),
-                    'batchSize' => count(json_decode($eventsData)),
-                    'batchSizeBytes' => $this->getStringSizeInBytes($eventsData),
-                    'events' => $eventsData,
-                ]
-            );
-
+            $response = $this->getHttpClient()->post($eventUrl, [
+                \GuzzleHttp\RequestOptions::HEADERS => $this->getHeaders(),
+                \GuzzleHttp\RequestOptions::BODY => $eventsData,
+                \GuzzleHttp\RequestOptions::CONNECT_TIMEOUT => 2,
+            ]);
+        } catch (\Exception $exception) {
+            $this->logException($exception, 'Failed sending events to echo', [
+                'batchSize' => count(json_decode($eventsData)),
+                'batchSizeBytes' => $this->getStringSizeInBytes($eventsData),
+                'events' => $eventsData,
+            ]);
             throw new \Talis\EchoClient\CouldNotSendDataException(
-                "Failed sending events to echo. {$e->getMessage()}"
+                "Failed sending events to echo. {$exception->getMessage()}",
+                0,
+                $exception
             );
         }
 
-        if ($response->isSuccessful()) {
+        // Only treat responses 2xx | 304 as successful
+        $statusCode = $response->getStatusCode();
+        if (($statusCode >= 200 && $statusCode < 300) || $statusCode == 304) {
             $this->getLogger()->debug('Success sending events to echo');
             return true;
         }
 
-        // if the response wasn't successful then log the error
-        // and raise an exception
-        $this->getLogger()->warning(
-            'Failed sending events to echo',
-            [
-                'responseCode' => $response->getStatusCode(),
-                'responseBody' => $response->getBody(true),
-                'batchSize' => count(json_decode($eventsData)),
-                'batchSizeBytes' => $this->getStringSizeInBytes($eventsData),
-            ]
-        );
-
         throw new \Talis\EchoClient\HttpException(
-            "{$response->getStatusCode()} - {$response->getBody(true)}"
+            "{$response->getStatusCode()} - {$response->getBody()}"
         );
     }
 
@@ -574,5 +521,30 @@ class Client extends Base
         }
 
         return ECHO_HOST . '/' . self::ECHO_API_VERSION;
+    }
+
+    /**
+     * Logs an exception.
+     *
+     * @param \Exception $exception The exception
+     * @param string     $message The message
+     * @param array      $context Additional context data
+     */
+    private function logException(\Exception $exception, $message, array $context = [])
+    {
+        $context = array_merge([
+            'exception' => get_class($exception),
+            'message' => $exception->getMessage(),
+        ], $context);
+
+        if ($exception instanceof \GuzzleHttp\Exception\RequestException && $exception->hasResponse()) {
+            $response = $exception->getResponse();
+            $context = array_merge([
+                'responseCode' => $response->getStatusCode(),
+                'responseBody' => (string) $response->getBody(),
+            ], $context);
+        }
+
+        $this->getLogger()->warning($message, $context);
     }
 }

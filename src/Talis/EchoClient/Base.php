@@ -77,11 +77,11 @@ abstract class Base
     /**
      * To allow mocking of the Guzzle client for testing.
      *
-     * @return Client
+     * @return \GuzzleHttp\Client
      */
     protected function getHttpClient()
     {
-        return new \Guzzle\Http\Client();
+        return new \GuzzleHttp\Client();
     }
 
     /**
