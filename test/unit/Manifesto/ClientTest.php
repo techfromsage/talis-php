@@ -55,53 +55,116 @@ class ClientTest extends TestBase
         $this->assertEquals($persona, $client->getPersonaClient());
     }
 
+    public function testGenerateUrlNotAuthorisedResponse()
+    {
+        $mockClient = $this->getClientWithMockResponses([
+            new \GuzzleHttp\Psr7\Response(
+                401,
+                [],
+                json_encode(['code' => 'Unauthorised request', 'message' => 'Client is not authorised for request'])
+            ),
+        ]);
+
+        $this->setExpectedException(
+            \Talis\Manifesto\Exceptions\UnauthorisedAccessException::class,
+            'Client is not authorised for request'
+        );
+        $response = $mockClient->generateUrl('123', 'token', 'secret');
+    }
+
+    public function testGenerateUrlReturns404()
+    {
+        $mockClient = $this->getClientWithMockResponses([
+            new \GuzzleHttp\Psr7\Response(404, [], 'File not found'),
+        ]);
+
+        $this->setExpectedException(
+            \Talis\Manifesto\Exceptions\GenerateUrlException::class,
+            'Missing archive'
+        );
+        $response = $mockClient->generateUrl('1234', 'token', 'secret');
+    }
+
+    public function testGenerateUrlJobReadyForDownload()
+    {
+        $mockClient = $this->getClientWithMockResponses([
+            new \GuzzleHttp\Psr7\Response(200, [], json_encode(['url' => 'https://path.to.s3/export.zip'])),
+        ]);
+
+        $this->assertEquals('https://path.to.s3/export.zip', $mockClient->generateUrl('1234', 'token', 'secret'));
+    }
+
+    /**
+     * @dataProvider requestArchiveErrorResponsesProvider
+     * @param \Psr\Http\Message\ResponseInterface $response The response
+     * @param string $exceptionClass The exception class
+     * @param string $exceptionMessage The exception message
+     */
+    public function testRequestArchiveErrorResponse($response, $exceptionClass, $exceptionMessage = '')
+    {
+        $mockClient = $this->getClientWithMockResponses([$response]);
+
+        $m = new \Talis\Manifesto\Manifest();
+        $m->setFormat(FORMAT_ZIP);
+        $files = [];
+        $file1 = ['file' => '/path/to/file1.txt'];
+        $files[] = $file1;
+        $m->addFile($file1);
+
+        $file2 = ['type' => FILE_TYPE_S3, 'container' => 'myBucket', 'file' => '/path/to/file2.txt', 'destinationPath' => 'foobar.txt'];
+        $files[] = $file2;
+        $m->addFile($file2);
+
+        $file3 = ['type' => FILE_TYPE_CF, 'file' => '/path/to/file3.txt', 'destinationPath' => '/another/path/foobar.txt'];
+        $files[] = $file3;
+        $m->addFile($file3);
+
+        $this->setExpectedException($exceptionClass, $exceptionMessage);
+        $response = $mockClient->requestArchive($m, 'token', 'secret');
+    }
+
+    public function requestArchiveErrorResponsesProvider()
+    {
+        return [
+            '400 Validation' => [
+                new \GuzzleHttp\Psr7\Response(
+                    400,
+                    [],
+                    json_encode(['code' => 'Invalid Manifest', 'message' => 'The Manifest is incomplete or contains invalid properties'])
+                ),
+                \Talis\Manifesto\Exceptions\ManifestValidationException::class,
+                'The Manifest is incomplete or contains invalid properties',
+            ],
+            '401 Persona' => [
+                new \GuzzleHttp\Psr7\Response(
+                    401,
+                    [],
+                    json_encode(['code' => 'Unauthorised request', 'message' => 'Client is not authorised for request'])
+                ),
+                \Talis\Manifesto\Exceptions\UnauthorisedAccessException::class,
+                'Client is not authorised for request',
+            ],
+            '404 File not found' => [
+                new \GuzzleHttp\Psr7\Response(404, [], 'File not found'),
+                \Talis\Manifesto\Exceptions\ArchiveException::class,
+                'Misconfigured Manifesto base url',
+            ],
+            '420 Client error' => [
+                new \GuzzleHttp\Psr7\Response(420, [], 'Enhance Your Calm'),
+                \GuzzleHttp\Exception\ClientException::class,
+            ],
+            '500 Server error' => [
+                new \GuzzleHttp\Psr7\Response(500, [], 'Server error'),
+                \GuzzleHttp\Exception\ServerException::class,
+            ],
+        ];
+    }
+
     public function testSuccessfulRequestArchive()
     {
-        /** @var \Talis\Manifesto\Client|PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(
-            '\Talis\Manifesto\Client',
-            ['getHeaders', 'getHTTPClient'],
-            ['https://example.com/manifesto']
-        );
-
-        $mockClient->expects($this->once())
-            ->method('getHeaders')
-            ->will(
-                $this->returnValue([
-                    [
-                        'Content-Type' => 'application/json',
-                        'Authorization' => 'Bearer FooToken'
-                    ]
-                ])
-            );
-
-        $client = new \Guzzle\Http\Client('https://example.com/manifesto');
-        $plugin = new \Guzzle\Plugin\Mock\MockPlugin();
-        $plugin->addResponse(
-            new \Guzzle\Http\Message\Response(
-                202,
-                null,
-                json_encode(['id' => '12345', 'status' => 'Accepted'])
-            )
-        );
-        $client->addSubscriber($plugin);
-
-        $mockClient->expects($this->once())
-            ->method('getHTTPClient')
-            ->will($this->returnValue($client));
-
-        // Set this manually since it won't work from the constructor since we're mocking
-        $mockClient->setManifestoBaseUrl('https://example.com/manifesto');
-
-        $cacheDriver = new \Doctrine\Common\Cache\ArrayCache();
-        $personaOpts = [
-            'persona_host' => 'http://persona',
-            'persona_oauth_route' => '/oauth/tokens/',
-            'userAgent' => 'manifesto-client/1.0',
-            'cacheBackend' => $cacheDriver,
-        ];
-
-        $mockClient->setPersonaConnectValues($personaOpts);
+        $mockClient = $this->getClientWithMockResponses([
+            new \GuzzleHttp\Psr7\Response(202, [], json_encode(['id' => '12345', 'status' => 'Accepted'])),
+        ]);
 
         $m = new \Talis\Manifesto\Manifest();
         $m->setFormat(FORMAT_ZIP);
@@ -121,492 +184,49 @@ class ClientTest extends TestBase
         /** @var \Talis\Manifesto\Archive $response */
         $response = $mockClient->requestArchive($m, 'token', 'secret');
 
-        $this->assertInstanceOf('\Talis\Manifesto\Archive', $response);
+        $this->assertInstanceOf(\Talis\Manifesto\Archive::class, $response);
         $this->assertEquals('12345', $response->getId());
         $this->assertEquals('Accepted', $response->getStatus());
         $this->assertEmpty($response->getLocation());
     }
 
-    public function testGenerateUrlNotAuthorisedResponse()
+    /**
+     * Gets the client with mocked HTTP responses.
+     *
+     * @param \GuzzleHttp\Psr7\Response[] $responses The responses
+     * @return \Talis\Manifesto\Client|\PHPUnit_Framework_MockObject_MockObject The client.
+     */
+    private function getClientWithMockResponses(array $responses = [])
     {
-        /** @var \Talis\Manifesto\Client|PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(
-            '\Talis\Manifesto\Client',
-            ['getHeaders', 'getHTTPClient'],
-            ['https://example.com/manifesto']
-        );
+        $mockHandler = new \GuzzleHttp\Handler\MockHandler($responses);
+        $handlerStack = \GuzzleHttp\HandlerStack::create($mockHandler);
 
-        $mockClient->expects($this->once())
-            ->method('getHeaders')
-            ->will(
-                $this->returnValue([
-                    [
-                        'Content-Type' => 'application/json',
-                        'Authorization' => 'Bearer FooToken'
-                    ]
-                ])
-            );
-
-        $client = new \Guzzle\Http\Client('https://example.com/manifesto');
-        $plugin = new \Guzzle\Plugin\Mock\MockPlugin();
-        $plugin->addResponse(
-            new \Guzzle\Http\Message\Response(
-                401,
-                null,
-                json_encode(['code' => 'Unauthorised request', 'message' => 'Client is not authorised for request'])
-            )
-        );
-
-        $client->addSubscriber($plugin);
-
-        $mockClient->expects($this->once())
-            ->method('getHTTPClient')
-            ->will($this->returnValue($client));
-
-        $cacheDriver = new \Doctrine\Common\Cache\ArrayCache();
-        $personaOpts = [
+        $manifestoBaseUrl = 'https://example.com/manifesto';
+        $personaConnectValues = [
             'persona_host' => 'http://persona',
             'persona_oauth_route' => '/oauth/tokens/',
             'userAgent' => 'manifesto-client/1.0',
-            'cacheBackend' => $cacheDriver,
+            'cacheBackend' => new \Doctrine\Common\Cache\ArrayCache(),
         ];
 
-        $mockClient->setPersonaConnectValues($personaOpts);
+        $httpClient = new \GuzzleHttp\Client(['handler' => $handlerStack]);
 
-        $this->setExpectedException('\Talis\Manifesto\Exceptions\UnauthorisedAccessException', 'Client is not authorised for request');
-        $response = $mockClient->generateUrl('123', 'token', 'secret');
-    }
+        $stubPersonaClient = $this->getMock(\Talis\Persona\Client\Tokens::class, [], [], '', false);
+        $stubPersonaClient->method('obtainNewToken')
+            ->willReturn(['access_token' => 'some-token']);
 
-    public function testGenerateUrlReturns404()
-    {
-        /** @var \Talis\Manifesto\Client|PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(
-            '\Talis\Manifesto\Client',
-            ['getHeaders', 'getHTTPClient'],
-            ['https://example.com/manifesto']
-        );
+        $manifestoClient = $this->getMockBuilder(\Talis\Manifesto\Client::class)
+            ->setConstructorArgs([$manifestoBaseUrl, $personaConnectValues])
+            ->setMethods(['getHTTPClient', 'getPersonaClient'])
+            ->getMock();
 
-        $mockClient->expects($this->once())
-            ->method('getHeaders')
-            ->will(
-                $this->returnValue([
-                    [
-                        'Content-Type' => 'application/json',
-                        'Authorization' => 'Bearer FooToken'
-                    ]
-                ])
-            );
+        $manifestoClient->method('getHTTPClient')
+            ->willReturn($httpClient);
 
-        $client = new \Guzzle\Http\Client('https://example.com/manifesto');
-        $plugin = new \Guzzle\Plugin\Mock\MockPlugin();
-        $plugin->addResponse(
-            new \Guzzle\Http\Message\Response(
-                404,
-                null,
-                'File not found'
-            )
-        );
-        $client->addSubscriber($plugin);
+        $manifestoClient->method('getPersonaClient')
+            ->willReturn($stubPersonaClient);
 
-        $mockClient->expects($this->once())
-            ->method('getHTTPClient')
-            ->will($this->returnValue($client));
-
-        $cacheDriver = new \Doctrine\Common\Cache\ArrayCache();
-        $personaOpts = [
-            'persona_host' => 'http://persona',
-            'persona_oauth_route' => '/oauth/tokens/',
-            'userAgent' => 'manifesto-client/1.0',
-            'cacheBackend' => $cacheDriver,
-        ];
-
-        $mockClient->setPersonaConnectValues($personaOpts);
-
-        $this->setExpectedException('\Talis\Manifesto\Exceptions\GenerateUrlException', 'Missing archive');
-        $response = $mockClient->generateUrl('1234', 'token', 'secret');
-    }
-
-    public function testGenerateUrlJobReadyForDownload()
-    {
-        /** @var \Talis\Manifesto\Client|PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(
-            '\Talis\Manifesto\Client',
-            ['getHeaders', 'getHTTPClient'],
-            ['https://example.com/manifesto']
-        );
-
-        $mockClient->expects($this->once())
-            ->method('getHeaders')
-            ->will(
-                $this->returnValue([
-                    [
-                        'Content-Type' => 'application/json',
-                        'Authorization' => 'Bearer FooToken'
-                    ]
-                ])
-            );
-
-        $client = new \Guzzle\Http\Client('https://example.com/manifesto');
-        $plugin = new \Guzzle\Plugin\Mock\MockPlugin();
-        $plugin->addResponse(
-            new \Guzzle\Http\Message\Response(
-                200,
-                null,
-                json_encode(['url' => 'https://path.to.s3/export.zip'])
-            )
-        );
-        $client->addSubscriber($plugin);
-
-        $mockClient->expects($this->once())
-            ->method('getHTTPClient')
-            ->will($this->returnValue($client));
-
-        $cacheDriver = new \Doctrine\Common\Cache\ArrayCache();
-        $personaOpts = [
-            'persona_host' => 'http://persona',
-            'persona_oauth_route' => '/oauth/tokens/',
-            'userAgent' => 'manifesto-client/1.0',
-            'cacheBackend' => $cacheDriver,
-        ];
-
-        $mockClient->setPersonaConnectValues($personaOpts);
-
-        $this->assertEquals('https://path.to.s3/export.zip', $mockClient->generateUrl('1234', 'token', 'secret'));
-    }
-
-    public function testRequestArchiveNotAuthorisedResponse()
-    {
-        /** @var \Talis\Manifesto\Client|PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(
-            '\Talis\Manifesto\Client',
-            ['getHeaders', 'getHTTPClient'],
-            ['https://example.com/manifesto']
-        );
-
-        $mockClient->expects($this->once())
-            ->method('getHeaders')
-            ->will(
-                $this->returnValue([
-                    [
-                        'Content-Type' => 'application/json',
-                        'Authorization' => 'Bearer FooToken'
-                    ]
-                ])
-            );
-
-        $client = new \Guzzle\Http\Client('https://example.com/manifesto');
-        $plugin = new \Guzzle\Plugin\Mock\MockPlugin();
-        $plugin->addResponse(
-            new \Guzzle\Http\Message\Response(
-                401,
-                null,
-                json_encode(['code' => 'Unauthorised request', 'message' => 'Client is not authorised for request'])
-            )
-        );
-        $client->addSubscriber($plugin);
-
-        $mockClient->expects($this->once())
-            ->method('getHTTPClient')
-            ->will($this->returnValue($client));
-
-        // Set this manually since it won't work from the constructor since we're mocking
-        $mockClient->setManifestoBaseUrl('https://example.com/manifesto');
-
-        $cacheDriver = new \Doctrine\Common\Cache\ArrayCache();
-        $personaOpts = [
-            'persona_host' => 'http://persona',
-            'persona_oauth_route' => '/oauth/tokens/',
-            'userAgent' => 'manifesto-client/1.0',
-            'cacheBackend' => $cacheDriver,
-        ];
-
-        $mockClient->setPersonaConnectValues($personaOpts);
-
-        $m = new \Talis\Manifesto\Manifest();
-        $m->setFormat(FORMAT_ZIP);
-        $files = [];
-        $file1 = ['file' => '/path/to/file1.txt'];
-        $files[] = $file1;
-        $m->addFile($file1);
-
-        $file2 = ['type' => FILE_TYPE_S3, 'container' => 'myBucket', 'file' => '/path/to/file2.txt', 'destinationPath' => 'foobar.txt'];
-        $files[] = $file2;
-        $m->addFile($file2);
-
-        $file3 = ['type' => FILE_TYPE_CF, 'file' => '/path/to/file3.txt', 'destinationPath' => '/another/path/foobar.txt'];
-        $files[] = $file3;
-        $m->addFile($file3);
-
-        $this->setExpectedException('\Talis\Manifesto\Exceptions\UnauthorisedAccessException', 'Client is not authorised for request');
-        $response = $mockClient->requestArchive($m, 'token', 'secret');
-    }
-
-    public function testRequestArchiveInvalidManifestResponse()
-    {
-        /** @var \Talis\Manifesto\Client|PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(
-            '\Talis\Manifesto\Client',
-            ['getHeaders', 'getHTTPClient'],
-            ['https://example.com/manifesto']
-        );
-
-        $mockClient->expects($this->once())
-            ->method('getHeaders')
-            ->will(
-                $this->returnValue([
-                    [
-                        'Content-Type' => 'application/json',
-                        'Authorization' => 'Bearer FooToken'
-                    ]
-                ])
-            );
-
-        $client = new \Guzzle\Http\Client('https://example.com/manifesto');
-        $plugin = new \Guzzle\Plugin\Mock\MockPlugin();
-        $plugin->addResponse(
-            new \Guzzle\Http\Message\Response(
-                400,
-                null,
-                json_encode(['code' => 'Invalid Manifest', 'message' => 'The Manifest is incomplete or contains invalid properties'])
-            )
-        );
-        $client->addSubscriber($plugin);
-
-        $mockClient->expects($this->once())
-            ->method('getHTTPClient')
-            ->will($this->returnValue($client));
-
-        // Set this manually since it won't work from the constructor since we're mocking
-        $mockClient->setManifestoBaseUrl('https://example.com/manifesto');
-
-        $cacheDriver = new \Doctrine\Common\Cache\ArrayCache();
-        $personaOpts = [
-            'persona_host' => 'http://persona',
-            'persona_oauth_route' => '/oauth/tokens/',
-            'userAgent' => 'manifesto-client/1.0',
-            'cacheBackend' => $cacheDriver,
-        ];
-
-        $mockClient->setPersonaConnectValues($personaOpts);
-
-        $m = new \Talis\Manifesto\Manifest();
-        $m->setFormat(FORMAT_ZIP);
-        $files = [];
-        $file1 = ['file' => '/path/to/file1.txt'];
-        $files[] = $file1;
-        $m->addFile($file1);
-
-        $file2 = ['type' => FILE_TYPE_S3, 'container' => 'myBucket', 'file' => '/path/to/file2.txt', 'destinationPath' => 'foobar.txt'];
-        $files[] = $file2;
-        $m->addFile($file2);
-
-        $file3 = ['type' => FILE_TYPE_CF, 'file' => '/path/to/file3.txt', 'destinationPath' => '/another/path/foobar.txt'];
-        $files[] = $file3;
-        $m->addFile($file3);
-
-        $this->setExpectedException('\Talis\Manifesto\Exceptions\ManifestValidationException', 'The Manifest is incomplete or contains invalid properties');
-        $response = $mockClient->requestArchive($m, 'token', 'secret');
-    }
-
-    public function testRequestArchiveReturns404()
-    {
-        /** @var \Talis\Manifesto\Client|PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(
-            '\Talis\Manifesto\Client',
-            ['getHeaders', 'getHTTPClient'],
-            ['https://example.com/manifesto']
-        );
-
-        $mockClient->expects($this->once())
-            ->method('getHeaders')
-            ->will(
-                $this->returnValue([
-                    [
-                        'Content-Type' => 'application/json',
-                        'Authorization' => 'Bearer FooToken'
-                    ]
-                ])
-            );
-
-        $client = new \Guzzle\Http\Client('https://example.com/manifesto');
-        $plugin = new \Guzzle\Plugin\Mock\MockPlugin();
-        $plugin->addResponse(
-            new \Guzzle\Http\Message\Response(
-                404,
-                null,
-                'File not found'
-            )
-        );
-        $client->addSubscriber($plugin);
-
-        $mockClient->expects($this->once())
-            ->method('getHTTPClient')
-            ->will($this->returnValue($client));
-
-        // Set this manually since it won't work from the constructor since we're mocking
-        $mockClient->setManifestoBaseUrl('https://example.com/manifesto');
-
-        $cacheDriver = new \Doctrine\Common\Cache\ArrayCache();
-        $personaOpts = [
-            'persona_host' => 'http://persona',
-            'persona_oauth_route' => '/oauth/tokens/',
-            'userAgent' => 'manifesto-client/1.0',
-            'cacheBackend' => $cacheDriver,
-        ];
-
-        $mockClient->setPersonaConnectValues($personaOpts);
-
-        $m = new \Talis\Manifesto\Manifest();
-        $m->setFormat(FORMAT_ZIP);
-        $files = [];
-        $file1 = ['file' => '/path/to/file1.txt'];
-        $files[] = $file1;
-        $m->addFile($file1);
-
-        $file2 = ['type' => FILE_TYPE_S3, 'container' => 'myBucket', 'file' => '/path/to/file2.txt', 'destinationPath' => 'foobar.txt'];
-        $files[] = $file2;
-        $m->addFile($file2);
-
-        $file3 = ['type' => FILE_TYPE_CF, 'file' => '/path/to/file3.txt', 'destinationPath' => '/another/path/foobar.txt'];
-        $files[] = $file3;
-        $m->addFile($file3);
-
-        $this->setExpectedException('\Talis\Manifesto\Exceptions\ArchiveException', 'Misconfigured Manifesto base url');
-        $response = $mockClient->requestArchive($m, 'token', 'secret');
-    }
-
-    public function testRequestArchiveUnexpectedClientErrorResponse()
-    {
-        /** @var \Talis\Manifesto\Client|PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(
-            '\Talis\Manifesto\Client',
-            ['getHeaders', 'getHTTPClient'],
-            ['https://example.com/manifesto']
-        );
-
-        $mockClient->expects($this->once())
-            ->method('getHeaders')
-            ->will(
-                $this->returnValue([
-                    [
-                        'Content-Type' => 'application/json',
-                        'Authorization' => 'Bearer FooToken'
-                    ]
-                ])
-            );
-
-        $client = new \Guzzle\Http\Client('https://example.com/manifesto');
-        $plugin = new \Guzzle\Plugin\Mock\MockPlugin();
-        $plugin->addResponse(
-            new \Guzzle\Http\Message\Response(
-                420,
-                null,
-                'Enhance Your Calm'
-            )
-        );
-        $client->addSubscriber($plugin);
-
-        $mockClient->expects($this->once())
-            ->method('getHTTPClient')
-            ->will($this->returnValue($client));
-
-        // Set this manually since it won't work from the constructor since we're mocking
-        $mockClient->setManifestoBaseUrl('https://example.com/manifesto');
-
-        $cacheDriver = new \Doctrine\Common\Cache\ArrayCache();
-        $personaOpts = [
-            'persona_host' => 'http://persona',
-            'persona_oauth_route' => '/oauth/tokens/',
-            'userAgent' => 'manifesto-client/1.0',
-            'cacheBackend' => $cacheDriver,
-        ];
-
-        $mockClient->setPersonaConnectValues($personaOpts);
-
-        $m = new \Talis\Manifesto\Manifest();
-        $m->setFormat(FORMAT_ZIP);
-        $files = [];
-        $file1 = ['file' => '/path/to/file1.txt'];
-        $files[] = $file1;
-        $m->addFile($file1);
-
-        $file2 = ['type' => FILE_TYPE_S3, 'container' => 'myBucket', 'file' => '/path/to/file2.txt', 'destinationPath' => 'foobar.txt'];
-        $files[] = $file2;
-        $m->addFile($file2);
-
-        $file3 = ['type' => FILE_TYPE_CF, 'file' => '/path/to/file3.txt', 'destinationPath' => '/another/path/foobar.txt'];
-        $files[] = $file3;
-        $m->addFile($file3);
-
-        $this->setExpectedException('\Guzzle\Http\Exception\ClientErrorResponseException');
-        $response = $mockClient->requestArchive($m, 'token', 'secret');
-    }
-
-    public function testRequestArchiveUnexpectedServerErrorResponse()
-    {
-        /** @var \Talis\Manifesto\Client|PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(
-            '\Talis\Manifesto\Client',
-            ['getHeaders', 'getHTTPClient'],
-            ['https://example.com/manifesto']
-        );
-
-        $mockClient->expects($this->once())
-            ->method('getHeaders')
-            ->will(
-                $this->returnValue([
-                    [
-                        'Content-Type' => 'application/json',
-                        'Authorization' => 'Bearer FooToken'
-                    ]
-                ])
-            );
-
-        $client = new \Guzzle\Http\Client('https://example.com/manifesto');
-        $plugin = new \Guzzle\Plugin\Mock\MockPlugin();
-        $plugin->addResponse(
-            new \Guzzle\Http\Message\Response(
-                500,
-                null,
-                'Server error'
-            )
-        );
-        $client->addSubscriber($plugin);
-
-        $mockClient->expects($this->once())
-            ->method('getHTTPClient')
-            ->will($this->returnValue($client));
-
-        // Set this manually since it won't work from the constructor since we're mocking
-        $mockClient->setManifestoBaseUrl('https://example.com/manifesto');
-
-        $cacheDriver = new \Doctrine\Common\Cache\ArrayCache();
-        $personaOpts = [
-            'persona_host' => 'http://persona',
-            'persona_oauth_route' => '/oauth/tokens/',
-            'userAgent' => 'manifesto-client/1.0',
-            'cacheBackend' => $cacheDriver,
-        ];
-
-        $mockClient->setPersonaConnectValues($personaOpts);
-
-        $m = new \Talis\Manifesto\Manifest();
-        $m->setFormat(FORMAT_ZIP);
-        $files = [];
-        $file1 = ['file' => '/path/to/file1.txt'];
-        $files[] = $file1;
-        $m->addFile($file1);
-
-        $file2 = ['type' => FILE_TYPE_S3, 'container' => 'myBucket', 'file' => '/path/to/file2.txt', 'destinationPath' => 'foobar.txt'];
-        $files[] = $file2;
-        $m->addFile($file2);
-
-        $file3 = ['type' => FILE_TYPE_CF, 'file' => '/path/to/file3.txt', 'destinationPath' => '/another/path/foobar.txt'];
-        $files[] = $file3;
-        $m->addFile($file3);
-
-        $this->setExpectedException('\Guzzle\Http\Exception\ServerErrorResponseException');
-        $response = $mockClient->requestArchive($m, 'token', 'secret');
+        return $manifestoClient;
     }
 }
 

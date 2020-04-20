@@ -26,7 +26,7 @@ class Client
     protected $manifestoBaseUrl;
 
     /**
-     * @var \Guzzle\Http\Client
+     * @var \GuzzleHttp\Client
      */
     protected $httpClient;
 
@@ -87,12 +87,12 @@ class Client
 
     /**
      * For mocking
-     * @return \Guzzle\Http\Client
+     * @return \GuzzleHttp\Client
      */
     protected function getHTTPClient()
     {
         if (!$this->httpClient) {
-            $this->httpClient = new \Guzzle\Http\Client();
+            $this->httpClient = new \GuzzleHttp\Client();
         }
         return $this->httpClient;
     }
@@ -103,7 +103,7 @@ class Client
      * @param Manifest $manifest Manifest
      * @param string $clientId Persona client ID
      * @param string $clientSecret Persona client secret
-     * @throws \Exception|\Guzzle\Http\Exception\ClientErrorResponseException API request error
+     * @throws \Exception|\GuzzleHttp\Exception\RequestException API request error
      * @throws Exceptions\ManifestValidationException Misconfigured manifest
      * @throws Exceptions\UnauthorisedAccessException Persona token error
      * @throws Exceptions\ArchiveException Misconfigured Manifesto API URL
@@ -115,26 +115,26 @@ class Client
         $manifestDocument = json_encode($manifest->generateManifest());
 
         try {
-            $client = $this->getHTTPClient();
             $headers = $this->getHeaders($clientId, $clientSecret);
 
-            $request = $client->post($archiveLocation, $headers, $manifestDocument);
-
-            $response = $request->send();
+            $response = $this->getHTTPClient()->post($archiveLocation, [
+                \GuzzleHttp\RequestOptions::HEADERS => $headers,
+                \GuzzleHttp\RequestOptions::BODY => $manifestDocument,
+            ]);
 
             if ($response->getStatusCode() == 202) {
                 $archive = new \Talis\Manifesto\Archive();
-                $archive->loadFromJson($response->getBody(true));
+                $archive->loadFromJson((string) $response->getBody());
                 return $archive;
             } else {
                 throw new \Talis\Manifesto\Exceptions\ArchiveException(
-                    $response->getBody(true),
+                    (string) $response->getBody(),
                     $response->getStatusCode()
                 );
             }
-        } catch (\Guzzle\Http\Exception\ClientErrorResponseException $exception) {
+        } catch (\GuzzleHttp\Exception\RequestException $exception) {
             $response = $exception->getResponse();
-            $error = $this->processErrorResponseBody($response->getBody(true));
+            $error = $this->processErrorResponseBody((string) $response->getBody());
             switch ($response->getStatusCode()) {
                 case 400:
                     throw new \Talis\Manifesto\Exceptions\ManifestValidationException(
@@ -165,35 +165,34 @@ class Client
      * @param string $clientId Persona client ID
      * @param string $clientSecret Persona client secret
      * @return string
-     * @throws \Exception|\Guzzle\Http\Exception\ClientErrorResponseException API request error
+     * @throws \Exception|\GuzzleHttp\Exception\RequestException API request error
      * @throws Exceptions\GenerateUrlException Unable to generate URL
      */
     public function generateUrl($jobId, $clientId, $clientSecret)
     {
         $url = $this->manifestoBaseUrl . '/1/archives/' . $jobId . '/generateUrl';
         try {
-            $client = $this->getHTTPClient();
             $headers = $this->getHeaders($clientId, $clientSecret);
 
-            $request = $client->post($url, $headers);
-
-            $response = $request->send();
+            $response = $this->getHTTPClient()->post($url, [
+                \GuzzleHttp\RequestOptions::HEADERS => $headers,
+            ]);
 
             if ($response->getStatusCode() == 200) {
-                $body = $response->getBody(true);
+                $body = (string) $response->getBody();
                 if (!empty($body)) {
-                    $body = json_decode($response->getBody(true));
+                    $body = json_decode((string) $response->getBody());
                 }
                 return $body->url;
             } else {
                 throw new \Talis\Manifesto\Exceptions\GenerateUrlException(
-                    $response->getBody(true),
+                    (string) $response->getBody(),
                     $response->getStatusCode()
                 );
             }
-        } catch (\Guzzle\Http\Exception\ClientErrorResponseException $exception) {
+        } catch (\GuzzleHttp\Exception\RequestException $exception) {
             $response = $exception->getResponse();
-            $error = $this->processErrorResponseBody($response->getBody(true));
+            $error = $this->processErrorResponseBody((string) $response->getBody());
             switch ($response->getStatusCode()) {
                 case 401:
                     throw new \Talis\Manifesto\Exceptions\UnauthorisedAccessException(
