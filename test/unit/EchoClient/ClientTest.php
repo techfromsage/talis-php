@@ -1,11 +1,6 @@
 <?php
-namespace Talis\EchoClient;
 
-if (!defined('APPROOT')) {
-    define('APPROOT', dirname(dirname(dirname(__DIR__))));
-}
-
-date_default_timezone_set('Europe/London');
+namespace test\unit\EchoClient;
 
 /**
  * Unit tests for Echo Client.
@@ -32,7 +27,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
     {
         $this->setRequiredDefines($requiredDefineToTest);
 
-        $this->setExpectedException('\Exception', 'Missing define: '.$requiredDefineToTest);
+        $this->setExpectedException('\Exception', 'Missing define: ' . $requiredDefineToTest);
         new \Talis\EchoClient\Client();
     }
 
@@ -139,7 +134,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
 
         $response = new \Guzzle\Http\Message\Response('202');
 
-        $mockRequest = $this->getMock('\Guzzle\Http\Message\Request', ['send'], ['post','']);
+        $mockRequest = $this->getMock('\Guzzle\Http\Message\Request', ['send'], ['post', '']);
         $mockRequest->expects($this->once())->method('send')->will($this->returnValue($response));
 
         $expectedHeaders = [
@@ -334,7 +329,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $response = new \Guzzle\Http\Message\Response('200');
         $response->setBody(json_encode(['events' => [$expectedEvent]]));
 
-        $mockRequest = $this->getMock('\Guzzle\Http\Message\Request', ['send'], ['get','']);
+        $mockRequest = $this->getMock('\Guzzle\Http\Message\Request', ['send'], ['get', '']);
         $mockRequest->expects($this->once())->method('send')->will($this->returnValue($response));
 
         $stubHttpClient = $this->getMock('\Guzzle\Http\Client', ['get']);
@@ -404,7 +399,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
             ->method('get')
             ->with(
                 'http://example.com:3002/1/events?limit=25&offset=1000&'
-                . 'class=test.expected.event&key=foo&value=bar&format=csv'
+                    . 'class=test.expected.event&key=foo&value=bar&format=csv'
             )
             ->will($this->returnValue($mockRequest));
 
@@ -432,7 +427,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $response = new \Guzzle\Http\Message\Response('200');
         $response->setBody(json_encode(['events' => [$expectedEvent]]));
 
-        $mockRequest = $this->getMock('\Guzzle\Http\Message\Request', ['send'], ['get','']);
+        $mockRequest = $this->getMock('\Guzzle\Http\Message\Request', ['send'], ['get', '']);
         $mockRequest->expects($this->once())->method('send')->will($this->returnValue($response));
 
         $stubHttpClient = $this->getMock('\Guzzle\Http\Client', ['get']);
@@ -440,8 +435,8 @@ class ClientTest extends \PHPUnit_Framework_TestCase
             ->method('get')
             ->with(
                 'http://example.com:3002/1/events?limit=25'
-                . '&class=test.expected.event&key=foo&value=bar'
-                . '&from=2018-01-22T15%3A17%3A28%2B00%3A00'
+                    . '&class=test.expected.event&key=foo&value=bar'
+                    . '&from=2018-01-22T15%3A17%3A28%2B00%3A00'
             )->will($this->returnValue($mockRequest));
 
         $echoClient = $this->getMock('\Talis\EchoClient\Client', ['getPersonaClient', 'getHttpClient']);
@@ -468,7 +463,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $response = new \Guzzle\Http\Message\Response('200');
         $response->setBody(json_encode(['events' => [$expectedEvent]]));
 
-        $mockRequest = $this->getMock('\Guzzle\Http\Message\Request', ['send'], ['get','']);
+        $mockRequest = $this->getMock('\Guzzle\Http\Message\Request', ['send'], ['get', '']);
         $mockRequest->expects($this->once())->method('send')->will($this->returnValue($response));
 
         $stubHttpClient = $this->getMock('\Guzzle\Http\Client', ['get']);
@@ -476,8 +471,8 @@ class ClientTest extends \PHPUnit_Framework_TestCase
             ->method('get')
             ->with(
                 'http://example.com:3002/1/events?limit=25&'
-                . 'class=test.expected.event&key=foo&value=bar&'
-                . 'to=2018-01-22T15%3A17%3A28%2B00%3A00'
+                    . 'class=test.expected.event&key=foo&value=bar&'
+                    . 'to=2018-01-22T15%3A17%3A28%2B00%3A00'
             )
             ->will($this->returnValue($mockRequest));
 
@@ -505,7 +500,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $response = new \Guzzle\Http\Message\Response('200');
         $response->setBody(json_encode(['events' => [$expectedEvent]]));
 
-        $mockRequest = $this->getMock('\Guzzle\Http\Message\Request', ['send'], ['get','']);
+        $mockRequest = $this->getMock('\Guzzle\Http\Message\Request', ['send'], ['get', '']);
         $mockRequest->expects($this->once())->method('send')->will($this->returnValue($response));
 
         $stubHttpClient = $this->getMock('\Guzzle\Http\Client', ['get']);
@@ -513,9 +508,9 @@ class ClientTest extends \PHPUnit_Framework_TestCase
             ->method('get')
             ->with(
                 'http://example.com:3002/1/events?limit=25'
-                . '&class=test.expected.event&key=foo&value=bar'
-                . '&to=2018-01-22T15%3A20%3A17%2B00%3A00'
-                . '&from=2018-01-22T15%3A17%3A28%2B00%3A00'
+                    . '&class=test.expected.event&key=foo&value=bar'
+                    . '&to=2018-01-22T15%3A20%3A17%2B00%3A00'
+                    . '&from=2018-01-22T15%3A17%3A28%2B00%3A00'
             )
             ->will($this->returnValue($mockRequest));
 
@@ -540,38 +535,38 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $response = new \Guzzle\Http\Message\Response('200');
         $response->setBody(
             '{'
-            . '"head":{"type":"hits","class":"test.player.view","group_by":"source","count":27},'
-            . '"results":['
-            . '{"source":"web.talis-com.b50367b.2014-05-15","hits":45},'
-            . '{"source":"web.talis-com.b692220.2014-05-15","hits":9},'
-            . '{"source":"mobile.android-v1.9","hits":16},'
-            . '{"source":"web.talis-com.f1afa4f.2014-05-13","hits":21},'
-            . '{"source":"mobile.android-v1.7","hits":48},'
-            . '{"source":"web.talis-com.d165ea5.2014-05-01","hits":411},'
-            . '{"source":"web.talis-com.3dceffd.2014-05-15","hits":8},'
-            . '{"source":"mobile.android-v1.6","hits":41},'
-            . '{"source":"web.talis-com.35baf27.2014-04-29","hits":50},'
-            . '{"source":"web.talis-com.13f1318.2014-05-14","hits":18},'
-            . '{"source":"web.talis-com.no-release","hits":219},'
-            . '{"source":"mobile.iOS-v1.97","hits":5},'
-            . '{"source":"web.talis-com-no-release","hits":23},'
-            . '{"source":"web.talis-com.12f4d8c.2014-04-29","hits":29},'
-            . '{"source":"web.talis-com.4a51b66.2014-04-25","hits":56},'
-            . '{"source":"mobile.android-v1.3","hits":4},'
-            . '{"source":"mobile.android-v2.0","hits":39},'
-            . '{"source":"web.talis-com.9df593e.2014-04-17","hits":44},'
-            . '{"source":"web.talis-com.8dac333.2014-04-17","hits":1},'
-            . '{"source":"mobile.iOS-v1.99","hits":60},'
-            . '{"source":"mobile.iOS-v1.98","hits":116},'
-            . '{"source":"web.talis-com.d5e099c.2014-05-15","hits":2},'
-            . '{"source":"mobile.android-v1.8","hits":16},'
-            . '{"source":"web.talis-com.64ade28.2014-04-17","hits":22},'
-            . '{"source":"mobile.iOS-v1.95","hits":10},'
-            . '{"source":"mobile.android-v1.4","hits":1},'
-            . '{"source":"mobile.android-v1.5","hits":20}]}'
+                . '"head":{"type":"hits","class":"test.player.view","group_by":"source","count":27},'
+                . '"results":['
+                . '{"source":"web.talis-com.b50367b.2014-05-15","hits":45},'
+                . '{"source":"web.talis-com.b692220.2014-05-15","hits":9},'
+                . '{"source":"mobile.android-v1.9","hits":16},'
+                . '{"source":"web.talis-com.f1afa4f.2014-05-13","hits":21},'
+                . '{"source":"mobile.android-v1.7","hits":48},'
+                . '{"source":"web.talis-com.d165ea5.2014-05-01","hits":411},'
+                . '{"source":"web.talis-com.3dceffd.2014-05-15","hits":8},'
+                . '{"source":"mobile.android-v1.6","hits":41},'
+                . '{"source":"web.talis-com.35baf27.2014-04-29","hits":50},'
+                . '{"source":"web.talis-com.13f1318.2014-05-14","hits":18},'
+                . '{"source":"web.talis-com.no-release","hits":219},'
+                . '{"source":"mobile.iOS-v1.97","hits":5},'
+                . '{"source":"web.talis-com-no-release","hits":23},'
+                . '{"source":"web.talis-com.12f4d8c.2014-04-29","hits":29},'
+                . '{"source":"web.talis-com.4a51b66.2014-04-25","hits":56},'
+                . '{"source":"mobile.android-v1.3","hits":4},'
+                . '{"source":"mobile.android-v2.0","hits":39},'
+                . '{"source":"web.talis-com.9df593e.2014-04-17","hits":44},'
+                . '{"source":"web.talis-com.8dac333.2014-04-17","hits":1},'
+                . '{"source":"mobile.iOS-v1.99","hits":60},'
+                . '{"source":"mobile.iOS-v1.98","hits":116},'
+                . '{"source":"web.talis-com.d5e099c.2014-05-15","hits":2},'
+                . '{"source":"mobile.android-v1.8","hits":16},'
+                . '{"source":"web.talis-com.64ade28.2014-04-17","hits":22},'
+                . '{"source":"mobile.iOS-v1.95","hits":10},'
+                . '{"source":"mobile.android-v1.4","hits":1},'
+                . '{"source":"mobile.android-v1.5","hits":20}]}'
         );
 
-        $mockRequest = $this->getMock('\Guzzle\Http\Message\Request', ['send'], ['get','']);
+        $mockRequest = $this->getMock('\Guzzle\Http\Message\Request', ['send'], ['get', '']);
         $mockRequest->expects($this->once())->method('send')->will($this->returnValue($response));
 
         $stubHttpClient = $this->getMock('\Guzzle\Http\Client', ['get']);
@@ -637,35 +632,35 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $response = new \Guzzle\Http\Message\Response('200');
         $response->setBody(
             '{"head":{"type":"hits","class":"test.player.view","group_by":"source","count":27},'
-            . '"results":['
-            . '{"source":"web.talis-com.b50367b.2014-05-15","hits":45},'
-            . '{"source":"web.talis-com.b692220.2014-05-15","hits":9},'
-            . '{"source":"mobile.android-v1.9","hits":16},'
-            . '{"source":"web.talis-com.f1afa4f.2014-05-13","hits":21},'
-            . '{"source":"mobile.android-v1.7","hits":48},'
-            . '{"source":"web.talis-com.d165ea5.2014-05-01","hits":411},'
-            . '{"source":"web.talis-com.3dceffd.2014-05-15","hits":8},'
-            . '{"source":"mobile.android-v1.6","hits":41},'
-            . '{"source":"web.talis-com.35baf27.2014-04-29","hits":50},'
-            . '{"source":"web.talis-com.13f1318.2014-05-14","hits":18},'
-            . '{"source":"web.talis-com.no-release","hits":219},'
-            . '{"source":"mobile.iOS-v1.97","hits":5},'
-            . '{"source":"web.talis-com-no-release","hits":23},'
-            . '{"source":"web.talis-com.12f4d8c.2014-04-29","hits":29},'
-            . '{"source":"web.talis-com.4a51b66.2014-04-25","hits":56},'
-            . '{"source":"mobile.android-v1.3","hits":4},'
-            . '{"source":"mobile.android-v2.0","hits":39},'
-            . '{"source":"web.talis-com.9df593e.2014-04-17","hits":44},'
-            . '{"source":"web.talis-com.8dac333.2014-04-17","hits":1},'
-            . '{"source":"mobile.iOS-v1.99","hits":60},'
-            . '{"source":"mobile.iOS-v1.98","hits":116},'
-            . '{"source":"web.talis-com.d5e099c.2014-05-15","hits":2},'
-            . '{"source":"mobile.android-v1.8","hits":16},'
-            . '{"source":"web.talis-com.64ade28.2014-04-17","hits":22},'
-            . '{"source":"mobile.iOS-v1.95","hits":10},'
-            . '{"source":"mobile.android-v1.4","hits":1},'
-            . '{"source":"mobile.android-v1.5","hits":20}'
-            . ']}'
+                . '"results":['
+                . '{"source":"web.talis-com.b50367b.2014-05-15","hits":45},'
+                . '{"source":"web.talis-com.b692220.2014-05-15","hits":9},'
+                . '{"source":"mobile.android-v1.9","hits":16},'
+                . '{"source":"web.talis-com.f1afa4f.2014-05-13","hits":21},'
+                . '{"source":"mobile.android-v1.7","hits":48},'
+                . '{"source":"web.talis-com.d165ea5.2014-05-01","hits":411},'
+                . '{"source":"web.talis-com.3dceffd.2014-05-15","hits":8},'
+                . '{"source":"mobile.android-v1.6","hits":41},'
+                . '{"source":"web.talis-com.35baf27.2014-04-29","hits":50},'
+                . '{"source":"web.talis-com.13f1318.2014-05-14","hits":18},'
+                . '{"source":"web.talis-com.no-release","hits":219},'
+                . '{"source":"mobile.iOS-v1.97","hits":5},'
+                . '{"source":"web.talis-com-no-release","hits":23},'
+                . '{"source":"web.talis-com.12f4d8c.2014-04-29","hits":29},'
+                . '{"source":"web.talis-com.4a51b66.2014-04-25","hits":56},'
+                . '{"source":"mobile.android-v1.3","hits":4},'
+                . '{"source":"mobile.android-v2.0","hits":39},'
+                . '{"source":"web.talis-com.9df593e.2014-04-17","hits":44},'
+                . '{"source":"web.talis-com.8dac333.2014-04-17","hits":1},'
+                . '{"source":"mobile.iOS-v1.99","hits":60},'
+                . '{"source":"mobile.iOS-v1.98","hits":116},'
+                . '{"source":"web.talis-com.d5e099c.2014-05-15","hits":2},'
+                . '{"source":"mobile.android-v1.8","hits":16},'
+                . '{"source":"web.talis-com.64ade28.2014-04-17","hits":22},'
+                . '{"source":"mobile.iOS-v1.95","hits":10},'
+                . '{"source":"mobile.android-v1.4","hits":1},'
+                . '{"source":"mobile.android-v1.5","hits":20}'
+                . ']}'
         );
 
         $mockRequest = $this->getMock('\Guzzle\Http\Message\Request', ['send'], ['get', '']);
@@ -706,34 +701,34 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $response = new \Guzzle\Http\Message\Response('200');
         $response->setBody(
             '{"head":{"type":"hits","class":"test.player.view","group_by":"source","count":27},'
-            . '"results":['
-            . '{"source":"web.talis-com.b50367b.2014-05-15","hits":45},'
-            . '{"source":"web.talis-com.b692220.2014-05-15","hits":9},'
-            . '{"source":"mobile.android-v1.9","hits":16},'
-            . '{"source":"web.talis-com.f1afa4f.2014-05-13","hits":21},'
-            . '{"source":"mobile.android-v1.7","hits":48},'
-            . '{"source":"web.talis-com.d165ea5.2014-05-01","hits":411},'
-            . '{"source":"web.talis-com.3dceffd.2014-05-15","hits":8},'
-            . '{"source":"mobile.android-v1.6","hits":41},'
-            . '{"source":"web.talis-com.35baf27.2014-04-29","hits":50},'
-            . '{"source":"web.talis-com.13f1318.2014-05-14","hits":18},'
-            . '{"source":"web.talis-com.no-release","hits":219},'
-            . '{"source":"mobile.iOS-v1.97","hits":5},'
-            . '{"source":"web.talis-com-no-release","hits":23},'
-            . '{"source":"web.talis-com.12f4d8c.2014-04-29","hits":29},'
-            . '{"source":"web.talis-com.4a51b66.2014-04-25","hits":56},'
-            . '{"source":"mobile.android-v1.3","hits":4},'
-            . '{"source":"mobile.android-v2.0","hits":39},'
-            . '{"source":"web.talis-com.9df593e.2014-04-17","hits":44},'
-            . '{"source":"web.talis-com.8dac333.2014-04-17","hits":1},'
-            . '{"source":"mobile.iOS-v1.99","hits":60},'
-            . '{"source":"mobile.iOS-v1.98","hits":116},'
-            . '{"source":"web.talis-com.d5e099c.2014-05-15","hits":2},'
-            . '{"source":"mobile.android-v1.8","hits":16},'
-            . '{"source":"web.talis-com.64ade28.2014-04-17","hits":22},'
-            . '{"source":"mobile.iOS-v1.95","hits":10},'
-            . '{"source":"mobile.android-v1.4","hits":1},'
-            . '{"source":"mobile.android-v1.5","hits":20}]}'
+                . '"results":['
+                . '{"source":"web.talis-com.b50367b.2014-05-15","hits":45},'
+                . '{"source":"web.talis-com.b692220.2014-05-15","hits":9},'
+                . '{"source":"mobile.android-v1.9","hits":16},'
+                . '{"source":"web.talis-com.f1afa4f.2014-05-13","hits":21},'
+                . '{"source":"mobile.android-v1.7","hits":48},'
+                . '{"source":"web.talis-com.d165ea5.2014-05-01","hits":411},'
+                . '{"source":"web.talis-com.3dceffd.2014-05-15","hits":8},'
+                . '{"source":"mobile.android-v1.6","hits":41},'
+                . '{"source":"web.talis-com.35baf27.2014-04-29","hits":50},'
+                . '{"source":"web.talis-com.13f1318.2014-05-14","hits":18},'
+                . '{"source":"web.talis-com.no-release","hits":219},'
+                . '{"source":"mobile.iOS-v1.97","hits":5},'
+                . '{"source":"web.talis-com-no-release","hits":23},'
+                . '{"source":"web.talis-com.12f4d8c.2014-04-29","hits":29},'
+                . '{"source":"web.talis-com.4a51b66.2014-04-25","hits":56},'
+                . '{"source":"mobile.android-v1.3","hits":4},'
+                . '{"source":"mobile.android-v2.0","hits":39},'
+                . '{"source":"web.talis-com.9df593e.2014-04-17","hits":44},'
+                . '{"source":"web.talis-com.8dac333.2014-04-17","hits":1},'
+                . '{"source":"mobile.iOS-v1.99","hits":60},'
+                . '{"source":"mobile.iOS-v1.98","hits":116},'
+                . '{"source":"web.talis-com.d5e099c.2014-05-15","hits":2},'
+                . '{"source":"mobile.android-v1.8","hits":16},'
+                . '{"source":"web.talis-com.64ade28.2014-04-17","hits":22},'
+                . '{"source":"mobile.iOS-v1.95","hits":10},'
+                . '{"source":"mobile.android-v1.4","hits":1},'
+                . '{"source":"mobile.android-v1.5","hits":20}]}'
         );
 
         $mockRequest = $this->getMock('\Guzzle\Http\Message\Request', ['send'], ['get', '']);
@@ -744,7 +739,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
             ->method('get')
             ->with(
                 'http://example.com:3002/1/analytics/hits?'
-                . 'class=test.player.view&key=some_key&value=some_value'
+                    . 'class=test.player.view&key=some_key&value=some_value'
             )
             ->will($this->returnValue($mockRequest));
 

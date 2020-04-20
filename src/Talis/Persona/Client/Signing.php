@@ -1,4 +1,5 @@
 <?php
+
 namespace Talis\Persona\Client;
 
 class Signing extends Base
@@ -67,7 +68,8 @@ class Signing extends Base
         $urlParts = parse_url($url);
         parse_str($urlParts['query'], $query);
 
-        if (!isset($query['expires'])
+        if (
+            !isset($query['expires'])
             || !isset($query['signature'])
             || intval($query['expires']) < time()
         ) {

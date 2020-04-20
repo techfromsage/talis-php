@@ -1,14 +1,6 @@
 <?php
 
-namespace Talis\Babel;
-
-if (!defined('APPROOT')) {
-    define('APPROOT', dirname(dirname(dirname(__DIR__))));
-}
-
-require_once APPROOT.'/vendor/autoload.php';
-
-/* require_once 'PHPUnit/Autoload.php'; */
+namespace test\unit\Babel;
 
 use Guzzle\Http\Client;
 use Guzzle\Plugin\Mock\MockPlugin;
@@ -240,7 +232,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
             ->setConstructorArgs(['http://someHost', '3001'])
             ->getMock();
 
-        $path = '/feeds/targets/'.md5('1234').'/activity/annotations?delta_token=0';
+        $path = '/feeds/targets/' . md5('1234') . '/activity/annotations?delta_token=0';
         $httpClient = new Client('http://someHost:3001' . $path);
 
         $mock = new MockPlugin();

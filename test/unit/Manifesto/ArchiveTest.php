@@ -1,34 +1,31 @@
 <?php
 
-$appRoot = dirname(dirname(dirname(__DIR__)));
-if (!defined('APPROOT')) {
-    define('APPROOT', $appRoot);
-}
+namespace test\unit\Manifesto;
 
-require_once $appRoot . '/test/unit/TestBase.php';
+use test\TestBase;
 
 class ArchiveTest extends TestBase
 {
     public function testLoadFromArray()
     {
-        $response = array('status'=>'Completed', 'location'=>'http://example.com/1234', 'id'=>"1234");
+        $response = ['status' => 'Completed', 'location' => 'http://example.com/1234', 'id' => '1234'];
 
         $archive = new \Talis\Manifesto\Archive();
         $archive->loadFromArray($response);
 
-        $this->assertEquals("1234", $archive->getId());
+        $this->assertEquals('1234', $archive->getId());
         $this->assertEquals('Completed', $archive->getStatus());
         $this->assertEquals('http://example.com/1234', $archive->getLocation());
     }
 
     public function testLoadFromJSON()
     {
-        $response = "{\"status\":\"Completed\", \"location\":\"http:\/\/example.com\/1234\", \"id\":\"1234\"}";
+        $response = '{"status":"Completed", "location":"http:\/\/example.com\/1234", "id":"1234"}';
 
         $archive = new \Talis\Manifesto\Archive();
         $archive->loadFromJson($response);
 
-        $this->assertEquals("1234", $archive->getId());
+        $this->assertEquals('1234', $archive->getId());
         $this->assertEquals('Completed', $archive->getStatus());
         $this->assertEquals('http://example.com/1234', $archive->getLocation());
     }

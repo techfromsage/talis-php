@@ -1,4 +1,5 @@
 <?php
+
 namespace Talis\Persona\Client;
 
 class Users extends Base
@@ -9,7 +10,7 @@ class Users extends Base
      * @param string $gupid user's gupid
      * @param string $token Persona oauth token
      * @return mixed response from Persona
-     * @throws \InvalidArgumentException either gupid or token is invalid
+     * @throws \InvalidArgumentException Either gupid or token is invalid
      * @throws \Exception Http communication error
      */
     public function getUserByGupid($gupid, $token)

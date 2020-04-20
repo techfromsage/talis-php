@@ -1,13 +1,9 @@
 <?php
 
+namespace test\unit\Persona;
+
 use Talis\Persona\Client\Users;
-
-$appRoot = dirname(dirname(dirname(__DIR__)));
-if (!defined('APPROOT')) {
-    define('APPROOT', $appRoot);
-}
-
-require_once $appRoot . '/test/unit/TestBase.php';
+use test\TestBase;
 
 class UsersTest extends TestBase
 {
@@ -49,7 +45,7 @@ class UsersTest extends TestBase
         ]);
         $mockClient->expects($this->once())
             ->method('performRequest')
-            ->will($this->throwException(new Exception('Did not retrieve successful response code')));
+            ->will($this->throwException(new \Exception('Did not retrieve successful response code')));
 
         $mockClient->getUserByGupid('123', '456');
     }
@@ -111,7 +107,7 @@ class UsersTest extends TestBase
         ]);
         $mockClient->expects($this->once())
             ->method('performRequest')
-            ->will($this->throwException(new Exception('Could not retrieve OAuth response code')));
+            ->will($this->throwException(new \Exception('Could not retrieve OAuth response code')));
 
         $mockClient->getUserByGuids(['HK-47'], '456');
     }
@@ -231,7 +227,7 @@ class UsersTest extends TestBase
         ]);
         $mockClient->expects($this->once())
             ->method('performRequest')
-            ->will($this->throwException(new Exception('Could not retrieve OAuth response code')));
+            ->will($this->throwException(new \Exception('Could not retrieve OAuth response code')));
         $mockClient->createUser('gupid', ['email' => ''], '123');
     }
 
@@ -341,7 +337,7 @@ class UsersTest extends TestBase
         ]);
         $mockClient->expects($this->once())
             ->method('performRequest')
-            ->will($this->throwException(new Exception('Could not retrieve OAuth response code')));
+            ->will($this->throwException(new \Exception('Could not retrieve OAuth response code')));
         $mockClient->updateUser('guid', ['email' => ''], '123');
     }
 
@@ -425,7 +421,7 @@ class UsersTest extends TestBase
         ]);
         $mockClient->expects($this->once())
             ->method('performRequest')
-            ->will($this->throwException(new Exception('Could not retrieve OAuth response code')));
+            ->will($this->throwException(new \Exception('Could not retrieve OAuth response code')));
         $mockClient->addGupidToUser('123', '456', '987');
     }
 
@@ -509,7 +505,7 @@ class UsersTest extends TestBase
         ]);
         $mockClient->expects($this->once())
             ->method('performRequest')
-            ->will($this->throwException(new Exception('Could not retrieve OAuth response code')));
+            ->will($this->throwException(new \Exception('Could not retrieve OAuth response code')));
         $mockClient->mergeUsers('123', '456', '987');
     }
 

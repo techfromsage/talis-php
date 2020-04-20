@@ -1,0 +1,20 @@
+<phpunit bootstrap="test/bootstrap.php">
+    <php>
+        <ini name="memory_limit" value="512M"/>
+    </php>
+
+    <filter>
+        <whitelist addUncoveredFilesFromWhitelist="true">
+            <directory suffix=".php">src</directory>
+        </whitelist>
+    </filter>
+
+    <testsuites>
+        <testsuite name="unit tests">
+            <directory>test/unit</directory>
+        </testsuite>
+        <testsuite name="integration tests">
+            <directory>test/integration</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>

@@ -1,9 +1,6 @@
 <?php
-namespace Talis\Critic;
 
-if (!defined('APPROOT')) {
-    define('APPROOT', dirname(dirname(dirname(__DIR__))));
-}
+namespace test\unit\Critic;
 
 /**
  * Unit tests for CriticClient
@@ -55,7 +52,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         /** @var \Talis\Critic\Client | PHPUnit_Framework_MockObject_MockObject $criticClient */
         $criticClient = $this->getMock(
             '\Talis\Critic\Client',
-            ['getHTTPClient','getHeaders'],
+            ['getHTTPClient', 'getHeaders'],
             [$this->criticBaseUrl]
         );
 
@@ -93,7 +90,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         /** @var \Talis\Critic\Client | PHPUnit_Framework_MockObject_MockObject $criticClient */
         $criticClient = $this->getMock(
             '\Talis\Critic\Client',
-            ['getHTTPClient','getHeaders'],
+            ['getHTTPClient', 'getHeaders'],
             [$this->criticBaseUrl]
         );
 

@@ -1,14 +1,9 @@
 <?php
 
+namespace test\unit\Persona;
+
 use Talis\Persona\Client\Login;
-
-$appRoot = dirname(dirname(dirname(__DIR__)));
-if (!defined('APPROOT')) {
-    define('APPROOT', $appRoot);
-}
-
-require_once $appRoot . '/test/unit/TestBase.php';
-
+use test\TestBase;
 
 class LoginTest extends TestBase
 {
@@ -648,10 +643,10 @@ class LoginTest extends TestBase
             ->method('redirect')
             ->with(
                 'http://' . $this->versionedPersonaHost() . '/auth/providers/trapdoor/login' .
-                '?require=profile' .
-                '&redirectUri=http%3A%2F%2Fexample.com' .
-                '&state=loginState' .
-                '&app=test_client'
+                    '?require=profile' .
+                    '&redirectUri=http%3A%2F%2Fexample.com' .
+                    '&state=loginState' .
+                    '&app=test_client'
             )
             ->will($this->returnValue(null));
 

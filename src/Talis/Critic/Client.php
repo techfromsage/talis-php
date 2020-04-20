@@ -113,7 +113,6 @@ class Client
             }
 
             throw new \Talis\Critic\Exceptions\ReviewException();
-        /** @var \Guzzle\Http\Exception\ClientErrorResponseException $e */
         } catch (\Guzzle\Http\Exception\ClientErrorResponseException $e) {
             $response = $e->getResponse();
             $error = $this->processErrorResponseBody($response->getBody(true));

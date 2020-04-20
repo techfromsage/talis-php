@@ -4,8 +4,8 @@ namespace Talis\Persona\Client;
 
 use Monolog\Logger;
 use Guzzle\Http\Exception\RequestException;
-use \Guzzle\Http\Client as GuzzleClient;
-use \Talis\Persona\Client\ClientVersionCache;
+use Guzzle\Http\Client as GuzzleClient;
+use Talis\Persona\Client\ClientVersionCache;
 
 abstract class Base
 {
@@ -29,16 +29,6 @@ abstract class Base
      * @var \Doctrine\Common\Cache\CacheProvider
      */
     private $cacheBackend;
-
-    /**
-     * @var string
-     */
-    private $keyPrefix;
-
-    /**
-     * @var int
-     */
-    private $defaultTtl;
 
     /**
      * @var string

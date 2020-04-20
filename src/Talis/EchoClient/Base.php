@@ -2,8 +2,8 @@
 
 namespace Talis\EchoClient;
 
-use \Monolog\Handler\StreamHandler;
-use \Monolog\Logger;
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
 
 abstract class Base
 {

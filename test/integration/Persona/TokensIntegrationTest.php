@@ -1,19 +1,14 @@
 <?php
 
-use Talis\Persona\Client\ValidationResults;
-use Talis\Persona\Client\Tokens;
+namespace test\integration\Persona;
+
 use Doctrine\Common\Cache\ArrayCache;
-
-$appRoot = dirname(dirname(dirname(__DIR__)));
-if (!defined('APPROOT')) {
-    define('APPROOT', $appRoot);
-}
-
-require_once $appRoot . '/test/unit/TestBase.php';
+use Talis\Persona\Client\Tokens;
+use Talis\Persona\Client\ValidationResults;
+use test\TestBase;
 
 class TokensIntegrationTest extends TestBase
 {
-
     /**
      * @var Talis\Persona\Client\Tokens
      */

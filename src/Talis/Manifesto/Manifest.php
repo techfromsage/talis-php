@@ -2,20 +2,27 @@
 
 namespace Talis\Manifesto;
 
-require_once dirname(__FILE__) . '/common.inc.php';
+use Talis\Manifesto\Exceptions\ManifestValidationException;
+
+// phpcs:disable PSR1.Files.SideEffects
+require_once 'common.inc.php';
 
 class Manifest
 {
-
     protected $callbackLocation;
     protected $callbackMethod = 'GET';
     protected $fileCount;
-    protected $files = array();
+    protected $files = [];
     protected $format;
     protected $safeMode = false;
 
-    protected $validFormats = array(FORMAT_ZIP, FORMAT_TARGZ, FORMAT_TARBZ);
+    protected $validFormats = [FORMAT_ZIP, FORMAT_TARGZ, FORMAT_TARBZ];
 
+    /**
+     * Constructs a new instance.
+     *
+     * @param boolean $safeMode The safe mode
+     */
     public function __construct($safeMode = false)
     {
         $this->safeMode = $safeMode;
@@ -30,7 +37,7 @@ class Manifest
     }
 
     /**
-     * @param boolean $safeMode
+     * @param boolean $safeMode Whether to enable safe mode
      */
     public function setSafeMode($safeMode)
     {
@@ -38,7 +45,7 @@ class Manifest
     }
 
     /**
-     * @return int
+     * @return integer
      */
     public function getFileCount()
     {
@@ -46,7 +53,7 @@ class Manifest
     }
 
     /**
-     * @param int $fileCount
+     * @param integer $fileCount Number of files expected
      */
     public function setFileCount($fileCount)
     {
@@ -55,38 +62,15 @@ class Manifest
 
     /**
      * @return array
-     * @throws Exceptions\ManifestValidationException
+     * @throws ManifestValidationException Manifest is not configured properly
      */
     public function generateManifest()
     {
-        if(empty($this->files))
-        {
-            throw new \Talis\Manifesto\Exceptions\ManifestValidationException("No files have been added to manifest");
-        }
+        $this->validateManifest();
 
-        if(!in_array($this->format, $this->validFormats))
-        {
-            throw new \Talis\Manifesto\Exceptions\ManifestValidationException("Output format has not been set");
-        }
-
-        if($this->safeMode && (!isset($this->fileCount) || empty($this->fileCount)))
-        {
-            throw new \Talis\Manifesto\Exceptions\ManifestValidationException("File count must be set in safe mode");
-        }
-        elseif(!($this->safeMode && isset($this->fileCount)))
-        {
-            $this->fileCount = count($this->files);
-        }
-
-        if($this->fileCount != count($this->files))
-        {
-            throw new \Talis\Manifesto\Exceptions\ManifestValidationException("Number of files does not equal fileCount");
-        }
-
-        $manifest = array();
-        if(isset($this->callbackLocation))
-        {
-            $manifest['callback'] = array('url'=>$this->callbackLocation, 'method'=>$this->callbackMethod);
+        $manifest = [];
+        if (isset($this->callbackLocation)) {
+            $manifest['callback'] = ['url' => $this->callbackLocation, 'method' => $this->callbackMethod];
         }
 
         $manifest['format'] = $this->format;
@@ -99,6 +83,31 @@ class Manifest
     }
 
     /**
+     * Validate current configuration.
+     * @throws ManifestValidationException Manifest is not configured properly
+     */
+    private function validateManifest()
+    {
+        if (empty($this->files)) {
+            throw new ManifestValidationException('No files have been added to manifest');
+        }
+
+        if (!in_array($this->format, $this->validFormats)) {
+            throw new ManifestValidationException('Output format has not been set');
+        }
+
+        if ($this->safeMode && (!isset($this->fileCount) || empty($this->fileCount))) {
+            throw new ManifestValidationException('File count must be set in safe mode');
+        } elseif (!($this->safeMode && isset($this->fileCount))) {
+            $this->fileCount = count($this->files);
+        }
+
+        if ($this->fileCount != count($this->files)) {
+            throw new ManifestValidationException('Number of files does not equal fileCount');
+        }
+    }
+
+    /**
      * @return array
      */
     public function getFiles()
@@ -107,18 +116,16 @@ class Manifest
     }
 
     /**
-     * @param array $file
-     * @throws \InvalidArgumentException
+     * @param array $file File descriptor
+     * @throws \InvalidArgumentException File has an incorrect type
      */
     public function addFile(array $file)
     {
-        if(!array_key_exists('file', $file) || empty($file['file']))
-        {
-            throw new \InvalidArgumentException("Files must contain a file key and value");
+        if (!array_key_exists('file', $file) || empty($file['file'])) {
+            throw new \InvalidArgumentException('Files must contain a file key and value');
         }
 
-        if(array_key_exists('type', $file) && !in_array($file['type'], array(FILE_TYPE_S3, FILE_TYPE_CF)))
-        {
+        if (array_key_exists('type', $file) && !in_array($file['type'], [FILE_TYPE_S3, FILE_TYPE_CF])) {
             throw new \InvalidArgumentException("Unsupported file 'type'");
         }
         $this->files[] = $file;
@@ -133,13 +140,12 @@ class Manifest
     }
 
     /**
-     * @param string $format
-     * @throws \InvalidArgumentException
+     * @param string $format On of the FORMAT_ constants
+     * @throws \InvalidArgumentException Invalid format given
      */
     public function setFormat($format)
     {
-        if(!in_array($format, $this->validFormats))
-        {
+        if (!in_array($format, $this->validFormats)) {
             throw new \InvalidArgumentException("'{$format}' is not supported");
         }
         $this->format = $format;
@@ -154,14 +160,13 @@ class Manifest
     }
 
     /**
-     * @param mixed $callbackLocation
-     * @throws \InvalidArgumentException
+     * @param mixed $callbackLocation Callback URL
+     * @throws \InvalidArgumentException Given location is not a http(s) URL
      */
     public function setCallbackLocation($callbackLocation)
     {
-        if(!(filter_var($callbackLocation, FILTER_VALIDATE_URL) && preg_match("/^https?:\/\//", $callbackLocation)))
-        {
-            throw new \InvalidArgumentException("Callback location must be an http or https url");
+        if (!(filter_var($callbackLocation, FILTER_VALIDATE_URL) && preg_match('/^https?:\/\//', $callbackLocation))) {
+            throw new \InvalidArgumentException('Callback location must be an http or https url');
         }
         $this->callbackLocation = $callbackLocation;
     }
@@ -175,16 +180,14 @@ class Manifest
     }
 
     /**
-     * @param string $callbackMethod
-     * @throws \InvalidArgumentException
+     * @param string $callbackMethod Callback HTTP request method
+     * @throws \InvalidArgumentException Given method is not supported
      */
     public function setCallbackMethod($callbackMethod)
     {
-        if(!in_array(strtoupper($callbackMethod), array("GET", "POST")))
-        {
-            throw new \InvalidArgumentException("Callback method must be GET or POST");
+        if (!in_array(strtoupper($callbackMethod), ['GET', 'POST'])) {
+            throw new \InvalidArgumentException('Callback method must be GET or POST');
         }
         $this->callbackMethod = strtoupper($callbackMethod);
     }
-
 }

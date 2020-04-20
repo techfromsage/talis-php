@@ -1,4 +1,5 @@
 <?php
+
 namespace Talis\Persona\Client;
 
 use Talis\Persona\Client\ValidationResults;

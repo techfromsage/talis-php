@@ -8,6 +8,7 @@ addons:
     packages:
       ant
 php:
+- 7.3
 - 7.2
 - 7.1
 - 7.0
@@ -17,7 +18,7 @@ install:
 - composer install
 script: |
     set -xe
-    find . -name '*.php' | grep -v './vendor/' | xargs -I{} php -l "{}" \;
+    ant lint
     ant test
 notifications:
   hipchat:
