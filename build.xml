@@ -73,7 +73,7 @@
     </target>
 
     <target name="coverage" depends="clean" description="Run code coverage over the unit tests">
-        <exec dir="${test.dir}" executable="${vendor.dir}/bin/phpunit" failonerror="true">
+        <exec executable="${vendor.dir}/bin/phpunit" failonerror="true">
             <arg line="--coverage-html ${coverage.dir}"/>
         </exec>
     </target>
