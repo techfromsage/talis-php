@@ -23,7 +23,7 @@ class Client
     protected $criticBaseUrl;
 
     /**
-     * @var \Guzzle\Http\Client
+     * @var \GuzzleHttp\Client
      */
     protected $httpClient;
 
@@ -72,12 +72,12 @@ class Client
 
     /**
      * For mocking
-     * @return \Guzzle\Http\Client
+     * @return \GuzzleHttp\Client
      */
     protected function getHTTPClient()
     {
         if (!$this->httpClient) {
-            $this->httpClient = new \Guzzle\Http\Client();
+            $this->httpClient = new \GuzzleHttp\Client();
         }
 
         return $this->httpClient;
@@ -94,28 +94,28 @@ class Client
      *              for pre-existing access_token (and setting a new cookie
      *              with the resultant token)
      *          use_cache: (boolean) use cached called (defaults to true) </pre>
-     * @throws \Exception|\Guzzle\Http\Exception\ClientErrorResponseException Http communication error
+     * @throws \Exception|\GuzzleHttp\Exception\RequestException Http communication error
      * @throws Exceptions\UnauthorisedAccessException Authorisation error
      */
     public function createReview(array $postFields, $clientId, $clientSecret, array $headerParams = [])
     {
-
         try {
-            $client = $this->getHTTPClient();
             $headers = $this->getHeaders($clientId, $clientSecret, $headerParams);
-
-            $request = $client->post($this->criticBaseUrl, $headers, $postFields);
-            $response = $request->send();
+            $response = $this->getHttpClient()->post($this->criticBaseUrl, [
+                \GuzzleHttp\RequestOptions::HEADERS => $headers,
+                \GuzzleHttp\RequestOptions::FORM_PARAMS => $postFields,
+            ]);
 
             if ($response->getStatusCode() == 201) {
-                $body = json_decode($response->getBody(true));
+                $responseBody = (string) $response->getBody();
+                $body = json_decode($responseBody);
                 return $body->id;
             }
 
             throw new \Talis\Critic\Exceptions\ReviewException();
-        } catch (\Guzzle\Http\Exception\ClientErrorResponseException $e) {
-            $response = $e->getResponse();
-            $error = $this->processErrorResponseBody($response->getBody(true));
+        } catch (\GuzzleHttp\Exception\RequestException $exception) {
+            $response = $exception->getResponse();
+            $error = $this->processErrorResponseBody((string) $response->getBody());
 
             switch ($response->getStatusCode()) {
                 case 403:
@@ -123,11 +123,11 @@ class Client
                     throw new \Talis\Critic\Exceptions\UnauthorisedAccessException(
                         $error['message'],
                         $error['error_code'],
-                        $e
+                        $exception
                     );
                     break;
                 default:
-                    throw $e;
+                    throw $exception;
             }
         }
     }
