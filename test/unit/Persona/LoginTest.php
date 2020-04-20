@@ -51,7 +51,7 @@ class LoginTest extends TestBase
 
     public function testRequireAuthNoRedirectUri()
     {
-        $mockClient = $this->getMock('Talis\Persona\Client\Login', ['login'], [
+        $mockClient = $this->getMock(\Talis\Persona\Client\Login::class, ['login'], [
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -84,7 +84,7 @@ class LoginTest extends TestBase
 
     public function testRequireAuthWithRedirectUri()
     {
-        $mockClient = $this->getMock('Talis\Persona\Client\Login', ['login'], [
+        $mockClient = $this->getMock(\Talis\Persona\Client\Login::class, ['login'], [
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -104,7 +104,7 @@ class LoginTest extends TestBase
 
     public function testRequireAuthAlreadyLoggedIn()
     {
-        $mockClient = $this->getMock('Talis\Persona\Client\Login', ['isLoggedIn', 'login'], [
+        $mockClient = $this->getMock(\Talis\Persona\Client\Login::class, ['isLoggedIn', 'login'], [
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -123,7 +123,7 @@ class LoginTest extends TestBase
 
     public function testRequireAuthNotAlreadyLoggedIn()
     {
-        $mockClient = $this->getMock('Talis\Persona\Client\Login', ['isLoggedIn', 'login'], [
+        $mockClient = $this->getMock(\Talis\Persona\Client\Login::class, ['isLoggedIn', 'login'], [
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -315,7 +315,7 @@ class LoginTest extends TestBase
 
     public function testValidateAuthPayloadContainsStateAndSignatureFullPayloadCheckLoginIsCalled()
     {
-        $mockClient = $this->getMock('Talis\Persona\Client\Login', ['isLoggedIn'], [
+        $mockClient = $this->getMock(\Talis\Persona\Client\Login::class, ['isLoggedIn'], [
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -358,7 +358,7 @@ class LoginTest extends TestBase
 
     public function testValidateAuthAfterRequireAuth()
     {
-        $mockClient = $this->getMock('Talis\Persona\Client\Login', ['isLoggedIn', 'login'], [
+        $mockClient = $this->getMock(\Talis\Persona\Client\Login::class, ['isLoggedIn', 'login'], [
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -630,7 +630,7 @@ class LoginTest extends TestBase
         ];
 
         $client = $this->getMock(
-            'Talis\Persona\Client\Login',
+            \Talis\Persona\Client\Login::class,
             ['redirect', 'getLoginState'],
             $arguments
         );
