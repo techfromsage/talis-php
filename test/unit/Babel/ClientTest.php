@@ -232,7 +232,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
             ->setConstructorArgs(['http://someHost', '3001'])
             ->getMock();
 
-        $path = '/feeds/targets/'.md5('1234').'/activity/annotations?delta_token=0';
+        $path = '/feeds/targets/' . md5('1234') . '/activity/annotations?delta_token=0';
         $httpClient = new Client('http://someHost:3001' . $path);
 
         $mock = new MockPlugin();

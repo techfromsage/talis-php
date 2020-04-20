@@ -48,7 +48,7 @@ class ManifestTest extends TestBase
     public function testValidateSetCallbackLocation()
     {
         $m = new \Talis\Manifesto\Manifest();
-        $this->setExpectedException('InvalidArgumentException', "Callback location must be an http or https url");
+        $this->setExpectedException('InvalidArgumentException', 'Callback location must be an http or https url');
         $m->setCallbackLocation('telnet://wibble');
     }
 
@@ -65,23 +65,23 @@ class ManifestTest extends TestBase
     public function testValidateSetCallbackMethod()
     {
         $m = new \Talis\Manifesto\Manifest();
-        $this->setExpectedException('InvalidArgumentException', "Callback method must be GET or POST");
-        $m->setCallbackMethod("PUT");
+        $this->setExpectedException('InvalidArgumentException', 'Callback method must be GET or POST');
+        $m->setCallbackMethod('PUT');
     }
 
     public function testAddGetFiles()
     {
         $m = new \Talis\Manifesto\Manifest();
-        $files = array();
-        $file1 = array('file'=>'/path/to/file1.txt');
+        $files = [];
+        $file1 = ['file' => '/path/to/file1.txt'];
         $files[] = $file1;
         $m->addFile($file1);
 
-        $file2 = array('type'=>FILE_TYPE_S3, 'container'=>'myBucket', 'file'=>'/path/to/file2.txt', 'destinationPath'=>'foobar.txt');
+        $file2 = ['type' => FILE_TYPE_S3, 'container' => 'myBucket', 'file' => '/path/to/file2.txt', 'destinationPath' => 'foobar.txt'];
         $files[] = $file2;
         $m->addFile($file2);
 
-        $file3 = array('type'=>FILE_TYPE_CF, 'file'=>'/path/to/file3.txt', 'destinationPath'=>'/another/path/foobar.txt');
+        $file3 = ['type' => FILE_TYPE_CF, 'file' => '/path/to/file3.txt', 'destinationPath' => '/another/path/foobar.txt'];
         $files[] = $file3;
         $m->addFile($file3);
 
@@ -91,22 +91,22 @@ class ManifestTest extends TestBase
     public function testValidateAddFileWithNoFileKey()
     {
         $m = new \Talis\Manifesto\Manifest();
-        $this->setExpectedException('InvalidArgumentException', "Files must contain a file key and value");
-        $m->addFile(array('type'=>FILE_TYPE_S3, 'container'=>'myBucket', 'destinationPath'=>'foobar.txt'));
+        $this->setExpectedException('InvalidArgumentException', 'Files must contain a file key and value');
+        $m->addFile(['type' => FILE_TYPE_S3, 'container' => 'myBucket', 'destinationPath' => 'foobar.txt']);
     }
 
     public function testValidateAddFileWithNoFileValue()
     {
         $m = new \Talis\Manifesto\Manifest();
-        $this->setExpectedException('InvalidArgumentException', "Files must contain a file key and value");
-        $m->addFile(array('type'=>FILE_TYPE_S3, 'container'=>'myBucket', 'file'=>null, 'destinationPath'=>'foobar.txt'));
+        $this->setExpectedException('InvalidArgumentException', 'Files must contain a file key and value');
+        $m->addFile(['type' => FILE_TYPE_S3, 'container' => 'myBucket', 'file' => null, 'destinationPath' => 'foobar.txt']);
     }
 
     public function testValidateAddFileWithUnsupportedFileType()
     {
         $m = new \Talis\Manifesto\Manifest();
         $this->setExpectedException('InvalidArgumentException', "Unsupported file 'type'");
-        $m->addFile(array('type'=>"MY_FOO_CLOUD", 'container'=>'myBucket', 'file'=>'/path/to/file.txt', 'destinationPath'=>'foobar.txt'));
+        $m->addFile(['type' => 'MY_FOO_CLOUD', 'container' => 'myBucket', 'file' => '/path/to/file.txt', 'destinationPath' => 'foobar.txt']);
     }
 
     public function testGenerateManifestNoFiles()
@@ -119,7 +119,7 @@ class ManifestTest extends TestBase
     public function testGenerateManifestNoFormat()
     {
         $m = new \Talis\Manifesto\Manifest();
-        $m->addFile(array('file'=>'/path/to/file1.txt'));
+        $m->addFile(['file' => '/path/to/file1.txt']);
         $this->setExpectedException('Talis\Manifesto\Exceptions\ManifestValidationException', 'Output format has not been set');
         $m->generateManifest();
     }
@@ -127,7 +127,7 @@ class ManifestTest extends TestBase
     public function testGenerateManifestNoFileCountInSafeMode()
     {
         $m = new \Talis\Manifesto\Manifest(true);
-        $m->addFile(array('file'=>'/path/to/file1.txt'));
+        $m->addFile(['file' => '/path/to/file1.txt']);
         $m->setFormat(FORMAT_TARBZ);
         $this->setExpectedException('Talis\Manifesto\Exceptions\ManifestValidationException', 'File count must be set in safe mode');
         $m->generateManifest();
@@ -136,7 +136,7 @@ class ManifestTest extends TestBase
     public function testGenerateManifestWrongFileCountInSafeMode()
     {
         $m = new \Talis\Manifesto\Manifest(true);
-        $m->addFile(array('file'=>'/path/to/file1.txt'));
+        $m->addFile(['file' => '/path/to/file1.txt']);
         $m->setFormat(FORMAT_TARBZ);
         $m->setFileCount(3);
         $this->setExpectedException('Talis\Manifesto\Exceptions\ManifestValidationException', 'Number of files does not equal fileCount');
@@ -147,24 +147,24 @@ class ManifestTest extends TestBase
     {
         $m = new \Talis\Manifesto\Manifest();
         $m->setFormat(FORMAT_ZIP);
-        $files = array();
-        $file1 = array('file'=>'/path/to/file1.txt');
+        $files = [];
+        $file1 = ['file' => '/path/to/file1.txt'];
         $files[] = $file1;
         $m->addFile($file1);
 
-        $file2 = array('type'=>FILE_TYPE_S3, 'container'=>'myBucket', 'file'=>'/path/to/file2.txt', 'destinationPath'=>'foobar.txt');
+        $file2 = ['type' => FILE_TYPE_S3, 'container' => 'myBucket', 'file' => '/path/to/file2.txt', 'destinationPath' => 'foobar.txt'];
         $files[] = $file2;
         $m->addFile($file2);
 
-        $file3 = array('type'=>FILE_TYPE_CF, 'file'=>'/path/to/file3.txt', 'destinationPath'=>'/another/path/foobar.txt');
+        $file3 = ['type' => FILE_TYPE_CF, 'file' => '/path/to/file3.txt', 'destinationPath' => '/another/path/foobar.txt'];
         $files[] = $file3;
         $m->addFile($file3);
 
-        $expectedManifest = array(
-            'format'=>FORMAT_ZIP,
-            'fileCount'=>3,
-            'files'=>$files
-        );
+        $expectedManifest = [
+            'format' => FORMAT_ZIP,
+            'fileCount' => 3,
+            'files' => $files
+        ];
 
         $this->assertEquals($expectedManifest, $m->generateManifest());
     }
@@ -173,16 +173,16 @@ class ManifestTest extends TestBase
     {
         $m = new \Talis\Manifesto\Manifest(true);
         $m->setFormat(FORMAT_TARBZ);
-        $files = array();
-        $file1 = array('file'=>'/path/to/file1.txt');
+        $files = [];
+        $file1 = ['file' => '/path/to/file1.txt'];
         $files[] = $file1;
         $m->addFile($file1);
 
-        $file2 = array('type'=>FILE_TYPE_S3, 'container'=>'myBucket', 'file'=>'/path/to/file2.txt', 'destinationPath'=>'foobar.txt');
+        $file2 = ['type' => FILE_TYPE_S3, 'container' => 'myBucket', 'file' => '/path/to/file2.txt', 'destinationPath' => 'foobar.txt'];
         $files[] = $file2;
         $m->addFile($file2);
 
-        $file3 = array('type'=>FILE_TYPE_CF, 'file'=>'/path/to/file3.txt', 'destinationPath'=>'/another/path/foobar.txt');
+        $file3 = ['type' => FILE_TYPE_CF, 'file' => '/path/to/file3.txt', 'destinationPath' => '/another/path/foobar.txt'];
         $files[] = $file3;
         $m->addFile($file3);
 
@@ -191,12 +191,12 @@ class ManifestTest extends TestBase
         $m->setCallbackLocation('https://example.com/callback.cgi');
         $m->setCallbackMethod('post');
 
-        $expectedManifest = array(
-            'callback'=>array('url'=>'https://example.com/callback.cgi', 'method'=>'POST'),
-            'format'=>FORMAT_TARBZ,
-            'fileCount'=>3,
-            'files'=>$files
-        );
+        $expectedManifest = [
+            'callback' => ['url' => 'https://example.com/callback.cgi', 'method' => 'POST'],
+            'format' => FORMAT_TARBZ,
+            'fileCount' => 3,
+            'files' => $files
+        ];
 
         $this->assertEquals($expectedManifest, $m->generateManifest());
     }

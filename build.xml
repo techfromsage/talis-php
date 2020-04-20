@@ -62,9 +62,7 @@
             <arg line="./ --exclude=vendor --no-cache" />
         </exec>
         <echo>Running PHP Codesniffer for code quality...</echo>
-        <exec dir="." executable="${vendor.dir}/bin/phpcs" failonerror="true">
-          <arg line="-s -p --severity=3 --standard=test/Standards/TalisPHP --extensions=php ./"/>
-        </exec>
+        <exec dir="." executable="${vendor.dir}/bin/phpcs" failonerror="true"/>
     </target>
 
     <target name="code-check" depends="clean">

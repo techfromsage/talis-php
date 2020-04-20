@@ -2,18 +2,17 @@
 
 namespace Talis\Persona\Client;
 
-use \Firebase\JWT\JWT;
-
-use \Talis\Persona\Client\ScopesNotDefinedException;
-use \Talis\Persona\Client\EmptyResponseException;
-use \Talis\Persona\Client\InvalidPublicKeyException;
-use \Talis\Persona\Client\InvalidSignatureException;
-use \Talis\Persona\Client\InvalidTokenException;
-use \Talis\Persona\Client\TokenValidationException;
-use \Talis\Persona\Client\UnauthorisedException;
-use \Talis\Persona\Client\UnknownException;
-use \Talis\Persona\Client\CertificateCache;
-use \Talis\Persona\Client\TokenCache;
+use Firebase\JWT\JWT;
+use Talis\Persona\Client\ScopesNotDefinedException;
+use Talis\Persona\Client\EmptyResponseException;
+use Talis\Persona\Client\InvalidPublicKeyException;
+use Talis\Persona\Client\InvalidSignatureException;
+use Talis\Persona\Client\InvalidTokenException;
+use Talis\Persona\Client\TokenValidationException;
+use Talis\Persona\Client\UnauthorisedException;
+use Talis\Persona\Client\UnknownException;
+use Talis\Persona\Client\CertificateCache;
+use Talis\Persona\Client\TokenCache;
 
 class Tokens extends Base
 {
@@ -52,7 +51,8 @@ class Tokens extends Base
         try {
             return $this->validateTokenUsingJWT($token, $scope);
         } catch (\Exception $e) {
-            if ($e instanceof ScopesNotDefinedException
+            if (
+                $e instanceof ScopesNotDefinedException
                 || $e instanceof CommunicationException
             ) {
                 return $this->validateTokenUsingPersona($token, $scope);
@@ -69,6 +69,7 @@ class Tokens extends Base
      *
      * @param string $token a token to validate explicitly, if you do not
      *      specify one the method tries to find one
+     * @param array $scopes Scopes that the token should have
      * @throws ScopesNotDefinedException If the JWT token doesn't include the user's scopes
      * @throws CommunicationException Cannot communicate with Persona
      * @throws \Exception If not able to communicate with Persona to retrieve the public certificate

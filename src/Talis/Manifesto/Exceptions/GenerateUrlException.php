@@ -1,9 +1,8 @@
 <?php
 
-
 namespace Talis\Manifesto\Exceptions;
 
-
-class GenerateUrlException extends \Exception {
+class GenerateUrlException extends \Exception
+{
 
 }

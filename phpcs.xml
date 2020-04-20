@@ -1,11 +1,16 @@
 <?xml version="1.0"?>
 <ruleset name="Talis">
+    <file>./src</file>
+    <file>./test</file>
     <arg name="extensions" value="php" />
+    <arg value="sp"/>
 
     <exclude-pattern>*/vendor/*</exclude-pattern>
 
     <!-- PSR12 -->
-    <rule ref="PSR12" />
+    <rule ref="PSR12">
+        <exclude name="PSR12.Properties.ConstantVisibility.NotFound"/>
+    </rule>
     <rule ref="PSR2.Methods.MethodDeclaration.Underscore">
         <severity>3</severity>
     </rule>
@@ -13,6 +18,7 @@
     <!-- Generic -->
     <rule ref="Generic.Arrays.DisallowLongArraySyntax" />
     <rule ref="Generic.Files.LineLength">
+        <exclude-pattern>*/test/*</exclude-pattern>
         <severity>3</severity>
     </rule>
     <rule ref="Generic.Commenting.Todo.CommentFound">
@@ -25,6 +31,10 @@
 
     <!-- PSR1 -->
     <rule ref="PSR1.Classes.ClassDeclaration.MissingNamespace">
+        <exclude-pattern>*/test/*</exclude-pattern>
+        <severity>3</severity>
+    </rule>
+    <rule ref="PSR1.Classes.ClassDeclaration.MultipleClasses">
         <exclude-pattern>*/test/*</exclude-pattern>
         <severity>3</severity>
     </rule>

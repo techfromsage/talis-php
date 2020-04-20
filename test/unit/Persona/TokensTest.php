@@ -2,13 +2,13 @@
 
 namespace test\unit\Persona;
 
-use \Firebase\JWT\JWT;
-use \Talis\Persona\Client\Tokens;
-use \Talis\Persona\Client\ValidationResults;
-use \Talis\Persona\Client\ScopesNotDefinedException;
-use \Talis\Persona\Client\TokenValidationException;
-use \Talis\Persona\Client\InvalidTokenException;
-use \Doctrine\Common\Cache\ArrayCache;
+use Firebase\JWT\JWT;
+use Talis\Persona\Client\Tokens;
+use Talis\Persona\Client\ValidationResults;
+use Talis\Persona\Client\ScopesNotDefinedException;
+use Talis\Persona\Client\TokenValidationException;
+use Talis\Persona\Client\InvalidTokenException;
+use Doctrine\Common\Cache\ArrayCache;
 use test\TestBase;
 
 class TokensTest extends TestBase

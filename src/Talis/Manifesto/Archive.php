@@ -1,11 +1,12 @@
 <?php
 
-
 namespace Talis\Manifesto;
 
+// phpcs:disable PSR1.Files.SideEffects
 require_once 'common.inc.php';
 
-class Archive {
+class Archive
+{
     /**
      * @var string
      */
@@ -21,24 +22,32 @@ class Archive {
      */
     protected $location;
 
+    /**
+     * Loads a from json.
+     *
+     * @param string $jsonDocument Archive as a JSON document
+     */
     public function loadFromJson($jsonDocument)
     {
         $this->loadFromArray(json_decode($jsonDocument, true));
     }
 
+    /**
+     * Loads a from array.
+     *
+     * @param array $array Archive as an array
+     */
     public function loadFromArray(array $array)
     {
-        if(isset($array['id']))
-        {
+        if (isset($array['id'])) {
             $this->id = $array['id'];
         }
-        if(isset($array['status']))
-        {
+
+        if (isset($array['status'])) {
             $this->status = $array['status'];
         }
 
-        if(isset($array['location']))
-        {
+        if (isset($array['location'])) {
             $this->location = $array['location'];
         }
     }
@@ -66,5 +75,4 @@ class Archive {
     {
         return $this->id;
     }
-
 }

@@ -1,9 +1,8 @@
 <?php
 
-
 namespace Talis\Manifesto\Exceptions;
 
-
-class ArchiveException extends \Exception {
+class ArchiveException extends \Exception
+{
 
 }

@@ -27,7 +27,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
     {
         $this->setRequiredDefines($requiredDefineToTest);
 
-        $this->setExpectedException('\Exception', 'Missing define: '.$requiredDefineToTest);
+        $this->setExpectedException('\Exception', 'Missing define: ' . $requiredDefineToTest);
         new \Talis\EchoClient\Client();
     }
 

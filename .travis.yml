@@ -17,7 +17,7 @@ install:
 - composer install
 script: |
     set -xe
-    find . -name '*.php' | grep -v './vendor/' | xargs -I{} php -l "{}" \;
+    ant lint
     ant test
 notifications:
   hipchat:

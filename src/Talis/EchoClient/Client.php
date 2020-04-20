@@ -1,11 +1,11 @@
 <?php
+
 namespace Talis\EchoClient;
 
-use \Monolog\Handler\StreamHandler;
-use \Monolog\Logger;
-
-use \Talis\EchoClient\Event;
-use \Talis\EchoClient\Base;
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
+use Talis\EchoClient\Event;
+use Talis\EchoClient\Base;
 
 /**
  * Sends events to Echo, if an echo server is enabled.
@@ -348,15 +348,17 @@ class Client extends Base
     {
         $baseUrl = $this->getBaseUrl();
 
-        if (!in_array(
-            $type,
-            [
+        if (
+            !in_array(
+                $type,
+                [
                 self::ECHO_ANALYTICS_HITS,
                 self::ECHO_ANALYTICS_AVG,
                 self::ECHO_ANALYTICS_MAX,
                 self::ECHO_ANALYTICS_SUM
-            ]
-        )) {
+                ]
+            )
+        ) {
             throw new \Exception('You must supply a valid analytics type');
         }
 

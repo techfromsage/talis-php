@@ -1,10 +1,11 @@
 <?php
+
 namespace Talis\Babel;
 
 use Guzzle\Http\Message\Header;
 use Guzzle\Http\Message\Header\HeaderCollection;
-use \Monolog\Handler\StreamHandler;
-use \Monolog\Logger;
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
 
 /**
  * Babel client.
@@ -326,7 +327,7 @@ class Client
             'Authorization' => "Bearer $token",
         ];
 
-        $this->getLogger()->debug('Babel HEAD: '.$url, $headers);
+        $this->getLogger()->debug('Babel HEAD: ' . $url, $headers);
 
         $httpClient = $this->getHttpClient();
         $request = $httpClient->head($url, $headers, ['exceptions' => false]);

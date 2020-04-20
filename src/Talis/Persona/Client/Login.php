@@ -79,7 +79,8 @@ class Login extends Base
             throw new \Exception('Payload not json');
         }
 
-        if (!isset($_SESSION[self::LOGIN_PREFIX . ':loginState'])
+        if (
+            !isset($_SESSION[self::LOGIN_PREFIX . ':loginState'])
             || !isset($payload['state'])
             || $payload['state'] !== $_SESSION[self::LOGIN_PREFIX . ':loginState']
         ) {
@@ -129,7 +130,8 @@ class Login extends Base
             return false;
         }
 
-        if (isset($_SESSION[self::LOGIN_PREFIX . ':loginSSO']['gupid'])
+        if (
+            isset($_SESSION[self::LOGIN_PREFIX . ':loginSSO']['gupid'])
             && !empty($_SESSION[self::LOGIN_PREFIX . ':loginSSO']['gupid'])
         ) {
             // Loop through all gupids and match against the login provider - it should be
@@ -151,7 +153,8 @@ class Login extends Base
      */
     public function getRedirectUrl()
     {
-        if (isset($_SESSION[self::LOGIN_PREFIX . ':loginSSO']['redirect'])
+        if (
+            isset($_SESSION[self::LOGIN_PREFIX . ':loginSSO']['redirect'])
             && !empty($_SESSION[self::LOGIN_PREFIX . ':loginSSO']['redirect'])
         ) {
             return $_SESSION[self::LOGIN_PREFIX . ':loginSSO']['redirect'];
@@ -166,7 +169,8 @@ class Login extends Base
      */
     public function getScopes()
     {
-        if (isset($_SESSION[self::LOGIN_PREFIX . ':loginSSO'])
+        if (
+            isset($_SESSION[self::LOGIN_PREFIX . ':loginSSO'])
             && isset($_SESSION[self::LOGIN_PREFIX . ':loginSSO']['token'])
             && isset($_SESSION[self::LOGIN_PREFIX . ':loginSSO']['token']['scope'])
         ) {
@@ -182,7 +186,8 @@ class Login extends Base
      */
     public function getProfile()
     {
-        if (isset($_SESSION[self::LOGIN_PREFIX . ':loginSSO'])
+        if (
+            isset($_SESSION[self::LOGIN_PREFIX . ':loginSSO'])
             && isset($_SESSION[self::LOGIN_PREFIX . ':loginSSO']['profile'])
         ) {
             return $_SESSION[self::LOGIN_PREFIX . ':loginSSO']['profile'];

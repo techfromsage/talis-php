@@ -9,7 +9,7 @@ trait CertificateCache
      * @param string $id certificate id
      * @return string|null certificate
      */
-    protected function getCachedCertificate($id='pub')
+    protected function getCachedCertificate($id = 'pub')
     {
         try {
             return $this->getCacheBackend()->fetch(
@@ -34,7 +34,7 @@ trait CertificateCache
      * @param integer $expiry expiry time in seconds
      * @param string $id certificate id
      */
-    protected function cacheCertificate($certificate, $expiry, $id='pub')
+    protected function cacheCertificate($certificate, $expiry, $id = 'pub')
     {
         try {
             $this->getCacheBackend()->save(
@@ -55,7 +55,12 @@ trait CertificateCache
         }
     }
 
-    protected function getCertificateCacheKey($id='pub')
+    /**
+     * Get the certificate cache key.
+     * @param string $id The identifier
+     * @return string The certificate cache key.
+     */
+    protected function getCertificateCacheKey($id = 'pub')
     {
         return "cert_$id";
     }
