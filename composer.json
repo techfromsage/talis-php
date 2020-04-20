@@ -21,7 +21,6 @@
     "firebase/php-jwt": "^3.0",
     "doctrine/common": "^2.5",
     "predis/predis"  : ">=0.8.5",
-    "guzzle/guzzle": "^3.8",
     "guzzlehttp/guzzle": "^6.0"
   },
   "require-dev": {
