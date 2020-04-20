@@ -4,7 +4,6 @@ namespace Talis\Manifesto\Exceptions;
 
 class ErrorResponseException extends \Exception
 {
-
     /**
      * @param string $message [optional] Manifesto error message
      * @param string $code [optional] Manifesto error code

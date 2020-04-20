@@ -9,7 +9,6 @@ use test\TestBase;
 
 class OAuthClientsIntegrationTest extends TestBase
 {
-
     /**
      * @var Talis\Persona\Client\OAuthClients
      */

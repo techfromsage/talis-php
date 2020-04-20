@@ -643,10 +643,10 @@ class LoginTest extends TestBase
             ->method('redirect')
             ->with(
                 'http://' . $this->versionedPersonaHost() . '/auth/providers/trapdoor/login' .
-                '?require=profile' .
-                '&redirectUri=http%3A%2F%2Fexample.com' .
-                '&state=loginState' .
-                '&app=test_client'
+                    '?require=profile' .
+                    '&redirectUri=http%3A%2F%2Fexample.com' .
+                    '&state=loginState' .
+                    '&app=test_client'
             )
             ->will($this->returnValue(null));
 

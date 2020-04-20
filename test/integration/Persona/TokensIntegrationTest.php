@@ -9,7 +9,6 @@ use test\TestBase;
 
 class TokensIntegrationTest extends TestBase
 {
-
     /**
      * @var Talis\Persona\Client\Tokens
      */

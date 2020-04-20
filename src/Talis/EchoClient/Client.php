@@ -13,7 +13,6 @@ use Talis\EchoClient\Base;
 class Client extends Base
 {
     const ECHO_API_VERSION = 1;
-
     const ECHO_ANALYTICS_HITS = 'hits';
     const ECHO_ANALYTICS_MAX = 'max';
     const ECHO_ANALYTICS_SUM = 'sum';
@@ -103,8 +102,8 @@ class Client extends Base
         if (count($events) > self::ECHO_MAX_BATCH_EVENTS) {
             $this->getLogger()->warning(
                 'Batch contains more than '
-                .  self::ECHO_MAX_BATCH_EVENTS
-                . ' events'
+                    .  self::ECHO_MAX_BATCH_EVENTS
+                    . ' events'
             );
 
             throw new \Talis\EchoClient\TooManyEventsInBatchException(
@@ -189,7 +188,7 @@ class Client extends Base
             // basis
             $this->getLogger()->warning(
                 'Echo server is not defined (missing ECHO_HOST define), '
-                . "not getting events - $class"
+                    . "not getting events - $class"
             );
 
             return false;
@@ -352,10 +351,10 @@ class Client extends Base
             !in_array(
                 $type,
                 [
-                self::ECHO_ANALYTICS_HITS,
-                self::ECHO_ANALYTICS_AVG,
-                self::ECHO_ANALYTICS_MAX,
-                self::ECHO_ANALYTICS_SUM
+                    self::ECHO_ANALYTICS_HITS,
+                    self::ECHO_ANALYTICS_AVG,
+                    self::ECHO_ANALYTICS_MAX,
+                    self::ECHO_ANALYTICS_SUM
                 ]
             )
         ) {
@@ -438,7 +437,7 @@ class Client extends Base
 
                     throw new \Exception(
                         'Could not get analytics from echo, json did not decode: '
-                        . $response->getBody(true)
+                            . $response->getBody(true)
                     );
             }
         } else {
@@ -455,7 +454,7 @@ class Client extends Base
 
             throw new \Exception(
                 'Could not get analytics from echo, statusCode: '
-                . $response->getStatusCode()
+                    . $response->getStatusCode()
             );
         }
     }
@@ -502,7 +501,7 @@ class Client extends Base
             // interaction as echo events are collected on a best-endeavours basis
             $this->getLogger()->warning(
                 'Echo server is not defined (missing ECHO_HOST define), '
-                . ' not sending events'
+                    . ' not sending events'
             );
 
             return false;

@@ -13,7 +13,6 @@ class EventTest extends \PHPUnit_Framework_TestCase
         define('ECHO_CLASS_PREFIX', 'test.');
     }
 
-
     /**
      * @test Verifies that the constructor rejects bad args
      * @dataProvider badConstructorArgsProvider

@@ -8,7 +8,6 @@ use test\TestBase;
 
 class UsersIntegerationTest extends TestBase
 {
-
     /**
      * @var Talis\Persona\Client\Users
      */

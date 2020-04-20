@@ -52,7 +52,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         /** @var \Talis\Critic\Client | PHPUnit_Framework_MockObject_MockObject $criticClient */
         $criticClient = $this->getMock(
             '\Talis\Critic\Client',
-            ['getHTTPClient','getHeaders'],
+            ['getHTTPClient', 'getHeaders'],
             [$this->criticBaseUrl]
         );
 
@@ -90,7 +90,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         /** @var \Talis\Critic\Client | PHPUnit_Framework_MockObject_MockObject $criticClient */
         $criticClient = $this->getMock(
             '\Talis\Critic\Client',
-            ['getHTTPClient','getHeaders'],
+            ['getHTTPClient', 'getHeaders'],
             [$this->criticBaseUrl]
         );
 

@@ -666,7 +666,7 @@ class TokensTest extends TestBase
     {
         $mockClient = $this->getMock(
             'Talis\Persona\Client\Tokens',
-            [ 'retrieveJWTCertificate' ],
+            ['retrieveJWTCertificate'],
             [
                 [
                     'userAgent' => 'unittest',
@@ -706,7 +706,7 @@ class TokensTest extends TestBase
     {
         $mockClient = $this->getMock(
             'Talis\Persona\Client\Tokens',
-            [ 'retrieveJWTCertificate' ],
+            ['retrieveJWTCertificate'],
             [
                 [
                     'userAgent' => 'unittest',
@@ -840,7 +840,7 @@ class TokensTest extends TestBase
     {
         $mockClient = $this->getMock(
             'Talis\Persona\Client\Tokens',
-            [ 'retrieveJWTCertificate' ],
+            ['retrieveJWTCertificate'],
             [
                 [
                     'userAgent' => 'unittest',
@@ -876,7 +876,7 @@ class TokensTest extends TestBase
     {
         $mockClient = $this->getMock(
             'Talis\Persona\Client\Tokens',
-            [ 'retrieveJWTCertificate' ],
+            ['retrieveJWTCertificate'],
             [
                 [
                     'userAgent' => 'unittest',

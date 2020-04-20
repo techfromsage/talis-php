@@ -147,8 +147,8 @@ class SigningTest extends TestBase
 
         $this->assertEquals(
             'http://someurl/someroute?expires=1234567890'
-            . '&signature=5be20a17931f220ca03d446a2574'
-            . '8a9ef707cd508c753760db11f1f95485f1f6',
+                . '&signature=5be20a17931f220ca03d446a2574'
+                . '8a9ef707cd508c753760db11f1f95485f1f6',
             $signedUrl
         );
     }
@@ -171,8 +171,8 @@ class SigningTest extends TestBase
 
         $this->assertEquals(
             'http://someurl/someroute?expires=1234567890&'
-            .  'signature=c4fbb2b15431ef08e861687bd55fd0ab98'
-            . 'bb52eee7a1178bdd10888eadbb48bb#myAnchor',
+                .  'signature=c4fbb2b15431ef08e861687bd55fd0ab98'
+                . 'bb52eee7a1178bdd10888eadbb48bb#myAnchor',
             $signedUrl
         );
     }
@@ -195,8 +195,8 @@ class SigningTest extends TestBase
 
         $this->assertEquals(
             'http://someurl/someroute?myparam=foo&expires=1234567890'
-            . '&signature=7675bae38ddea8c2236d208a5003337f926af4ebd3'
-            . '3aac03144eb40c69d58804',
+                . '&signature=7675bae38ddea8c2236d208a5003337f926af4ebd3'
+                . '3aac03144eb40c69d58804',
             $signedUrl
         );
     }
@@ -219,8 +219,8 @@ class SigningTest extends TestBase
 
         $this->assertEquals(
             'http://someurl/someroute?myparam=foo&expires=1234567890'
-            . '&signature=f871db0896f6e893b607d2987ccc838786114b9778'
-            . 'b4dbae2b554c2faf9486a1#myAnchor',
+                . '&signature=f871db0896f6e893b607d2987ccc838786114b9778'
+                . 'b4dbae2b554c2faf9486a1#myAnchor',
             $signedUrl
         );
     }
