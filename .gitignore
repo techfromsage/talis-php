@@ -4,3 +4,4 @@ composer.phar
 .idea
 build
 vendor
+docker-compose.override.yml

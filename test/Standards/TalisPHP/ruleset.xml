@@ -1,8 +1,14 @@
 <?xml version="1.0"?>
-<ruleset name="TARL">
+<ruleset name="Talis">
     <arg name="extensions" value="php" />
 
     <exclude-pattern>*/vendor/*</exclude-pattern>
+
+    <!-- PSR12 -->
+    <rule ref="PSR12" />
+    <rule ref="PSR2.Methods.MethodDeclaration.Underscore">
+        <severity>3</severity>
+    </rule>
 
     <!-- Generic -->
     <rule ref="Generic.Arrays.DisallowLongArraySyntax" />
@@ -27,12 +33,6 @@
         <severity>3</severity>
     </rule>
     <rule ref="PSR1.Methods.CamelCapsMethodName">
-        <severity>3</severity>
-    </rule>
-
-    <!-- PSR2 -->
-    <rule ref="PSR2" />
-    <rule ref="PSR2.Methods.MethodDeclaration.Underscore">
         <severity>3</severity>
     </rule>
 

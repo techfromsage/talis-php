@@ -1,11 +1,8 @@
 <?php
 
-$appRoot = dirname(dirname(dirname(__DIR__)));
-if (!defined('APPROOT')) {
-    define('APPROOT', $appRoot);
-}
+namespace test\unit\Manifesto;
 
-require_once $appRoot . '/test/unit/TestBase.php';
+use test\TestBase;
 
 class ClientTest extends TestBase
 {
@@ -45,7 +42,7 @@ class ClientTest extends TestBase
     {
         $client = new TestManifestoClient('http://example.com/');
         $cacheDriver = new \Doctrine\Common\Cache\ArrayCache();
-        $persona = new Talis\Persona\Client\Tokens(
+        $persona = new \Talis\Persona\Client\Tokens(
             array(
                 'persona_host' => 'http://persona',
                 'persona_oauth_route' => '/oauth/tokens/',

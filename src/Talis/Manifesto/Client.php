@@ -70,7 +70,7 @@ class Client {
     {
         if(!isset($this->personaClient))
         {
-            $this->personaClient = new Talis\Persona\Client\Tokens($this->personaConnectValues);
+            $this->personaClient = new \Talis\Persona\Client\Tokens($this->personaConnectValues);
         }
         return $this->personaClient;
     }

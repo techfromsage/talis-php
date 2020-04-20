@@ -1,11 +1,8 @@
 <?php
 
-$appRoot = dirname(dirname(dirname(__DIR__)));
-if (!defined('APPROOT')) {
-    define('APPROOT', $appRoot);
-}
+namespace test\unit\Manifesto;
 
-require_once $appRoot . '/test/unit/TestBase.php';
+use test\TestBase;
 
 class ArchiveTest extends TestBase
 {

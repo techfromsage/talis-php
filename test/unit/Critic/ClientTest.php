@@ -1,9 +1,6 @@
 <?php
-namespace Talis\Critic;
 
-if (!defined('APPROOT')) {
-    define('APPROOT', dirname(dirname(dirname(__DIR__))));
-}
+namespace test\unit\Critic;
 
 /**
  * Unit tests for CriticClient

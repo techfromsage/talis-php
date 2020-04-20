@@ -1,14 +1,9 @@
 <?php
 
+namespace test\unit\Persona;
+
 use Talis\Persona\Client\Login;
-
-$appRoot = dirname(dirname(dirname(__DIR__)));
-if (!defined('APPROOT')) {
-    define('APPROOT', $appRoot);
-}
-
-require_once $appRoot . '/test/unit/TestBase.php';
-
+use test\TestBase;
 
 class LoginTest extends TestBase
 {

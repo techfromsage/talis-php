@@ -1,14 +1,10 @@
 <?php
 
+namespace test\integration\Persona;
+
 use Talis\Persona\Client\Users;
 use Talis\Persona\Client\Tokens;
-
-$appRoot = dirname(dirname(dirname(__DIR__)));
-if (!defined('APPROOT')) {
-    define('APPROOT', $appRoot);
-}
-
-require_once $appRoot . '/test/unit/TestBase.php';
+use test\TestBase;
 
 class UsersIntegerationTest extends TestBase
 {

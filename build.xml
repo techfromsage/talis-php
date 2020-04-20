@@ -57,13 +57,13 @@
     <target name="test" depends="clean,  unittest, integrationtest" description="Run all the tests"/>
 
     <target name="lint" depends="clean">
-        <echo>Running PHP Codesniffer for code quality...</echo>
-        <exec dir="." executable="${vendor.dir}/bin/phpcs" failonerror="true">
-          <arg line="-s -p --severity=3 --standard=test/Standards/TalisPHP --extensions=php ./"/>
-        </exec>
         <echo>Running PHP Lint for code quality...</echo>
         <exec dir="." executable="${vendor.dir}/bin/phplint" failonerror="true">
             <arg line="./ --exclude=vendor --no-cache" />
+        </exec>
+        <echo>Running PHP Codesniffer for code quality...</echo>
+        <exec dir="." executable="${vendor.dir}/bin/phpcs" failonerror="true">
+          <arg line="-s -p --severity=3 --standard=test/Standards/TalisPHP --extensions=php ./"/>
         </exec>
     </target>
 
@@ -81,16 +81,18 @@
     </target>
 
     <target name="unittest" depends="clean">
-        <exec dir="${unit.test.dir}" executable="${vendor.dir}/bin/phpunit" failonerror="true">
+        <exec executable="${vendor.dir}/bin/phpunit" failonerror="true">
+            <arg line="${unit.test.dir}"/>
             <arg line="--log-junit ${build.dir}/unittest-report.xml"/>
         </exec>
     </target>
 
     <target name="integrationtest" depends="clean">
-        <exec dir="${integration.test.dir}" executable="${vendor.dir}/bin/phpunit" failonerror="true">
+        <exec executable="${vendor.dir}/bin/phpunit" failonerror="true">
             <env key="PERSONA_TEST_HOST" value="${env.PERSONA_TEST_HOST}" />
             <env key="PERSONA_TEST_OAUTH_CLIENT" value="${env.PERSONA_TEST_OAUTH_CLIENT}" />
             <env key="PERSONA_TEST_OAUTH_SECRET" value="${env.PERSONA_TEST_OAUTH_SECRET}" />
+            <arg line="${integration.test.dir}"/>
             <arg line="--log-junit ${build.dir}/integrationtest-report.xml"/>
         </exec>
     </target>

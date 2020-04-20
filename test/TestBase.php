@@ -1,23 +1,10 @@
 <?php
-if (!defined('APPROOT')) {
-    define('APPROOT', dirname(dirname(__DIR__)));
-}
+
+namespace test;
 
 use Doctrine\Common\Cache\FilesystemCache;
 
-/**
- * Retrieve environment variable, else return a default
- * @param string $name name of environment value
- * @param string $default default to return
- * @return string
- */
-function envvalue($name, $default)
-{
-    $value = getenv($name);
-    return $value == false ? $default : $value;
-}
-
-abstract class TestBase extends PHPUnit_Framework_TestCase
+abstract class TestBase extends \PHPUnit_Framework_TestCase
 {
     protected $cacheBackend = null;
 
@@ -36,8 +23,8 @@ abstract class TestBase extends PHPUnit_Framework_TestCase
             return;
         }
 
-        $it = new RecursiveDirectoryIterator($dir, RecursiveDirectoryIterator::SKIP_DOTS);
-        $files = new RecursiveIteratorIterator($it, RecursiveIteratorIterator::CHILD_FIRST);
+        $it = new \RecursiveDirectoryIterator($dir, \RecursiveDirectoryIterator::SKIP_DOTS);
+        $files = new \RecursiveIteratorIterator($it, \RecursiveIteratorIterator::CHILD_FIRST);
 
         foreach ($files as $file) {
             if ($file->isDir()) {
@@ -66,7 +53,6 @@ abstract class TestBase extends PHPUnit_Framework_TestCase
     protected function setUp()
     {
         $this->removeCacheFolder();
-        date_default_timezone_set('Europe/London');
         $className = get_class($this);
         $testName = $this->getName();
         echo " Test: {$className}->{$testName}\n";

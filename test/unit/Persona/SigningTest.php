@@ -1,13 +1,9 @@
 <?php
 
-$appRoot = dirname(dirname(dirname(__DIR__)));
-if (!defined('APPROOT')) {
-    define('APPROOT', $appRoot);
-}
-
-require_once $appRoot . '/test/unit/TestBase.php';
+namespace test\unit\Persona;
 
 use Talis\Persona\Client\Signing;
+use test\TestBase;
 
 class SigningTest extends TestBase
 {

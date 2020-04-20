@@ -1,5 +1,7 @@
 <?php
 
+namespace test\unit\Persona;
+
 use \Firebase\JWT\JWT;
 use \Talis\Persona\Client\Tokens;
 use \Talis\Persona\Client\ValidationResults;
@@ -7,13 +9,7 @@ use \Talis\Persona\Client\ScopesNotDefinedException;
 use \Talis\Persona\Client\TokenValidationException;
 use \Talis\Persona\Client\InvalidTokenException;
 use \Doctrine\Common\Cache\ArrayCache;
-
-$appRoot = dirname(dirname(dirname(__DIR__)));
-if (!defined('APPROOT')) {
-    define('APPROOT', $appRoot);
-}
-
-require_once $appRoot . '/test/unit/TestBase.php';
+use test\TestBase;
 
 class TokensTest extends TestBase
 {
@@ -24,10 +20,9 @@ class TokensTest extends TestBase
     {
         parent::setUp();
 
-        global $appRoot;
-        $this->_wrongPrivateKey = file_get_contents("{$appRoot}/test/keys/wrong_private_key.pem");
-        $this->privateKey = file_get_contents("{$appRoot}/test/keys/private_key.pem");
-        $this->publicKey = file_get_contents("{$appRoot}/test/keys/public_key.pem");
+        $this->_wrongPrivateKey = file_get_contents(APPROOT . '/test/keys/wrong_private_key.pem');
+        $this->privateKey = file_get_contents(APPROOT . '/test/keys/private_key.pem');
+        $this->publicKey = file_get_contents(APPROOT . '/test/keys/public_key.pem');
     }
 
     public function testEmptyConfigThrowsException()
@@ -373,9 +368,9 @@ class TokensTest extends TestBase
             ]
         );
 
-        $plugin = new Guzzle\Plugin\Mock\MockPlugin();
-        $plugin->addResponse(new Guzzle\Http\Message\Response(202));
-        $httpClient = new Guzzle\Http\Client();
+        $plugin = new \Guzzle\Plugin\Mock\MockPlugin();
+        $plugin->addResponse(new \Guzzle\Http\Message\Response(202));
+        $httpClient = new \Guzzle\Http\Client();
         $httpClient->addSubscriber($plugin);
 
         $jwt = JWT::encode(
@@ -449,11 +444,11 @@ class TokensTest extends TestBase
             ]
         );
 
-        $plugin = new Guzzle\Plugin\Mock\MockPlugin();
+        $plugin = new \Guzzle\Plugin\Mock\MockPlugin();
         $plugin->addResponse(
-            new Guzzle\Http\Message\Response(200, null, $accessToken)
+            new \Guzzle\Http\Message\Response(200, null, $accessToken)
         );
-        $httpClient = new Guzzle\Http\Client();
+        $httpClient = new \Guzzle\Http\Client();
         $httpClient->addSubscriber($plugin);
 
         $mockClient->expects($this->once())
@@ -1170,9 +1165,9 @@ class TokensTest extends TestBase
                 ['[cert_pub][1]', 'cert', 300]
             );
 
-        $plugin = new Guzzle\Plugin\Mock\MockPlugin();
-        $plugin->addResponse(new Guzzle\Http\Message\Response(200, null, 'cert'));
-        $httpClient = new Guzzle\Http\Client();
+        $plugin = new \Guzzle\Plugin\Mock\MockPlugin();
+        $plugin->addResponse(new \Guzzle\Http\Message\Response(200, null, 'cert'));
+        $httpClient = new \Guzzle\Http\Client();
         $httpClient->addSubscriber($plugin);
 
         $tokens = $this->getMock(
@@ -1222,9 +1217,9 @@ class TokensTest extends TestBase
                 ['[cert_pub][1]', 'cert', 300]
             );
 
-        $plugin = new Guzzle\Plugin\Mock\MockPlugin();
-        $plugin->addResponse(new Guzzle\Http\Message\Response(200, null, 'cert'));
-        $httpClient = new Guzzle\Http\Client();
+        $plugin = new \Guzzle\Plugin\Mock\MockPlugin();
+        $plugin->addResponse(new \Guzzle\Http\Message\Response(200, null, 'cert'));
+        $httpClient = new \Guzzle\Http\Client();
         $httpClient->addSubscriber($plugin);
 
         $tokens = $this->getMock(
@@ -1268,9 +1263,9 @@ class TokensTest extends TestBase
             )
             ->will($this->throwException(new \Exception('oh no')));
 
-        $plugin = new Guzzle\Plugin\Mock\MockPlugin();
-        $plugin->addResponse(new Guzzle\Http\Message\Response(200, null, 'cert'));
-        $httpClient = new Guzzle\Http\Client();
+        $plugin = new \Guzzle\Plugin\Mock\MockPlugin();
+        $plugin->addResponse(new \Guzzle\Http\Message\Response(200, null, 'cert'));
+        $httpClient = new \Guzzle\Http\Client();
         $httpClient->addSubscriber($plugin);
 
         $tokens = $this->getMock(

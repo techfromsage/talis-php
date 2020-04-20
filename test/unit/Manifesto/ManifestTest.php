@@ -1,13 +1,11 @@
 <?php
 
-$appRoot = dirname(dirname(dirname(__DIR__)));
-if (!defined('APPROOT')) {
-    define('APPROOT', $appRoot);
-}
+namespace test\unit\Manifesto;
 
-require_once $appRoot . '/test/unit/TestBase.php';
+use test\TestBase;
 
-class ManifestTest extends TestBase {
+class ManifestTest extends TestBase
+{
     public function testGetSetSafeMode()
     {
         $m = new \Talis\Manifesto\Manifest();

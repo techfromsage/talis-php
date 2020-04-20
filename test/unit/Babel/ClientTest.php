@@ -1,14 +1,6 @@
 <?php
 
-namespace Talis\Babel;
-
-if (!defined('APPROOT')) {
-    define('APPROOT', dirname(dirname(dirname(__DIR__))));
-}
-
-require_once APPROOT.'/vendor/autoload.php';
-
-/* require_once 'PHPUnit/Autoload.php'; */
+namespace test\unit\Babel;
 
 use Guzzle\Http\Client;
 use Guzzle\Plugin\Mock\MockPlugin;
