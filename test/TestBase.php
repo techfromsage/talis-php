@@ -8,13 +8,6 @@ abstract class TestBase extends \PHPUnit_Framework_TestCase
 {
     protected $cacheBackend = null;
 
-    public function __construct()
-    {
-        $this->cacheBackend = new FilesystemCache(
-            sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'personaCache'
-        );
-    }
-
     protected function removeCacheFolder()
     {
         $dir = '/tmp/personaCache';
@@ -53,6 +46,9 @@ abstract class TestBase extends \PHPUnit_Framework_TestCase
     protected function setUp()
     {
         $this->removeCacheFolder();
+        $this->cacheBackend = new FilesystemCache(
+            sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'personaCache'
+        );
         $className = get_class($this);
         $testName = $this->getName();
         echo " Test: {$className}->{$testName}\n";
