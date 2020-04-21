@@ -30,6 +30,17 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $this->postFields = ['listUri' => 'http://somelist'];
     }
 
+    public function testCreateReviewSuccess()
+    {
+        $id = '1234567890';
+        $criticClient = $this->getClientWithMockResponses([
+            new \GuzzleHttp\Psr7\Response(201, [], json_encode(['id' => $id])),
+        ]);
+
+        $criticClient->setPersonaConnectValues($this->personaConfig);
+        $this->assertEquals($id, $criticClient->createReview($this->postFields, '', ''));
+    }
+
     /**
      * Exception thrown when response code is 200
      *
@@ -37,32 +48,9 @@ class ClientTest extends \PHPUnit_Framework_TestCase
      */
     public function testCreateReviewException()
     {
-        $this->setUp();
-
-        $plugin = new \Guzzle\Plugin\Mock\MockPlugin();
-        $plugin->addResponse(new \Guzzle\Http\Message\Response(
-            200,
-            null,
-            json_encode([])
-        ));
-
-        $client = new \Guzzle\Http\Client();
-        $client->addSubscriber($plugin);
-
-        /** @var \Talis\Critic\Client | PHPUnit_Framework_MockObject_MockObject $criticClient */
-        $criticClient = $this->getMock(
-            '\Talis\Critic\Client',
-            ['getHTTPClient', 'getHeaders'],
-            [$this->criticBaseUrl]
-        );
-
-        $criticClient->expects($this->once())
-            ->method('getHTTPClient')
-            ->will($this->returnValue($client));
-
-        $criticClient->expects($this->once())
-            ->method('getHeaders')
-            ->will($this->returnValue([]));
+        $criticClient = $this->getClientWithMockResponses([
+            new \GuzzleHttp\Psr7\Response(200, [], json_encode(['id' => '1234'])),
+        ]);
 
         $criticClient->setPersonaConnectValues($this->personaConfig);
         $criticClient->createReview($this->postFields, '', '');
@@ -75,32 +63,9 @@ class ClientTest extends \PHPUnit_Framework_TestCase
      */
     public function testCreateReviewGuzzleException()
     {
-        $this->setUp();
-
-        $plugin = new \Guzzle\Plugin\Mock\MockPlugin();
-        $plugin->addResponse(new \Guzzle\Http\Message\Response(
-            401,
-            null,
-            json_encode([])
-        ));
-
-        $client = new \Guzzle\Http\Client();
-        $client->addSubscriber($plugin);
-
-        /** @var \Talis\Critic\Client | PHPUnit_Framework_MockObject_MockObject $criticClient */
-        $criticClient = $this->getMock(
-            '\Talis\Critic\Client',
-            ['getHTTPClient', 'getHeaders'],
-            [$this->criticBaseUrl]
-        );
-
-        $criticClient->expects($this->once())
-            ->method('getHTTPClient')
-            ->will($this->returnValue($client));
-
-        $criticClient->expects($this->once())
-            ->method('getHeaders')
-            ->will($this->returnValue([]));
+        $criticClient = $this->getClientWithMockResponses([
+            new \GuzzleHttp\Psr7\Response(401, [], json_encode([])),
+        ]);
 
         $criticClient->setPersonaConnectValues($this->personaConfig);
 
@@ -117,35 +82,42 @@ class ClientTest extends \PHPUnit_Framework_TestCase
      */
     public function testCreateReviewWithInvalidPersonaConfigFails()
     {
-        $this->setUp();
+        $this->criticClient->setPersonaConnectValues($this->personaConfig);
 
-        $plugin = new \Guzzle\Plugin\Mock\MockPlugin();
-        $plugin->addResponse(new \Guzzle\Http\Message\Response(
-            201,
-            null,
-            json_encode([])
-        ));
-
-        $client = new \Guzzle\Http\Client();
-        $client->addSubscriber($plugin);
-
-        /** @var \Talis\Critic\Client | PHPUnit_Framework_MockObject_MockObject $criticClient */
-        $criticClient = $this->getMock(
-            '\Talis\Critic\Client',
-            ['getHTTPClient'],
-            [$this->criticBaseUrl]
-        );
-
-        $criticClient->expects($this->once())
-            ->method('getHTTPClient')
-            ->will($this->returnValue($client));
-
-        $criticClient->setPersonaConnectValues($this->personaConfig);
-
-        $criticClient->createReview(
+        $this->criticClient->createReview(
             $this->postFields,
             'someClientId',
             'someClientSecret'
         );
+    }
+
+    /**
+     * Gets the client with mocked HTTP responses.
+     *
+     * @param \GuzzleHttp\Psr7\Response[] $responses The responses
+     * @return \Talis\Critic\Client|\PHPUnit_Framework_MockObject_MockObject The client.
+     */
+    private function getClientWithMockResponses(array $responses)
+    {
+        $mockHandler = new \GuzzleHttp\Handler\MockHandler($responses);
+        $handlerStack = \GuzzleHttp\HandlerStack::create($mockHandler);
+        $httpClient = new \GuzzleHttp\Client(['handler' => $handlerStack]);
+
+        $criticClient = $this->getMockBuilder(\Talis\Critic\Client::class)
+            ->setMethods(['getHTTPClient', 'getHeaders'])
+            ->setConstructorArgs([$this->criticBaseUrl])
+            ->getMock();
+
+        $criticClient->method('getHTTPClient')
+            ->willReturn($httpClient);
+
+        $criticClient->expects($this->once())
+            ->method('getHeaders')
+            ->willReturn([
+                'Content-Type' => 'application/json',
+                'Authorization' => 'Bearer TOKEN',
+            ]);
+
+        return $criticClient;
     }
 }

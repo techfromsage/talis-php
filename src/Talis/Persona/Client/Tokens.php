@@ -181,7 +181,7 @@ class Tokens extends Base
                 ]
             );
 
-            return $response->__toString();
+            return (string) $response;
         } catch (\Exception $e) {
             $this->getLogger()->warning(
                 'could not retrieve persona public certificate'

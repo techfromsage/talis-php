@@ -3,8 +3,7 @@
 namespace Talis\Persona\Client;
 
 use Monolog\Logger;
-use Guzzle\Http\Exception\RequestException;
-use Guzzle\Http\Client as GuzzleClient;
+use Predis\Response\ResponseInterface;
 use Talis\Persona\Client\ClientVersionCache;
 
 abstract class Base
@@ -132,11 +131,11 @@ abstract class Base
     /**
      * Create a http client
      * @param string $host host to send a request to
-     * @return \Guzzle\Http\Client http client
+     * @return \GuzzleHttp\Client http client
      */
     protected function getHTTPClient($host)
     {
-        return new GuzzleClient($host);
+        return new \GuzzleHttp\Client(['base_uri' => $host]);
     }
 
     /**
@@ -147,13 +146,18 @@ abstract class Base
      */
     protected function createRequest($url, array $opts)
     {
-        $httpKeys = ['timeout', 'body'];
-        $definedHttpConfig = array_intersect_key($opts, array_flip($httpKeys));
-
+        $version = $this->getClientVersion();
         $opts = array_merge(
             [
                 'headers' => [
                     'Cache-Control' => 'max-age=0, no-cache',
+                    'User-Agent' => "{$this->config['userAgent']}"
+                        . "persona-php-client/{$version} "
+                        . "(php/{$this->phpVersion})",
+                    'X-Request-ID' => $this->getRequestId(),
+                    'X-Client-Version' => $version,
+                    'X-Client-Language' => 'php',
+                    'X-Client-Consumer' => $this->config['userAgent'],
                 ],
                 'method' => 'GET',
                 'expectResponse' => true,
@@ -163,38 +167,21 @@ abstract class Base
             $opts
         );
 
-        $version = $this->getClientVersion();
-        $httpConfig = array_merge(
-            [
-                'timeout' => 30,
-                'User-Agent' => "{$this->config['userAgent']}"
-                . "persona-php-client/{$version} "
-                . "(php/{$this->phpVersion})",
-                'X-Request-ID' => $this->getRequestId(),
-                'X-Client-Version' => $version,
-                'X-Client-Language' => 'php',
-                'X-Client-Consumer' => $this->config['userAgent'],
-            ],
-            $definedHttpConfig
-        );
-
         $body = isset($opts['body']) ? $opts['body'] : null;
 
         if (isset($opts['bearerToken'])) {
-            $httpConfig['headers']['Authorization'] = "Bearer {$opts['bearerToken']}";
+            $opts['headers']['Authorization'] = "Bearer {$opts['bearerToken']}";
         }
 
         if ($body != null && $opts['addContentType']) {
-            $httpConfig['headers']['Content-Type'] = 'application/x-www-form-urlencoded';
+            $opts['headers']['Content-Type'] = 'application/x-www-form-urlencoded';
         }
 
-        $client = $this->getHTTPClient($this->config['persona_host']);
-        $request = $client->createRequest(
+        $request = new \GuzzleHttp\Psr7\Request(
             $opts['method'],
             $url,
             $opts['headers'],
-            $body,
-            $httpConfig
+            $body
         );
 
         return $request;
@@ -218,15 +205,16 @@ abstract class Base
      */
     protected function performRequest($url, array $opts = [])
     {
+        $client = $this->getHTTPClient($this->config['persona_host']);
         $request = $this->createRequest($url, $opts);
 
         try {
-            $response = $request->send();
-        } catch (RequestException $exception) {
-            $response = $exception->getRequest()->getResponse();
-
-            if (isset($response)) {
-                $status = $response->getStatusCode();
+            $response = $client->send($request, [
+                \GuzzleHttp\RequestOptions::TIMEOUT => isset($opts['timeout']) ? $opts['timeout'] : 30,
+            ]);
+        } catch (\GuzzleHttp\Exception\RequestException $exception) {
+            if ($exception->hasResponse()) {
+                $status = $exception->getResponse()->getStatusCode();
             } else {
                 $status = -1;
             }
@@ -247,11 +235,11 @@ abstract class Base
     /**
      * Parse the response from Persona.
      * @param string $url url
-     * @param mixed $response response from persona
+     * @param \Psr\Http\Message\ResponseInterface $response response from persona
      * @param array $opts options
      * @return string|array
      */
-    protected function parseResponse($url, $response, array $opts)
+    protected function parseResponse($url, \Psr\Http\Message\ResponseInterface $response, array $opts)
     {
         $parseJson = $this->get($opts, 'parseJson', true) === true;
         $expectResponse = $this->get($opts, 'expectResponse', true) === true;
@@ -275,11 +263,13 @@ abstract class Base
             return null;
         }
 
+        $responseBody = (string) $response->getBody();
+
         if ($parseJson === false) {
-            return $response->getBody();
+            return $responseBody;
         }
 
-        $json = json_decode($response->getBody(), true);
+        $json = json_decode($responseBody, true);
 
         if (empty($json)) {
             $this->getLogger()->error(
@@ -287,7 +277,7 @@ abstract class Base
             );
 
             throw new \Exception(
-                "Could not parse response from persona as JSON {$response->getBody()}"
+                "Could not parse response from persona as JSON {$responseBody}"
             );
         }
 

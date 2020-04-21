@@ -22,6 +22,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
      * Ensure that all the required define()s are set before Echo Client can be used.
      *
      * @dataProvider mandatoryDefinesProvider
+     * @param string $requiredDefineToTest Name of missing constant to test
      */
     public function testRequiredDefines($requiredDefineToTest)
     {
@@ -31,24 +32,21 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         new \Talis\EchoClient\Client();
     }
 
+    public function mandatoryDefinesProvider()
+    {
+        $data = [];
+
+        foreach ($this->arrMandatoryDefines as $defineKey) {
+            $data[] = [$defineKey];
+        }
+
+        return $data;
+    }
+
     public function testNoEventWrittenWhenNoEchoHostDefined()
     {
         $this->setRequiredDefines();
-
-        $stubPersonaClient = $this->getMock('\Talis\Persona\Client\Tokens', [], [], '', false);
-        $stubPersonaClient->expects($this->once())
-            ->method('obtainNewToken')
-            ->will($this->returnValue(['access_token' => 'some-token']));
-
-        $echoClient = $this->getMock(
-            '\Talis\EchoClient\Client',
-            ['getPersonaClient']
-        );
-
-        $echoClient->expects($this->once())
-            ->method('getPersonaClient')
-            ->will($this->returnValue($stubPersonaClient));
-
+        $echoClient = $this->getClientWithMockResponses();
         $bSent = $echoClient->createEvent('someClass', 'someSource');
         $this->assertFalse($bSent);
     }
@@ -57,62 +55,22 @@ class ClientTest extends \PHPUnit_Framework_TestCase
     {
         $this->setRequiredDefines();
 
-        $stubPersonaClient = $this->getMock('\Talis\Persona\Client\Tokens', [], [], '', false);
-        $stubPersonaClient->expects($this->once())
-            ->method('obtainNewToken')
-            ->will($this->returnValue(['access_token' => 'some-token']));
-
-        $response = new \Guzzle\Http\Message\Response('202');
-
-        $mockRequest = $this->getMock('\Guzzle\Http\Message\Request', ['send'], ['post', '']);
-        $mockRequest->expects($this->once())
-            ->method('send')
-            ->will($this->returnValue($response));
-
-        $expectedHeaders = [
-            'Content-Type' => 'application/json',
-            'Authorization' => 'Bearer some-token',
-        ];
+        $history = [];
+        $echoClient = $this->getClientWithMockResponses([
+            new \GuzzleHttp\Psr7\Response(202),
+        ], $history);
 
         $expectedEventJson = json_encode([
             [
                 'class' => 'test.some.class',
                 'source' => 'some-source',
-                'props' => [
-                    'foo' => 'bar'
-                ],
+                'props' => ['foo' => 'bar'],
                 'user' => 'some-user',
                 'timestamp' => '1531816712'
             ]
         ]);
 
-        $expectedConnectTimeout = ['connect_timeout' => 2];
-
-        $stubHttpClient = $this->getMock('\Guzzle\Http\Client', ['post']);
-        $stubHttpClient->expects($this->once())
-            ->method('post')
-            ->with(
-                'http://example.com:3002/1/events',
-                $expectedHeaders,
-                $expectedEventJson,
-                $expectedConnectTimeout
-            )
-            ->will($this->returnValue($mockRequest));
-
-        $echoClient = $this->getMock(
-            '\Talis\EchoClient\Client',
-            ['getPersonaClient', 'getHttpClient']
-        );
-
-        $echoClient->expects($this->once())
-            ->method('getPersonaClient')
-            ->will($this->returnValue($stubPersonaClient));
-
-        $echoClient->expects($this->once())
-            ->method('getHttpClient')
-            ->will($this->returnValue($stubHttpClient));
-
-        $bSent = $echoClient->createEvent(
+        $wasSent = $echoClient->createEvent(
             'some.class',
             'some-source',
             ['foo' => 'bar'],
@@ -120,78 +78,60 @@ class ClientTest extends \PHPUnit_Framework_TestCase
             '1531816712'
         );
 
-        $this->assertTrue($bSent);
+        $this->assertTrue($wasSent);
+        /** @var \Psr\Http\Message\RequestInterface $request */
+        $request = array_pop($history)['request'];
+        $this->assertEquals(['application/json'], $request->getHeader('Content-Type'));
+        $this->assertEquals(['Bearer some-token'], $request->getHeader('Authorization'));
+        $this->assertEquals($expectedEventJson, (string) $request->getBody());
     }
 
     public function testSendBatchEvents()
     {
         $this->setRequiredDefines();
 
-        $stubPersonaClient = $this->getMock('\Talis\Persona\Client\Tokens', [], [], '', false);
-        $stubPersonaClient->expects($this->once())
-            ->method('obtainNewToken')
-            ->will($this->returnValue(['access_token' => 'some-token']));
+        $history = [];
+        $echoClient = $this->getClientWithMockResponses([
+            new \GuzzleHttp\Psr7\Response(202),
+        ], $history);
 
-        $response = new \Guzzle\Http\Message\Response('202');
-
-        $mockRequest = $this->getMock('\Guzzle\Http\Message\Request', ['send'], ['post', '']);
-        $mockRequest->expects($this->once())->method('send')->will($this->returnValue($response));
-
-        $expectedHeaders = [
-            'Content-Type' => 'application/json',
-            'Authorization' => 'Bearer some-token'
-        ];
         $expectedEventJson = json_encode([
             [
                 'class' => 'test.foo',
                 'source' => 'bar',
-                'props' => [
-                    'baz' => 'box'
-                ],
+                'props' => ['baz' => 'box'],
                 'user' => 'joe',
                 'timestamp' => '1531816712'
             ],
             [
                 'class' => 'test.foob',
                 'source' => 'barb',
-                'props' => [
-                    'bazb' => 'boxb'
-                ],
+                'props' => ['bazb' => 'boxb'],
                 'user' => 'joeb',
                 'timestamp' => '1531816712'
             ],
             [
                 'class' => 'test.fooc',
                 'source' => 'barc',
-                'props' => [
-                    'bazc' => 'boxc'
-                ],
+                'props' => ['bazc' => 'boxc'],
                 'user' => 'joec',
                 'timestamp' => '1531816712'
             ]
         ]);
 
-        $expectedConnectTimeout = ['connect_timeout' => 2];
-
-        $stubHttpClient = $this->getMock('\Guzzle\Http\Client', ['post']);
-        $stubHttpClient->expects($this->once())->method('post')->with(
-            'http://example.com:3002/1/events',
-            $expectedHeaders,
-            $expectedEventJson,
-            $expectedConnectTimeout
-        )->will($this->returnValue($mockRequest));
-
-        $echoClient = $this->getMock('\Talis\EchoClient\Client', ['getPersonaClient', 'getHttpClient']);
-        $echoClient->expects($this->once())->method('getPersonaClient')->will($this->returnValue($stubPersonaClient));
-        $echoClient->expects($this->once())->method('getHttpClient')->will($this->returnValue($stubHttpClient));
-
-        $events = [];
-        $events[] = new \Talis\EchoClient\Event('foo', 'bar', ['baz' => 'box'], 'joe', '1531816712');
-        $events[] = new \Talis\EchoClient\Event('foob', 'barb', ['bazb' => 'boxb'], 'joeb', '1531816712');
-        $events[] = new \Talis\EchoClient\Event('fooc', 'barc', ['bazc' => 'boxc'], 'joec', '1531816712');
+        $events = [
+            new \Talis\EchoClient\Event('foo', 'bar', ['baz' => 'box'], 'joe', '1531816712'),
+            new \Talis\EchoClient\Event('foob', 'barb', ['bazb' => 'boxb'], 'joeb', '1531816712'),
+            new \Talis\EchoClient\Event('fooc', 'barc', ['bazc' => 'boxc'], 'joec', '1531816712'),
+        ];
         $wasSent = $echoClient->sendBatchEvents($events);
 
         $this->assertTrue($wasSent);
+        /** @var \Psr\Http\Message\RequestInterface $request */
+        $request = array_pop($history)['request'];
+        $this->assertEquals(['application/json'], $request->getHeader('Content-Type'));
+        $this->assertEquals(['Bearer some-token'], $request->getHeader('Authorization'));
+        $this->assertEquals($expectedEventJson, (string) $request->getBody());
     }
 
     /**
@@ -234,28 +174,15 @@ class ClientTest extends \PHPUnit_Framework_TestCase
     {
         $this->setRequiredDefines();
 
-        $expectedEventJson = json_encode([
-            [
-                'class' => 'test.foo',
-                'source' => 'bar',
-                'props' => [
-                    'baz' => 'box'
-                ],
-                'user' => 'joe',
-                'timestamp' => '1531816712'
-            ]
-        ]);
+        $echoClient = new \Talis\EchoClient\Client();
 
-        $expectedConnectTimeout = ['connect_timeout' => 2];
-
-        $echoClient = $this->getMock('\Talis\EchoClient\Client', ['getStringSizeInBytes']);
-        $echoClient->expects($this->once())
-            ->method('getStringSizeInBytes')
-            ->with($expectedEventJson)
-            ->will($this->returnValue(1000001));
-
-        $events = [];
-        $events[] = new \Talis\EchoClient\Event('foo', 'bar', ['baz' => 'box'], 'joe', '1531816712');
+        $events = [new \Talis\EchoClient\Event(
+            'foo',
+            'bar',
+            ['long' => str_repeat('a', 1000000)],
+            'joe',
+            '1531816712'
+        )];
         $echoClient->sendBatchEvents($events);
     }
 
@@ -272,542 +199,247 @@ class ClientTest extends \PHPUnit_Framework_TestCase
     {
         $this->setRequiredDefines();
 
-        $stubPersonaClient = $this->getMock('\Talis\Persona\Client\Tokens', [], [], '', false);
-        $stubPersonaClient->expects($this->once())
-            ->method('obtainNewToken')
-            ->will($this->returnValue(['access_token' => 'some-token']));
-
         $expectedEvent = ['class' => 'test.expected.event'];
-        $response = new \Guzzle\Http\Message\Response('200');
-        $response->setBody(json_encode(['events' => [$expectedEvent]]));
-
-        $mockRequest = $this->getMock(
-            '\Guzzle\Http\Message\Request',
-            ['send'],
-            ['get', '']
-        );
-
-        $mockRequest->expects($this->once())
-            ->method('send')
-            ->will($this->returnValue($response));
-
-        $stubHttpClient = $this->getMock('\Guzzle\Http\Client', ['get']);
-        $stubHttpClient->expects($this->once())
-            ->method('get')
-            ->with('http://example.com:3002/1/events?limit=25&class=test.expected.event&key=foo&value=bar')
-            ->will($this->returnValue($mockRequest));
-
-        $echoClient = $this->getMock(
-            '\Talis\EchoClient\Client',
-            ['getPersonaClient', 'getHttpClient']
-        );
-
-        $echoClient->expects($this->once())
-            ->method('getPersonaClient')
-            ->will($this->returnValue($stubPersonaClient));
-        $echoClient->expects($this->once())
-            ->method('getHttpClient')
-            ->will($this->returnValue($stubHttpClient));
+        $history = [];
+        $echoClient = $this->getClientWithMockResponses([
+            new \GuzzleHttp\Psr7\Response(200, [], json_encode(['events' => [$expectedEvent]])),
+        ], $history);
 
         $result = $echoClient->getRecentEvents('expected.event', 'foo', 'bar');
 
         $this->assertEquals([$expectedEvent], $result);
+        /** @var \Psr\Http\Message\RequestInterface $request */
+        $request = array_pop($history)['request'];
+        $this->assertEquals(
+            'http://example.com:3002/1/events?limit=25&class=test.expected.event&key=foo&value=bar',
+            (string) $request->getUri()
+        );
     }
 
-    public function testGetEvents()
+    /**
+     * @dataProvider getEventsCasesProvider
+     * @param array $arguments Client::getEvents method arguments
+     * @param string $expectedUri Expected URI to be called
+     */
+    public function testGetEvents(array $arguments, $expectedUri)
     {
         $this->setRequiredDefines();
 
-        $stubPersonaClient = $this->getMockBuilder('\Talis\Persona\Client\Tokens')
-            ->disableOriginalConstructor()
-            ->getMock();
-        $stubPersonaClient->expects($this->once())
-            ->method('obtainNewToken')
-            ->will($this->returnValue(['access_token' => 'some-token']));
-
         $expectedEvent = ['class' => 'test.expected.event'];
-        $response = new \Guzzle\Http\Message\Response('200');
-        $response->setBody(json_encode(['events' => [$expectedEvent]]));
+        $history = [];
+        $echoClient = $this->getClientWithMockResponses([
+            new \GuzzleHttp\Psr7\Response(200, [], json_encode(['events' => [$expectedEvent]])),
+        ], $history);
 
-        $mockRequest = $this->getMock('\Guzzle\Http\Message\Request', ['send'], ['get', '']);
-        $mockRequest->expects($this->once())->method('send')->will($this->returnValue($response));
-
-        $stubHttpClient = $this->getMock('\Guzzle\Http\Client', ['get']);
-        $stubHttpClient->expects($this->once())
-            ->method('get')
-            ->with('http://example.com:3002/1/events?limit=25&class=test.expected.event&key=foo&value=bar')
-            ->will($this->returnValue($mockRequest));
-
-        $echoClient = $this->getMock('\Talis\EchoClient\Client', ['getPersonaClient', 'getHttpClient']);
-        $echoClient->expects($this->once())->method('getPersonaClient')->will($this->returnValue($stubPersonaClient));
-        $echoClient->expects($this->once())->method('getHttpClient')->will($this->returnValue($stubHttpClient));
-
-        $result = $echoClient->getEvents('expected.event', 'foo', 'bar');
+        $result = call_user_func_array([$echoClient, 'getEvents'], $arguments);
 
         $this->assertEquals([$expectedEvent], $result);
+        /** @var \Psr\Http\Message\RequestInterface $request */
+        $request = array_pop($history)['request'];
+        $this->assertEquals($expectedUri, (string) $request->getUri());
     }
 
-    public function testGetEventsOffset()
+    public function getEventsCasesProvider()
     {
-        $this->setRequiredDefines();
-
-        $stubPersonaClient = $this->getMock('\Talis\Persona\Client\Tokens', [], [], '', false);
-        $stubPersonaClient->expects($this->once())
-            ->method('obtainNewToken')
-            ->will($this->returnValue(['access_token' => 'some-token']));
-
-        $expectedEvent = ['class' => 'test.expected.event'];
-        $response = new \Guzzle\Http\Message\Response('200');
-        $response->setBody(json_encode(['events' => [$expectedEvent]]));
-
-        $mockRequest = $this->getMock('\Guzzle\Http\Message\Request', ['send'], ['get', '']);
-        $mockRequest->expects($this->once())->method('send')->will($this->returnValue($response));
-
-        $stubHttpClient = $this->getMock('\Guzzle\Http\Client', ['get']);
-        $stubHttpClient->expects($this->once())
-            ->method('get')
-            ->with('http://example.com:3002/1/events?limit=25&offset=30&class=test.expected.event&key=foo&value=bar')
-            ->will($this->returnValue($mockRequest));
-
-        $echoClient = $this->getMock('\Talis\EchoClient\Client', ['getPersonaClient', 'getHttpClient']);
-        $echoClient->expects($this->once())->method('getPersonaClient')->will($this->returnValue($stubPersonaClient));
-        $echoClient->expects($this->once())->method('getHttpClient')->will($this->returnValue($stubHttpClient));
-
-        $result = $echoClient->getEvents('expected.event', 'foo', 'bar', 25, 30);
-
-        $this->assertEquals([$expectedEvent], $result);
+        return [
+            'defaults' => [
+                ['expected.event', 'foo', 'bar'],
+                'http://example.com:3002/1/events?limit=25&class=test.expected.event&key=foo&value=bar',
+            ],
+            'offset' => [
+                ['expected.event', 'foo', 'bar', 25, 30],
+                'http://example.com:3002/1/events?limit=25&offset=30&class=test.expected.event&key=foo&value=bar',
+            ],
+            'to certain time' => [
+                ['expected.event', 'foo', 'bar', 25, 0, null, 1516634248],
+                'http://example.com:3002/1/events?limit=25'
+                . '&class=test.expected.event&key=foo&value=bar'
+                . '&from=2018-01-22T15%3A17%3A28%2B00%3A00'
+            ],
+            'from certain time' => [
+                ['expected.event', 'foo', 'bar', 25, 0, null, null, 1516634248],
+                'http://example.com:3002/1/events?limit=25&'
+                . 'class=test.expected.event&key=foo&value=bar&'
+                . 'to=2018-01-22T15%3A17%3A28%2B00%3A00'
+            ],
+            'from certain time to certain time' => [
+                ['expected.event', 'foo', 'bar', 25, 0, null, 1516634248, 1516634417],
+                'http://example.com:3002/1/events?limit=25'
+                . '&class=test.expected.event&key=foo&value=bar'
+                . '&to=2018-01-22T15%3A20%3A17%2B00%3A00'
+                . '&from=2018-01-22T15%3A17%3A28%2B00%3A00'
+            ],
+        ];
     }
 
     public function testGetEventsCsvFormat()
     {
         $this->setRequiredDefines();
 
-        $stubPersonaClient = $this->getMock('\Talis\Persona\Client\Tokens', [], [], '', false);
-        $stubPersonaClient->expects($this->once())
-            ->method('obtainNewToken')
-            ->will($this->returnValue(['access_token' => 'some-token']));
-
         $expectedResult = '"a","csv","file"' . "\n" . '"with","some,"data"';
-        $response = new \Guzzle\Http\Message\Response('200');
-        $response->setBody($expectedResult);
-
-        $mockRequest = $this->getMock('\Guzzle\Http\Message\Request', ['send'], ['get', '']);
-        $mockRequest->expects($this->once())->method('send')->will($this->returnValue($response));
-
-        $stubHttpClient = $this->getMock('\Guzzle\Http\Client', ['get']);
-        $stubHttpClient->expects($this->once())
-            ->method('get')
-            ->with(
-                'http://example.com:3002/1/events?limit=25&offset=1000&'
-                    . 'class=test.expected.event&key=foo&value=bar&format=csv'
-            )
-            ->will($this->returnValue($mockRequest));
-
-        $echoClient = $this->getMock('\Talis\EchoClient\Client', ['getPersonaClient', 'getHttpClient']);
-        $echoClient->expects($this->once())->method('getPersonaClient')->will($this->returnValue($stubPersonaClient));
-        $echoClient->expects($this->once())->method('getHttpClient')->will($this->returnValue($stubHttpClient));
+        $history = [];
+        $echoClient = $this->getClientWithMockResponses([
+            new \GuzzleHttp\Psr7\Response(200, [], $expectedResult),
+        ], $history);
 
         $result = $echoClient->getEvents('expected.event', 'foo', 'bar', 25, 1000, 'csv');
 
         $this->assertEquals($expectedResult, $result);
-    }
-
-    public function testGetEventsToCertainTime()
-    {
-        $this->setRequiredDefines();
-
-        $stubPersonaClient = $this->getMockBuilder('\Talis\Persona\Client\Tokens')
-            ->disableOriginalConstructor()
-            ->getMock();
-        $stubPersonaClient->expects($this->once())
-            ->method('obtainNewToken')
-            ->will($this->returnValue(['access_token' => 'some-token']));
-
-        $expectedEvent = ['class' => 'test.expected.event'];
-        $response = new \Guzzle\Http\Message\Response('200');
-        $response->setBody(json_encode(['events' => [$expectedEvent]]));
-
-        $mockRequest = $this->getMock('\Guzzle\Http\Message\Request', ['send'], ['get', '']);
-        $mockRequest->expects($this->once())->method('send')->will($this->returnValue($response));
-
-        $stubHttpClient = $this->getMock('\Guzzle\Http\Client', ['get']);
-        $stubHttpClient->expects($this->once())
-            ->method('get')
-            ->with(
-                'http://example.com:3002/1/events?limit=25'
-                    . '&class=test.expected.event&key=foo&value=bar'
-                    . '&from=2018-01-22T15%3A17%3A28%2B00%3A00'
-            )->will($this->returnValue($mockRequest));
-
-        $echoClient = $this->getMock('\Talis\EchoClient\Client', ['getPersonaClient', 'getHttpClient']);
-        $echoClient->expects($this->once())->method('getPersonaClient')->will($this->returnValue($stubPersonaClient));
-        $echoClient->expects($this->once())->method('getHttpClient')->will($this->returnValue($stubHttpClient));
-
-        $result = $echoClient->getEvents('expected.event', 'foo', 'bar', 25, 0, null, 1516634248);
-
-        $this->assertEquals([$expectedEvent], $result);
-    }
-
-    public function testGetEventsFromCertainTime()
-    {
-        $this->setRequiredDefines();
-
-        $stubPersonaClient = $this->getMockBuilder('\Talis\Persona\Client\Tokens')
-            ->disableOriginalConstructor()
-            ->getMock();
-        $stubPersonaClient->expects($this->once())
-            ->method('obtainNewToken')
-            ->will($this->returnValue(['access_token' => 'some-token']));
-
-        $expectedEvent = ['class' => 'test.expected.event'];
-        $response = new \Guzzle\Http\Message\Response('200');
-        $response->setBody(json_encode(['events' => [$expectedEvent]]));
-
-        $mockRequest = $this->getMock('\Guzzle\Http\Message\Request', ['send'], ['get', '']);
-        $mockRequest->expects($this->once())->method('send')->will($this->returnValue($response));
-
-        $stubHttpClient = $this->getMock('\Guzzle\Http\Client', ['get']);
-        $stubHttpClient->expects($this->once())
-            ->method('get')
-            ->with(
-                'http://example.com:3002/1/events?limit=25&'
-                    . 'class=test.expected.event&key=foo&value=bar&'
-                    . 'to=2018-01-22T15%3A17%3A28%2B00%3A00'
-            )
-            ->will($this->returnValue($mockRequest));
-
-        $echoClient = $this->getMock('\Talis\EchoClient\Client', ['getPersonaClient', 'getHttpClient']);
-        $echoClient->expects($this->once())->method('getPersonaClient')->will($this->returnValue($stubPersonaClient));
-        $echoClient->expects($this->once())->method('getHttpClient')->will($this->returnValue($stubHttpClient));
-
-        $result = $echoClient->getEvents('expected.event', 'foo', 'bar', 25, 0, null, null, 1516634248);
-
-        $this->assertEquals([$expectedEvent], $result);
-    }
-
-    public function testGetEventsFromCertainTimeToACertainTime()
-    {
-        $this->setRequiredDefines();
-
-        $stubPersonaClient = $this->getMockBuilder('\Talis\Persona\Client\Tokens')
-            ->disableOriginalConstructor()
-            ->getMock();
-        $stubPersonaClient->expects($this->once())
-            ->method('obtainNewToken')
-            ->will($this->returnValue(['access_token' => 'some-token']));
-
-        $expectedEvent = ['class' => 'test.expected.event'];
-        $response = new \Guzzle\Http\Message\Response('200');
-        $response->setBody(json_encode(['events' => [$expectedEvent]]));
-
-        $mockRequest = $this->getMock('\Guzzle\Http\Message\Request', ['send'], ['get', '']);
-        $mockRequest->expects($this->once())->method('send')->will($this->returnValue($response));
-
-        $stubHttpClient = $this->getMock('\Guzzle\Http\Client', ['get']);
-        $stubHttpClient->expects($this->once())
-            ->method('get')
-            ->with(
-                'http://example.com:3002/1/events?limit=25'
-                    . '&class=test.expected.event&key=foo&value=bar'
-                    . '&to=2018-01-22T15%3A20%3A17%2B00%3A00'
-                    . '&from=2018-01-22T15%3A17%3A28%2B00%3A00'
-            )
-            ->will($this->returnValue($mockRequest));
-
-        $echoClient = $this->getMock('\Talis\EchoClient\Client', ['getPersonaClient', 'getHttpClient']);
-        $echoClient->expects($this->once())->method('getPersonaClient')->will($this->returnValue($stubPersonaClient));
-        $echoClient->expects($this->once())->method('getHttpClient')->will($this->returnValue($stubHttpClient));
-
-        $result = $echoClient->getEvents('expected.event', 'foo', 'bar', 25, 0, null, 1516634248, 1516634417);
-
-        $this->assertEquals([$expectedEvent], $result);
+        /** @var \Psr\Http\Message\RequestInterface $request */
+        $request = array_pop($history)['request'];
+        $this->assertEquals(
+            'http://example.com:3002/1/events?limit=25&offset=1000&'
+                . 'class=test.expected.event&key=foo&value=bar&format=csv',
+            (string) $request->getUri()
+        );
     }
 
     public function testHitsReturnsExpectedJSON()
     {
         $this->setRequiredDefines();
 
-        $stubPersonaClient = $this->getMock('\Talis\Persona\Client\Tokens', [], [], '', false);
-        $stubPersonaClient->expects($this->once())
-            ->method('obtainNewToken')
-            ->will($this->returnValue(['access_token' => 'some-token']));
-
-        $response = new \Guzzle\Http\Message\Response('200');
-        $response->setBody(
-            '{'
-                . '"head":{"type":"hits","class":"test.player.view","group_by":"source","count":27},'
-                . '"results":['
-                . '{"source":"web.talis-com.b50367b.2014-05-15","hits":45},'
-                . '{"source":"web.talis-com.b692220.2014-05-15","hits":9},'
-                . '{"source":"mobile.android-v1.9","hits":16},'
-                . '{"source":"web.talis-com.f1afa4f.2014-05-13","hits":21},'
-                . '{"source":"mobile.android-v1.7","hits":48},'
-                . '{"source":"web.talis-com.d165ea5.2014-05-01","hits":411},'
-                . '{"source":"web.talis-com.3dceffd.2014-05-15","hits":8},'
-                . '{"source":"mobile.android-v1.6","hits":41},'
-                . '{"source":"web.talis-com.35baf27.2014-04-29","hits":50},'
-                . '{"source":"web.talis-com.13f1318.2014-05-14","hits":18},'
-                . '{"source":"web.talis-com.no-release","hits":219},'
-                . '{"source":"mobile.iOS-v1.97","hits":5},'
-                . '{"source":"web.talis-com-no-release","hits":23},'
-                . '{"source":"web.talis-com.12f4d8c.2014-04-29","hits":29},'
-                . '{"source":"web.talis-com.4a51b66.2014-04-25","hits":56},'
-                . '{"source":"mobile.android-v1.3","hits":4},'
-                . '{"source":"mobile.android-v2.0","hits":39},'
-                . '{"source":"web.talis-com.9df593e.2014-04-17","hits":44},'
-                . '{"source":"web.talis-com.8dac333.2014-04-17","hits":1},'
-                . '{"source":"mobile.iOS-v1.99","hits":60},'
-                . '{"source":"mobile.iOS-v1.98","hits":116},'
-                . '{"source":"web.talis-com.d5e099c.2014-05-15","hits":2},'
-                . '{"source":"mobile.android-v1.8","hits":16},'
-                . '{"source":"web.talis-com.64ade28.2014-04-17","hits":22},'
-                . '{"source":"mobile.iOS-v1.95","hits":10},'
-                . '{"source":"mobile.android-v1.4","hits":1},'
-                . '{"source":"mobile.android-v1.5","hits":20}]}'
-        );
-
-        $mockRequest = $this->getMock('\Guzzle\Http\Message\Request', ['send'], ['get', '']);
-        $mockRequest->expects($this->once())->method('send')->will($this->returnValue($response));
-
-        $stubHttpClient = $this->getMock('\Guzzle\Http\Client', ['get']);
-        $stubHttpClient->expects($this->once())
-            ->method('get')
-            ->with('http://example.com:3002/1/analytics/hits?class=test.player.view')
-            ->will($this->returnValue($mockRequest));
-
-        $echoClient = $this->getMock('\Talis\EchoClient\Client', ['getPersonaClient', 'getHttpClient']);
-        $echoClient->expects($this->once())->method('getPersonaClient')->will($this->returnValue($stubPersonaClient));
-        $echoClient->expects($this->once())->method('getHttpClient')->will($this->returnValue($stubHttpClient));
+        $expectedResponse = [
+            'head' => [
+                'type' => 'hits',
+                'class' => 'test.player.view',
+                'group_by' => 'source',
+                'count' => 3,
+            ],
+            'results' => [
+                ['source' => 'web.talis-com.b50367b.2014-05-15', 'hits' => 45],
+                ['source' => 'web.talis-com.b692220.2014-05-15', 'hits' => 9],
+                ['source' => 'mobile.android-v1.9', 'hits' => 16],
+            ],
+        ];
+        $history = [];
+        $echoClient = $this->getClientWithMockResponses([
+            new \GuzzleHttp\Psr7\Response(200, [], json_encode($expectedResponse)),
+        ], $history);
 
         $result = $echoClient->getHits('player.view');
 
-        $this->assertTrue(isset($result['head']));
-        $this->assertTrue(isset($result['results']));
+        $this->assertEquals($expectedResponse, $result);
+        /** @var \Psr\Http\Message\RequestInterface $request */
+        $request = array_pop($history)['request'];
+        $this->assertEquals(
+            'http://example.com:3002/1/analytics/hits?class=test.player.view',
+            (string) $request->getUri()
+        );
     }
 
     public function testHitsReturnsExpectedCsv()
     {
         $this->setRequiredDefines();
 
-        $stubPersonaClient = $this->getMock('\Talis\Persona\Client\Tokens', [], [], '', false);
-        $stubPersonaClient->expects($this->once())
-            ->method('obtainNewToken')
-            ->will($this->returnValue(['access_token' => 'some-token']));
-
-        $expectedResponse = "here,are,some,headers\n,and,here,is,some,data";
-        $response = new \Guzzle\Http\Message\Response('200');
-        $response->setBody($expectedResponse);
-
-        $mockRequest = $this->getMock('\Guzzle\Http\Message\Request', ['send'], ['get', '']);
-        $mockRequest->expects($this->once())->method('send')->will($this->returnValue($response));
-
-        $stubHttpClient = $this->getMock('\Guzzle\Http\Client', ['get']);
-        $stubHttpClient->expects($this->once())
-            ->method('get')
-            ->with('http://example.com:3002/1/analytics/hits?class=test.player.view&format=csv')
-            ->will($this->returnValue($mockRequest));
-
-        $echoClient = $this->getMock('\Talis\EchoClient\Client', ['getPersonaClient', 'getHttpClient']);
-        $echoClient->expects($this->once())
-            ->method('getPersonaClient')
-            ->will($this->returnValue($stubPersonaClient));
-        $echoClient->expects($this->once())
-            ->method('getHttpClient')
-            ->will($this->returnValue($stubHttpClient));
+        $expectedBody = "here,are,some,headers\n,and,here,is,some,data";
+        $history = [];
+        $echoClient = $this->getClientWithMockResponses([
+            new \GuzzleHttp\Psr7\Response(200, [], $expectedBody),
+        ], $history);
 
         $result = $echoClient->getHits('player.view', ['format' => 'csv']);
 
-        $this->assertSame($expectedResponse, $result);
+        $this->assertSame($expectedBody, $result);
+        /** @var \Psr\Http\Message\RequestInterface $request */
+        $request = array_pop($history)['request'];
+        $this->assertEquals(
+            'http://example.com:3002/1/analytics/hits?class=test.player.view&format=csv',
+            (string) $request->getUri()
+        );
     }
 
     public function testHitsReturnsExpectedJSONNoCache()
     {
         $this->setRequiredDefines();
 
-        $stubPersonaClient = $this->getMock('\Talis\Persona\Client\Tokens', [], [], '', false);
-        $stubPersonaClient->expects($this->once())
-            ->method('obtainNewToken')
-            ->will($this->returnValue(['access_token' => 'some-token']));
-
-        $response = new \Guzzle\Http\Message\Response('200');
-        $response->setBody(
-            '{"head":{"type":"hits","class":"test.player.view","group_by":"source","count":27},'
-                . '"results":['
-                . '{"source":"web.talis-com.b50367b.2014-05-15","hits":45},'
-                . '{"source":"web.talis-com.b692220.2014-05-15","hits":9},'
-                . '{"source":"mobile.android-v1.9","hits":16},'
-                . '{"source":"web.talis-com.f1afa4f.2014-05-13","hits":21},'
-                . '{"source":"mobile.android-v1.7","hits":48},'
-                . '{"source":"web.talis-com.d165ea5.2014-05-01","hits":411},'
-                . '{"source":"web.talis-com.3dceffd.2014-05-15","hits":8},'
-                . '{"source":"mobile.android-v1.6","hits":41},'
-                . '{"source":"web.talis-com.35baf27.2014-04-29","hits":50},'
-                . '{"source":"web.talis-com.13f1318.2014-05-14","hits":18},'
-                . '{"source":"web.talis-com.no-release","hits":219},'
-                . '{"source":"mobile.iOS-v1.97","hits":5},'
-                . '{"source":"web.talis-com-no-release","hits":23},'
-                . '{"source":"web.talis-com.12f4d8c.2014-04-29","hits":29},'
-                . '{"source":"web.talis-com.4a51b66.2014-04-25","hits":56},'
-                . '{"source":"mobile.android-v1.3","hits":4},'
-                . '{"source":"mobile.android-v2.0","hits":39},'
-                . '{"source":"web.talis-com.9df593e.2014-04-17","hits":44},'
-                . '{"source":"web.talis-com.8dac333.2014-04-17","hits":1},'
-                . '{"source":"mobile.iOS-v1.99","hits":60},'
-                . '{"source":"mobile.iOS-v1.98","hits":116},'
-                . '{"source":"web.talis-com.d5e099c.2014-05-15","hits":2},'
-                . '{"source":"mobile.android-v1.8","hits":16},'
-                . '{"source":"web.talis-com.64ade28.2014-04-17","hits":22},'
-                . '{"source":"mobile.iOS-v1.95","hits":10},'
-                . '{"source":"mobile.android-v1.4","hits":1},'
-                . '{"source":"mobile.android-v1.5","hits":20}'
-                . ']}'
-        );
-
-        $mockRequest = $this->getMock('\Guzzle\Http\Message\Request', ['send'], ['get', '']);
-        $mockRequest->expects($this->once())->method('send')->will($this->returnValue($response));
-
-        $stubHttpClient = $this->getMock('\Guzzle\Http\Client', ['get']);
-        $stubHttpClient->expects($this->once())
-            ->method('get')
-            ->with(
-                'http://example.com:3002/1/analytics/hits?class=test.player.view',
-                [
-                    'Content-Type' => 'application/json',
-                    'Authorization' => 'Bearer some-token',
-                    'Cache-Control' => 'none'
-                ]
-            )
-            ->will($this->returnValue($mockRequest));
-
-        $echoClient = $this->getMock('\Talis\EchoClient\Client', ['getPersonaClient', 'getHttpClient']);
-        $echoClient->expects($this->once())->method('getPersonaClient')->will($this->returnValue($stubPersonaClient));
-        $echoClient->expects($this->once())->method('getHttpClient')->will($this->returnValue($stubHttpClient));
+        $expectedResponse = [
+            'head' => [
+                'type' => 'hits',
+                'class' => 'test.player.view',
+                'group_by' => 'source',
+                'count' => 3,
+            ],
+            'results' => [
+                ['source' => 'web.talis-com.b50367b.2014-05-15', 'hits' => 45],
+                ['source' => 'web.talis-com.b692220.2014-05-15', 'hits' => 9],
+                ['source' => 'mobile.android-v1.9', 'hits' => 16],
+            ],
+        ];
+        $history = [];
+        $echoClient = $this->getClientWithMockResponses([
+            new \GuzzleHttp\Psr7\Response(200, [], json_encode($expectedResponse)),
+        ], $history);
 
         $result = $echoClient->getHits('player.view', [], true);
 
-        $this->assertTrue(isset($result['head']));
-        $this->assertTrue(isset($result['results']));
+        $this->assertEquals($expectedResponse, $result);
+        /** @var \Psr\Http\Message\RequestInterface $request */
+        $request = array_pop($history)['request'];
+        $this->assertEquals(['application/json'], $request->getHeader('Content-Type'));
+        $this->assertEquals(['Bearer some-token'], $request->getHeader('Authorization'));
+        $this->assertEquals(['none'], $request->getHeader('Cache-Control'));
+        $this->assertEquals(
+            'http://example.com:3002/1/analytics/hits?class=test.player.view',
+            (string) $request->getUri()
+        );
     }
 
     public function testHitsWithOptsReturnsExpectedJSON()
     {
         $this->setRequiredDefines();
 
-        $stubPersonaClient = $this->getMock('\Talis\Persona\Client\Tokens', [], [], '', false);
-        $stubPersonaClient->expects($this->once())
-            ->method('obtainNewToken')
-            ->will($this->returnValue(['access_token' => 'some-token']));
-
-        $response = new \Guzzle\Http\Message\Response('200');
-        $response->setBody(
-            '{"head":{"type":"hits","class":"test.player.view","group_by":"source","count":27},'
-                . '"results":['
-                . '{"source":"web.talis-com.b50367b.2014-05-15","hits":45},'
-                . '{"source":"web.talis-com.b692220.2014-05-15","hits":9},'
-                . '{"source":"mobile.android-v1.9","hits":16},'
-                . '{"source":"web.talis-com.f1afa4f.2014-05-13","hits":21},'
-                . '{"source":"mobile.android-v1.7","hits":48},'
-                . '{"source":"web.talis-com.d165ea5.2014-05-01","hits":411},'
-                . '{"source":"web.talis-com.3dceffd.2014-05-15","hits":8},'
-                . '{"source":"mobile.android-v1.6","hits":41},'
-                . '{"source":"web.talis-com.35baf27.2014-04-29","hits":50},'
-                . '{"source":"web.talis-com.13f1318.2014-05-14","hits":18},'
-                . '{"source":"web.talis-com.no-release","hits":219},'
-                . '{"source":"mobile.iOS-v1.97","hits":5},'
-                . '{"source":"web.talis-com-no-release","hits":23},'
-                . '{"source":"web.talis-com.12f4d8c.2014-04-29","hits":29},'
-                . '{"source":"web.talis-com.4a51b66.2014-04-25","hits":56},'
-                . '{"source":"mobile.android-v1.3","hits":4},'
-                . '{"source":"mobile.android-v2.0","hits":39},'
-                . '{"source":"web.talis-com.9df593e.2014-04-17","hits":44},'
-                . '{"source":"web.talis-com.8dac333.2014-04-17","hits":1},'
-                . '{"source":"mobile.iOS-v1.99","hits":60},'
-                . '{"source":"mobile.iOS-v1.98","hits":116},'
-                . '{"source":"web.talis-com.d5e099c.2014-05-15","hits":2},'
-                . '{"source":"mobile.android-v1.8","hits":16},'
-                . '{"source":"web.talis-com.64ade28.2014-04-17","hits":22},'
-                . '{"source":"mobile.iOS-v1.95","hits":10},'
-                . '{"source":"mobile.android-v1.4","hits":1},'
-                . '{"source":"mobile.android-v1.5","hits":20}]}'
-        );
-
-        $mockRequest = $this->getMock('\Guzzle\Http\Message\Request', ['send'], ['get', '']);
-        $mockRequest->expects($this->once())->method('send')->will($this->returnValue($response));
-
-        $stubHttpClient = $this->getMock('\Guzzle\Http\Client', ['get']);
-        $stubHttpClient->expects($this->once())
-            ->method('get')
-            ->with(
-                'http://example.com:3002/1/analytics/hits?'
-                    . 'class=test.player.view&key=some_key&value=some_value'
-            )
-            ->will($this->returnValue($mockRequest));
-
-        $echoClient = $this->getMock('\Talis\EchoClient\Client', ['getPersonaClient', 'getHttpClient']);
-        $echoClient->expects($this->once())->method('getPersonaClient')->will($this->returnValue($stubPersonaClient));
-        $echoClient->expects($this->once())->method('getHttpClient')->will($this->returnValue($stubHttpClient));
+        $expectedResponse = [
+            'head' => [
+                'type' => 'hits',
+                'class' => 'test.player.view',
+                'group_by' => 'source',
+                'count' => 3,
+            ],
+            'results' => [
+                ['source' => 'web.talis-com.b50367b.2014-05-15', 'hits' => 45],
+                ['source' => 'web.talis-com.b692220.2014-05-15', 'hits' => 9],
+                ['source' => 'mobile.android-v1.9', 'hits' => 16],
+            ],
+        ];
+        $history = [];
+        $echoClient = $this->getClientWithMockResponses([
+            new \GuzzleHttp\Psr7\Response(200, [], json_encode($expectedResponse)),
+        ], $history);
 
         $result = $echoClient->getHits('player.view', ['key' => 'some_key', 'value' => 'some_value']);
 
-        $this->assertTrue(isset($result['head']));
-        $this->assertTrue(isset($result['results']));
+        $this->assertEquals($expectedResponse, $result);
+        /** @var \Psr\Http\Message\RequestInterface $request */
+        $request = array_pop($history)['request'];
+        $this->assertEquals(
+            'http://example.com:3002/1/analytics/hits?class=test.player.view&key=some_key&value=some_value',
+            (string) $request->getUri()
+        );
     }
-
-    public function testHitsCallsAnalytics()
-    {
-        $this->setRequiredDefines();
-
-        $echoClient = $this->getMock('\Talis\EchoClient\Client', ['getAnalytics']);
-        $echoClient->expects($this->once())->method('getAnalytics')->with('some.class', 'hits');
-
-        $echoClient->getHits('some.class');
-    }
-
-    public function testAverageCallsAnalytics()
-    {
-        $this->setRequiredDefines();
-
-        $echoClient = $this->getMock('\Talis\EchoClient\Client', ['getAnalytics']);
-        $echoClient->expects($this->once())->method('getAnalytics')->with('some.class', 'average');
-
-        $echoClient->getAverage('some.class');
-    }
-
-    public function testSumCallsAnalytics()
-    {
-        $this->setRequiredDefines();
-
-        $echoClient = $this->getMock('\Talis\EchoClient\Client', ['getAnalytics']);
-        $echoClient->expects($this->once())->method('getAnalytics')->with('some.class', 'sum');
-
-        $echoClient->getSum('some.class');
-    }
-
-    public function testMaxCallsAnalytics()
-    {
-        $this->setRequiredDefines();
-
-        $echoClient = $this->getMock('\Talis\EchoClient\Client', ['getAnalytics']);
-        $echoClient->expects($this->once())->method('getAnalytics')->with('some.class', 'max');
-
-        $echoClient->getMax('some.class');
-    }
-
-    /* ---------------------------------------------------------------------------------------------------------- */
 
     /**
-     * The dataprovider for testRequiredDefines
-     * @see http://phpunit.de/manual/current/en/writing-tests-for-phpunit.html#writing-tests-for-phpunit.data-providers
+     * @dataProvider analyticsAggregationsProvider
+     * @param string $method Aggregation method to test
+     * @param string $expectedType Expected analytics type
      */
-    public function mandatoryDefinesProvider()
+    public function testAggregationMethodsCallAnalytics($method, $expectedType)
     {
-        $data = [];
+        $this->setRequiredDefines();
 
-        foreach ($this->arrMandatoryDefines as $defineKey) {
-            $data[] = [$defineKey];
-        }
+        $echoClient = $this->getMock(\Talis\EchoClient\Client::class, ['getAnalytics']);
+        $echoClient->expects($this->once())->method('getAnalytics')->with('some.class', $expectedType);
 
-        return $data;
+        call_user_func([$echoClient, $method], 'some.class');
+    }
+
+    public function analyticsAggregationsProvider()
+    {
+        return [
+            ['getHits', 'hits'],
+            ['getAverage', 'average'],
+            ['getSum', 'sum'],
+            ['getMax', 'max'],
+        ];
     }
 
     /**
@@ -823,5 +455,40 @@ class ClientTest extends \PHPUnit_Framework_TestCase
 
         define('ECHO_CLASS_PREFIX', 'test.');
         define('ECHO_HOST', 'http://example.com:3002');
+    }
+
+    /**
+     * Gets the client with mocked HTTP responses.
+     *
+     * @param \GuzzleHttp\Psr7\Response[] $responses The responses
+     * @param array $history History middleware container
+     * @return \Talis\EchoClient\Client|\PHPUnit_Framework_MockObject_MockObject The client.
+     */
+    private function getClientWithMockResponses(array $responses = [], array &$history = null)
+    {
+        $mockHandler = new \GuzzleHttp\Handler\MockHandler($responses);
+        $handlerStack = \GuzzleHttp\HandlerStack::create($mockHandler);
+
+        if (isset($history)) {
+            $handlerStack->push(\GuzzleHttp\Middleware::history($history));
+        }
+
+        $httpClient = new \GuzzleHttp\Client(['handler' => $handlerStack]);
+
+        $stubPersonaClient = $this->getMock(\Talis\Persona\Client\Tokens::class, [], [], '', false);
+        $stubPersonaClient->method('obtainNewToken')
+            ->willReturn(['access_token' => 'some-token']);
+
+        $echoClient = $this->getMockBuilder(\Talis\EchoClient\Client::class)
+            ->setMethods(['getHTTPClient', 'getPersonaClient'])
+            ->getMock();
+
+        $echoClient->method('getHTTPClient')
+            ->willReturn($httpClient);
+
+        $echoClient->method('getPersonaClient')
+            ->willReturn($stubPersonaClient);
+
+        return $echoClient;
     }
 }

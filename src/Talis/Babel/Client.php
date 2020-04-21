@@ -2,8 +2,6 @@
 
 namespace Talis\Babel;
 
-use Guzzle\Http\Message\Header;
-use Guzzle\Http\Message\Header\HeaderCollection;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 
@@ -27,7 +25,7 @@ class Client
     private $babelPort;
 
     /**
-     * @var \Guzzle\Http\Client
+     * @var \GuzzleHttp\Client
      */
     private $httpClient = null;
 
@@ -124,8 +122,8 @@ class Client
         $queryParams = http_build_query(['delta_token' => $deltaToken]);
         $url = "/feeds/targets/$hash/activity/annotations?$queryParams";
 
-        $headers = $this->performBabelHead($url, $token);
-        $newItemsHeader = $headers->get('X-Feed-New-Items')->toArray();
+        $response = $this->performBabelHead($url, $token);
+        $newItemsHeader = $response->getHeader('X-Feed-New-Items');
 
         if (count($newItemsHeader) !== 1) {
             throw new \Talis\Babel\ClientException(
@@ -258,7 +256,7 @@ class Client
         if ($bCreateSynchronously) {
             // Specific header that Babel server accepts to not return until the
             // feed has also been created for the annotation.
-            $requestOptions = ['headers' => ['X-Ingest-Synchronously' => 'true']];
+            $requestOptions = [\GuzzleHttp\RequestOptions::HEADERS => ['X-Ingest-Synchronously' => 'true']];
         }
 
         $url = '/annotations';
@@ -283,13 +281,12 @@ class Client
         ];
 
         $this->getLogger()->debug("Babel GET: $url", $headers);
-        $httpClient = $this->getHttpClient();
 
-        $request = $httpClient->get($url, $headers, ['exceptions' => false]);
-        $response = $request->send();
-
-        if ($response->isSuccessful()) {
-            $responseBody = $response->getBody(true);
+        try {
+            $response = $this->getHttpClient()->get($url, [
+                \GuzzleHttp\RequestOptions::HEADERS => $headers,
+            ]);
+            $responseBody = (string) $response->getBody();
             $arrResponse = json_decode($responseBody, true);
 
             if ($arrResponse == null) {
@@ -299,14 +296,9 @@ class Client
             }
 
             return $arrResponse;
+        } catch (\GuzzleHttp\Exception\RequestException $exception) {
+            $this->handleBabelError($url, $exception);
         }
-
-        /*
-         * For error scenarios we want to distinguish Persona problems and
-         * instances where no data is found.  Anything else raises a generic
-         * \Talis\Babel\ClientException.
-         */
-        $this->handleBabelError($url, $response);
     }
 
     /**
@@ -315,7 +307,7 @@ class Client
      *
      * @param string $url babel url
      * @param string $token persona oauth token
-     * @return HeaderCollection
+     * @return \Psr\Http\Message\ResponseInterface
      * @throws InvalidPersonaTokenException Invalid Persona oauth token
      * @throws NotFoundException Babel feed not found
      * @throws \Talis\Babel\ClientException Could not communicate with Babel
@@ -329,20 +321,15 @@ class Client
 
         $this->getLogger()->debug('Babel HEAD: ' . $url, $headers);
 
-        $httpClient = $this->getHttpClient();
-        $request = $httpClient->head($url, $headers, ['exceptions' => false]);
-        $response = $request->send();
+        try {
+            $response = $this->getHttpClient()->head($url, [
+                \GuzzleHttp\RequestOptions::HEADERS => $headers,
+            ]);
 
-        if ($response->isSuccessful()) {
-            return $response->getHeaders();
+            return $response;
+        } catch (\GuzzleHttp\Exception\RequestException $exception) {
+            $this->handleBabelError($url, $exception);
         }
-
-        /*
-         * For error scenarios we want to distinguish Persona problems and
-         * instances where no data is found.  Anything else raises a generic
-         * \Talis\Babel\ClientException.
-         */
-        $this->handleBabelError($url, $response);
     }
 
     /**
@@ -367,18 +354,18 @@ class Client
             'Authorization' => "Bearer $token",
         ];
 
-        if (isset($requestOptions['headers'])) {
-            $headers = array_merge($headers, $requestOptions['headers']);
+        if (isset($requestOptions[\GuzzleHttp\RequestOptions::HEADERS])) {
+            $headers = array_merge($headers, $requestOptions[\GuzzleHttp\RequestOptions::HEADERS]);
         }
 
         $this->getLogger()->debug("Babel POST: $url", $arrData);
 
-        $httpClient = $this->getHttpClient();
-        $request = $httpClient->post($url, $headers, $arrData, ['exceptions' => false]);
-        $response = $request->send();
-
-        if ($response->isSuccessful()) {
-            $responseBody = $response->getBody(true);
+        try {
+            $response = $this->getHttpClient()->post($url, [
+                \GuzzleHttp\RequestOptions::HEADERS => $headers,
+                \GuzzleHttp\RequestOptions::FORM_PARAMS => $arrData,
+            ]);
+            $responseBody = (string) $response->getBody();
             $arrResponse = json_decode($responseBody, true);
 
             if ($arrResponse == null) {
@@ -388,9 +375,9 @@ class Client
             }
 
             return $arrResponse;
+        } catch (\GuzzleHttp\Exception\RequestException $exception) {
+            $this->handleBabelError($url, $exception);
         }
-
-        $this->handleBabelError($url, $response);
     }
 
     /**
@@ -428,7 +415,7 @@ class Client
     /**
      * Get an instance of the Guzzle HTTP client.
      *
-     * @return \Guzzle\Http\Client
+     * @return \GuzzleHttp\Client
      */
     protected function getHttpClient()
     {
@@ -440,7 +427,7 @@ class Client
                 $baseUrl .= ":$port";
             }
 
-            $this->httpClient = new \Guzzle\Http\Client($baseUrl);
+            $this->httpClient = new \GuzzleHttp\Client(['base_uri' => $baseUrl]);
         }
 
         return $this->httpClient;
@@ -464,10 +451,16 @@ class Client
     /**
      * Handle a babel error response
      * @param string $url babel url which was called
-     * @param mixed $response http response
+     * @param \GuzzleHttp\Exception\RequestException $exception request exception
      */
-    protected function handleBabelError($url, $response)
+    protected function handleBabelError($url, \GuzzleHttp\Exception\RequestException $exception)
     {
+        // Re-throw exception if it occurred before the response was produced
+        if (!$exception->hasResponse()) {
+            throw $exception;
+        }
+
+        $response = $exception->getResponse();
         $statusCode = $response->getStatusCode();
 
         switch ($statusCode) {
@@ -479,7 +472,7 @@ class Client
                 throw new NotFoundException("Nothing found for request: $url");
             default:
                 $errorMessage = 'Unknown error';
-                $responseBody = $response->getBody(true);
+                $responseBody = (string) $response->getBody();
 
                 if ($responseBody) {
                     $arrResponse = json_decode($responseBody, true);
@@ -493,7 +486,7 @@ class Client
                     "Babel failed for request: $url",
                     [
                         'statusCode' => $statusCode,
-                        'message' => $response->getMessage(),
+                        'message' => $exception->getMessage(),
                         'body' => $responseBody,
                     ]
                 );

@@ -2,10 +2,6 @@
 
 namespace test\unit\Babel;
 
-use Guzzle\Http\Client;
-use Guzzle\Plugin\Mock\MockPlugin;
-use Guzzle\Http\Message\Response;
-
 /**
  * Travis-CI runs against the unit tests but can only test certain things.
  *
@@ -173,20 +169,10 @@ class ClientTest extends \PHPUnit_Framework_TestCase
 
     public function testCreateAnnotationErrorMessage()
     {
-        $babelClient = $this->getMockBuilder('Talis\Babel\Client')
-            ->setMethods(['getHTTPClient'])
-            ->setConstructorArgs(['http://someHost', '3001'])
-            ->getMock();
-
-        $httpClient = new Client('http://someHost:3001/annotations');
-
-        $mock = new MockPlugin();
         $responseBody = ['message' => 'Some kind of validation failure'];
-        $mock->addResponse(new Response(400, null, json_encode($responseBody)));
-        $httpClient->addSubscriber($mock);
-        $babelClient->expects($this->once())
-            ->method('getHTTPClient')
-            ->will($this->returnValue($httpClient));
+        $babelClient = $this->getClientWithMockResponses([
+            new \GuzzleHttp\Psr7\Response(400, [], json_encode($responseBody)),
+        ]);
 
         $this->setExpectedException(
             'Talis\Babel\ClientException',
@@ -199,23 +185,126 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         );
     }
 
+    public function testGetAnnotationsSuccess()
+    {
+        $responseBody = [
+            'count' => 2,
+            'annotations' => [
+                [
+                    'hasBody' => [
+                        'type' => 'Text',
+                        'format' => 'text/plain',
+                        'chars' => 'This is a simple text annotation',
+                    ],
+                    'hasTarget' => [
+                        'uri' => 'http://some-video',
+                        'fragment' => 't=npt:0,5',
+                    ],
+                    'annotatedBy' => 'users:1234',
+                    'annotatedAt' => '2007-03-01T13:00:00Z',
+                    'motivatedBy' => 'commenting',
+                    'serializedBy' => 'SOME_OAUTH_CLIENT_ID',
+                ],
+                [
+                    'hasBody' => [
+                        'type' => 'Text',
+                        'format' => 'text/plain',
+                        'chars' => 'This is a simple text annotation',
+                    ],
+                    'hasTarget' => [
+                        'uri' => 'http://some-video',
+                        'fragment' => 't=npt:0,5',
+                    ],
+                    'annotatedBy' => 'users:1234',
+                    'motivatedBy' => 'commenting',
+                ],
+            ],
+        ];
+        $history = [];
+        $babelClient = $this->getClientWithMockResponses([
+            new \GuzzleHttp\Psr7\Response(200, [], json_encode($responseBody)),
+        ], $history);
+
+        $actualBody = $babelClient->getAnnotations('someToken', ['annotatedBy' => '/users/1234']);
+        /** @var \Psr\Http\Message\RequestInterface $request */
+        $request = array_pop($history)['request'];
+        $this->assertEquals($responseBody, $actualBody);
+        $this->assertEquals(
+            '/annotations?annotatedBy=' . urlencode('/users/1234'),
+            (string) $request->getUri()
+        );
+    }
+
+    public function testGetFeedSuccess()
+    {
+        $responseBody = [
+            'annotations' => ['51e45ed9bf55dcf9b7000001'],
+            'feed_length' => 1,
+            'delta_token' => '1',
+            'limit' => 25,
+            'offset' => 0,
+        ];
+        $history = [];
+        $babelClient = $this->getClientWithMockResponses([
+            new \GuzzleHttp\Psr7\Response(200, [], json_encode($responseBody)),
+        ], $history);
+
+        $actualBody = $babelClient->getTargetFeed('1234', 'someToken');
+        /** @var \Psr\Http\Message\RequestInterface $request */
+        $request = array_pop($history)['request'];
+        $this->assertEquals($responseBody, $actualBody);
+        $this->assertRegExp(
+            '#^/feeds/targets/[a-f0-9]{32}/activity/annotations$#',
+            (string) $request->getUri()
+        );
+    }
+
+    public function testGetFeedHydrateSuccess()
+    {
+        $responseBody = [
+            'annotations' => [
+                [
+                    '_id' => '51e45ed9bf55dcf9b7000001',
+                    '__v' => 0,
+                    'annotatedBy' => 'mqdOrdxgRJA1jGWjs-O58A',
+                    'annotatedAt' => '2013-07-15T20:43:05.660Z',
+                    'motivatedBy' => 'commenting',
+                    'hasTarget' => ['uri' => 'http://some/location'],
+                    'hasBody' => [
+                        'format' => 'text/plain',
+                        'type' => 'Text',
+                        'chars' => 'sometext',
+                    ],
+                ],
+            ],
+            'feed_length' => 1,
+            'userProfiles' => ['mqdOrdxgRJA1jGWjs-O58A' => ['name' => 'russ']],
+            'delta_token' => '1',
+            'limit' => 25,
+            'offset' => 0,
+        ];
+        $history = [];
+        $babelClient = $this->getClientWithMockResponses([
+            new \GuzzleHttp\Psr7\Response(200, [], json_encode($responseBody)),
+        ], $history);
+
+        $actualBody = $babelClient->getTargetFeed('1234', 'someToken', true, ['delta_token' => '1']);
+        /** @var \Psr\Http\Message\RequestInterface $request */
+        $request = array_pop($history)['request'];
+        $this->assertEquals($responseBody, $actualBody);
+        $this->assertRegExp(
+            '#^/feeds/targets/[a-f0-9]{32}/activity/annotations/hydrate\?delta_token=1$#',
+            (string) $request->getUri()
+        );
+    }
+
     public function testGetFeedErrorMessage()
     {
-        $babelClient = $this->getMockBuilder('Talis\Babel\Client')
-            ->setMethods(['getHTTPClient'])
-            ->setConstructorArgs(['http://someHost', '3001'])
-            ->getMock();
-
         $path = '/feeds/targets/' . md5('1234') . '/activity/annotations';
-        $httpClient = new Client('http://someHost:3001' . $path);
-
-        $mock = new MockPlugin();
         $responseBody = ['message' => 'Something important was left out'];
-        $mock->addResponse(new Response(400, null, json_encode($responseBody)));
-        $httpClient->addSubscriber($mock);
-        $babelClient->expects($this->once())
-            ->method('getHTTPClient')
-            ->will($this->returnValue($httpClient));
+        $babelClient = $this->getClientWithMockResponses([
+            new \GuzzleHttp\Psr7\Response(400, [], json_encode($responseBody)),
+        ]);
 
         $this->setExpectedException(
             'Talis\Babel\ClientException',
@@ -225,23 +314,37 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $babelClient->getTargetFeed('1234', 'someToken');
     }
 
+    public function testGetFeedErrorOnEmptyReponse()
+    {
+        $babelClient = $this->getClientWithMockResponses([
+            new \GuzzleHttp\Psr7\Response(200, [], '{"garbage"}'),
+        ]);
+
+        $this->setExpectedException(
+            'Talis\Babel\ClientException',
+            'Failed to decode JSON response: {"garbage"}'
+        );
+
+        $babelClient->getTargetFeed('1234', 'someToken');
+    }
+
+    public function testGetFeedCountSuccess()
+    {
+        $responseBody = ['message' => 'Something went bang'];
+        $babelClient = $this->getClientWithMockResponses([
+            new \GuzzleHttp\Psr7\Response(200, ['X-Feed-New-Items' => [42]]),
+        ]);
+
+        $this->assertEquals(42, $babelClient->getTargetFeedCount('1234', 'someToken'));
+    }
+
     public function testGetFeedCountErrorMessage()
     {
-        $babelClient = $this->getMockBuilder('Talis\Babel\Client')
-            ->setMethods(['getHTTPClient'])
-            ->setConstructorArgs(['http://someHost', '3001'])
-            ->getMock();
-
         $path = '/feeds/targets/' . md5('1234') . '/activity/annotations?delta_token=0';
-        $httpClient = new Client('http://someHost:3001' . $path);
-
-        $mock = new MockPlugin();
         $responseBody = ['message' => 'Something went bang'];
-        $mock->addResponse(new Response(500, null, json_encode($responseBody)));
-        $httpClient->addSubscriber($mock);
-        $babelClient->expects($this->once())
-            ->method('getHTTPClient')
-            ->will($this->returnValue($httpClient));
+        $babelClient = $this->getClientWithMockResponses([
+            new \GuzzleHttp\Psr7\Response(500, [], json_encode($responseBody)),
+        ]);
 
         $this->setExpectedException(
             'Talis\Babel\ClientException',
@@ -249,5 +352,91 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         );
 
         $babelClient->getTargetFeedCount('1234', 'someToken');
+    }
+
+    public function testGetFeedCountErrorIfHeaderMissing()
+    {
+        $responseBody = ['message' => 'Something went bang'];
+        $babelClient = $this->getClientWithMockResponses([
+            new \GuzzleHttp\Psr7\Response(200, []),
+        ]);
+
+        $this->setExpectedException(
+            'Talis\Babel\ClientException',
+            'Unexpected amount of X-Feed-New-Items headers returned'
+        );
+
+        $babelClient->getTargetFeedCount('1234', 'someToken');
+    }
+
+    public function testGetFeedCountErrorIfTooManyValues()
+    {
+        $responseBody = ['message' => 'Something went bang'];
+        $babelClient = $this->getClientWithMockResponses([
+            new \GuzzleHttp\Psr7\Response(200, ['X-Feed-New-Items' => [3, 7]]),
+        ]);
+
+        $this->setExpectedException(
+            'Talis\Babel\ClientException',
+            'Unexpected amount of X-Feed-New-Items headers returned'
+        );
+
+        $babelClient->getTargetFeedCount('1234', 'someToken');
+    }
+
+    public function testGetFeedsSuccess()
+    {
+        $responseBody = [
+            'annotations' => [
+                ['_id' => '51e45ed9bf55dcf9b7000001'],
+                ['_id' => '51e5347c4c7f72d861000002'],
+            ],
+            'feed_length' => 2,
+        ];
+        $history = [];
+        $babelClient = $this->getClientWithMockResponses([
+            new \GuzzleHttp\Psr7\Response(200, [], json_encode($responseBody)),
+        ], $history);
+
+        $actualBody = $babelClient->getFeeds(['123', '456'], 'someToken');
+        /** @var \Psr\Http\Message\RequestInterface $request */
+        $request = array_pop($history)['request'];
+        $this->assertEquals($responseBody, $actualBody);
+        $this->assertEquals(
+            '/feeds/annotations/hydrate?feed_ids=' . urlencode('123,456'),
+            (string) $request->getUri()
+        );
+    }
+
+    /**
+     * Gets the client with mocked HTTP responses.
+     *
+     * @param \GuzzleHttp\Psr7\Response[] $responses The responses
+     * @param array $history History middleware container
+     * @return \Talis\Babel\Client|\PHPUnit_Framework_MockObject_MockObject The client.
+     */
+    private function getClientWithMockResponses(array $responses, array &$history = null)
+    {
+        $mockHandler = new \GuzzleHttp\Handler\MockHandler($responses);
+        $handlerStack = \GuzzleHttp\HandlerStack::create($mockHandler);
+
+        if (isset($history)) {
+            $handlerStack->push(\GuzzleHttp\Middleware::history($history));
+        }
+
+        $httpClient = new \GuzzleHttp\Client(['handler' => $handlerStack]);
+
+        $babelClient = $this->getMockBuilder(\Talis\Babel\Client::class)
+            ->setMethods(['getHTTPClient'])
+            ->setConstructorArgs(['http://someHost', '3001'])
+            ->getMock();
+
+        $babelClient->expects($this->once())
+            ->method('getHTTPClient')
+            ->willReturn($httpClient);
+
+        $babelClient->setLogger(new \Psr\Log\NullLogger());
+
+        return $babelClient;
     }
 }

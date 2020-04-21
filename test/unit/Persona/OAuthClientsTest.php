@@ -38,7 +38,7 @@ class OAuthClientsTest extends TestBase
     public function testGetOAuthClientThrowsExceptionWhenClientNotFound()
     {
         $this->setExpectedException('Exception', 'Did not retrieve successful response code');
-        $mockClient = $this->getMock('Talis\Persona\Client\OAuthClients', ['personaGetOAuthClient'], [
+        $mockClient = $this->getMock(\Talis\Persona\Client\OAuthClients::class, ['personaGetOAuthClient'], [
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -54,7 +54,7 @@ class OAuthClientsTest extends TestBase
 
     public function testGetOAuthClientReturnsClientWhenGupidFound()
     {
-        $mockClient = $this->getMock('Talis\Persona\Client\OAuthClients', ['personaGetOAuthClient'], [
+        $mockClient = $this->getMock(\Talis\Persona\Client\OAuthClients::class, ['personaGetOAuthClient'], [
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -225,7 +225,7 @@ class OAuthClientsTest extends TestBase
     public function testUpdateOAuthClientPutFails()
     {
         $this->setExpectedException('Exception', 'Could not retrieve OAuth response code');
-        $mockClient = $this->getMock('Talis\Persona\Client\OAuthClients', ['personaPatchOAuthClient'], [
+        $mockClient = $this->getMock(\Talis\Persona\Client\OAuthClients::class, ['personaPatchOAuthClient'], [
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -241,7 +241,7 @@ class OAuthClientsTest extends TestBase
 
     public function testUpdateOAuthClientPutSucceeds()
     {
-        $mockClient = $this->getMock('Talis\Persona\Client\OAuthClients', ['personaPatchOAuthClient'], [
+        $mockClient = $this->getMock(\Talis\Persona\Client\OAuthClients::class, ['personaPatchOAuthClient'], [
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -267,7 +267,7 @@ class OAuthClientsTest extends TestBase
     public function testRegenerateSecretNon200Exception()
     {
         $oauthClient = $this->getMock(
-            'Talis\Persona\Client\OAuthClients',
+            \Talis\Persona\Client\OAuthClients::class,
             ['performRequest'],
             [
                 [
@@ -305,7 +305,7 @@ class OAuthClientsTest extends TestBase
     public function testRegenerateSecretInvalidResponsePayload()
     {
         $oauthClient = $this->getMock(
-            'Talis\Persona\Client\OAuthClients',
+            \Talis\Persona\Client\OAuthClients::class,
             ['performRequest'],
             [
                 [
@@ -339,7 +339,7 @@ class OAuthClientsTest extends TestBase
     public function testRegenerateSecretHappyPath()
     {
         $oauthClient = $this->getMock(
-            'Talis\Persona\Client\OAuthClients',
+            \Talis\Persona\Client\OAuthClients::class,
             ['performRequest'],
             [
                 [

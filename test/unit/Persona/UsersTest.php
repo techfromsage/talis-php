@@ -36,7 +36,7 @@ class UsersTest extends TestBase
     public function testGetUserByGupidThrowsExceptionWhenGupidNotFound()
     {
         $this->setExpectedException('Exception', 'Did not retrieve successful response code');
-        $mockClient = $this->getMock('Talis\Persona\Client\Users', ['performRequest'], [
+        $mockClient = $this->getMock(\Talis\Persona\Client\Users::class, ['performRequest'], [
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -52,7 +52,7 @@ class UsersTest extends TestBase
 
     public function testGetUserByGupidReturnsUserWhenGupidFound()
     {
-        $mockClient = $this->getMock('Talis\Persona\Client\Users', ['performRequest'], [
+        $mockClient = $this->getMock(\Talis\Persona\Client\Users::class, ['performRequest'], [
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -98,7 +98,7 @@ class UsersTest extends TestBase
     public function testGetUserByGuidsThrowsExceptionWhenGuidsNotFound()
     {
         $this->setExpectedException('Exception', 'Error finding user profiles: Could not retrieve OAuth response code');
-        $mockClient = $this->getMock('Talis\Persona\Client\Users', ['performRequest'], [
+        $mockClient = $this->getMock(\Talis\Persona\Client\Users::class, ['performRequest'], [
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -114,7 +114,7 @@ class UsersTest extends TestBase
 
     public function testGetUserByGuidsReturnsUserWhenGuidsFound()
     {
-        $mockClient = $this->getMock('Talis\Persona\Client\Users', ['performRequest'], [
+        $mockClient = $this->getMock(\Talis\Persona\Client\Users::class, ['performRequest'], [
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -175,7 +175,7 @@ class UsersTest extends TestBase
 
     public function testCreateUserEmptyProfile()
     {
-        $mockClient = $this->getMock('Talis\Persona\Client\Users', ['performRequest'], [
+        $mockClient = $this->getMock(\Talis\Persona\Client\Users::class, ['performRequest'], [
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -218,7 +218,7 @@ class UsersTest extends TestBase
     public function testCreateUserPostFails()
     {
         $this->setExpectedException('Exception', 'Error creating user: Could not retrieve OAuth response code');
-        $mockClient = $this->getMock('Talis\Persona\Client\Users', ['performRequest'], [
+        $mockClient = $this->getMock(\Talis\Persona\Client\Users::class, ['performRequest'], [
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -233,7 +233,7 @@ class UsersTest extends TestBase
 
     public function testCreateUserPostSucceeds()
     {
-        $mockClient = $this->getMock('Talis\Persona\Client\Users', ['performRequest'], [
+        $mockClient = $this->getMock(\Talis\Persona\Client\Users::class, ['performRequest'], [
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -328,7 +328,7 @@ class UsersTest extends TestBase
     public function testUpdateUserPutFails()
     {
         $this->setExpectedException('Exception', 'Error updating user: Could not retrieve OAuth response code');
-        $mockClient = $this->getMock('Talis\Persona\Client\Users', ['performRequest'], [
+        $mockClient = $this->getMock(\Talis\Persona\Client\Users::class, ['performRequest'], [
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -343,7 +343,7 @@ class UsersTest extends TestBase
 
     public function testUpdateUserPutSucceeds()
     {
-        $mockClient = $this->getMock('Talis\Persona\Client\Users', ['performRequest'], [
+        $mockClient = $this->getMock(\Talis\Persona\Client\Users::class, ['performRequest'], [
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -412,7 +412,7 @@ class UsersTest extends TestBase
     public function testAddGupidToUserPatchFails()
     {
         $this->setExpectedException('Exception', 'Error adding gupid to user: Could not retrieve OAuth response code');
-        $mockClient = $this->getMock('Talis\Persona\Client\Users', ['performRequest'], [
+        $mockClient = $this->getMock(\Talis\Persona\Client\Users::class, ['performRequest'], [
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -427,7 +427,7 @@ class UsersTest extends TestBase
 
     public function testAddGupidToUserPutSucceeds()
     {
-        $mockClient = $this->getMock('Talis\Persona\Client\Users', ['performRequest'], [
+        $mockClient = $this->getMock(\Talis\Persona\Client\Users::class, ['performRequest'], [
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -496,7 +496,7 @@ class UsersTest extends TestBase
     public function testMergeUsersPostFails()
     {
         $this->setExpectedException('Exception', 'Error merging users: Could not retrieve OAuth response code');
-        $mockClient = $this->getMock('Talis\Persona\Client\Users', ['performRequest'], [
+        $mockClient = $this->getMock(\Talis\Persona\Client\Users::class, ['performRequest'], [
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -511,7 +511,7 @@ class UsersTest extends TestBase
 
     public function testMergeUsersPostSucceeds()
     {
-        $mockClient = $this->getMock('Talis\Persona\Client\Users', ['performRequest'], [
+        $mockClient = $this->getMock(\Talis\Persona\Client\Users::class, ['performRequest'], [
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
