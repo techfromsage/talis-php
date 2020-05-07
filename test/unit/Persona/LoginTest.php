@@ -502,6 +502,25 @@ class LoginTest extends TestBase
         $this->assertEquals('456', $personaClient->getPersistentId());
     }
 
+    public function testGetPersistentIdFoundMatchingGupidByFullNamespace()
+    {
+        $personaClient = new Login(
+            [
+                'userAgent' => 'unittest',
+                'persona_host' => 'localhost',
+                'cacheBackend' => $this->cacheBackend,
+            ]
+        );
+        $_SESSION[Login::LOGIN_PREFIX . ':loginProvider'] = 'google';
+        $_SESSION[Login::LOGIN_PREFIX . ':loginSSO'] = [
+            'gupid' => [
+                'google-with-suffix:456',
+                'google:123'
+            ]
+        ];
+        $this->assertEquals('123', $personaClient->getPersistentId());
+    }
+
     // getRedirectUrl tests
     public function testGetRedirectUrlNoSession()
     {

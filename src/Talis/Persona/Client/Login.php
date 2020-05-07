@@ -138,8 +138,9 @@ class Login extends Base
             // the prefix of the persona profile
             foreach ($_SESSION[self::LOGIN_PREFIX . ':loginSSO']['gupid'] as $gupid) {
                 $loginProvider = $_SESSION[self::LOGIN_PREFIX . ':loginProvider'];
-                if (strpos($gupid, $loginProvider) === 0) {
-                    return str_replace("$loginProvider:", '', $gupid);
+                $loginProviderNamespace = "$loginProvider:";
+                if (strpos($gupid, $loginProviderNamespace) === 0) {
+                    return str_replace($loginProviderNamespace, '', $gupid);
                 }
             }
         }
