@@ -121,33 +121,6 @@ class Login extends Base
     }
 
     /**
-     * Get users persistent ID - it finds a persistent ID that matches the login provider
-     * @return boolean|string pid else boolean false
-     */
-    public function getPersistentId()
-    {
-        if (!isset($_SESSION[self::LOGIN_PREFIX . ':loginProvider'])) {
-            return false;
-        }
-
-        if (
-            isset($_SESSION[self::LOGIN_PREFIX . ':loginSSO']['gupid'])
-            && !empty($_SESSION[self::LOGIN_PREFIX . ':loginSSO']['gupid'])
-        ) {
-            // Loop through all gupids and match against the login provider - it should be
-            // the prefix of the persona profile
-            foreach ($_SESSION[self::LOGIN_PREFIX . ':loginSSO']['gupid'] as $gupid) {
-                $loginProvider = $_SESSION[self::LOGIN_PREFIX . ':loginProvider'];
-                if (strpos($gupid, $loginProvider) === 0) {
-                    return str_replace("$loginProvider:", '', $gupid);
-                }
-            }
-        }
-
-        return false;
-    }
-
-    /**
      * Get redirect URL value
      * @return string|boolean redirect url else boolean false
      */
