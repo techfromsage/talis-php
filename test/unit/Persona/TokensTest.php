@@ -1312,7 +1312,7 @@ class TokensTest extends TestBase
     /**
      * @covers Tokens::getSubjectIdFromToken
      */
-    public function testgetSubjectIdFromTokenReturnsClientIdFromToken()
+    public function testGetSubjectIdFromTokenReturnsClientIdFromToken()
     {
         $mockClient = $this->getMockTokensClientWithFakeCertificate();
 
@@ -1329,7 +1329,7 @@ class TokensTest extends TestBase
     /**
      * @covers Tokens::getSubjectIdFromToken
      */
-    public function testgetSubjectIdFromTokenThrowsExceptionIfTokenContainsNoSubClaim()
+    public function testGetSubjectIdFromTokenThrowsExceptionIfTokenContainsNoSubClaim()
     {
         $mockClient = $this->getMockTokensClientWithFakeCertificate();
 
