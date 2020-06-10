@@ -1310,9 +1310,9 @@ class TokensTest extends TestBase
     }
 
     /**
-     * @covers Tokens::getClientIdFromToken
+     * @covers Tokens::getSubjectIdFromToken
      */
-    public function testGetClientIdFromTokenReturnsClientIdFromToken()
+    public function testgetSubjectIdFromTokenReturnsClientIdFromToken()
     {
         $mockClient = $this->getMockTokensClientWithFakeCertificate();
 
@@ -1322,14 +1322,14 @@ class TokensTest extends TestBase
             'scopes' => [$fakeClientId]
         ]);
 
-        $clientIdFromToken = $mockClient->getClientIdFromToken($accessToken);
+        $clientIdFromToken = $mockClient->getSubjectIdFromToken($accessToken);
         $this->assertEquals($fakeClientId, $clientIdFromToken);
     }
 
     /**
-     * @covers Tokens::getClientIdFromToken
+     * @covers Tokens::getSubjectIdFromToken
      */
-    public function testGetClientIdFromTokenThrowsExceptionIfTokenContainsNoSubClaim()
+    public function testgetSubjectIdFromTokenThrowsExceptionIfTokenContainsNoSubClaim()
     {
         $mockClient = $this->getMockTokensClientWithFakeCertificate();
 
@@ -1338,7 +1338,7 @@ class TokensTest extends TestBase
         ]);
 
         $this->setExpectedException(InvalidTokenException::class);
-        $mockClient->getClientIdFromToken($accessToken);
+        $mockClient->getSubjectIdFromToken($accessToken);
     }
 
     /**

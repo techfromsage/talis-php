@@ -288,7 +288,7 @@ class Tokens extends Base
     }
 
     /**
-     * Extract the client ID (the `sub` claim) from a token.
+     * Extract the client ID for the Subject (the `sub` claim) from a token.
      * @param string $accessToken An access token (JWT)
      * @return string The client ID
      *
@@ -296,7 +296,7 @@ class Tokens extends Base
      * @throws InvalidTokenException If the token is valid, but contains no client ID
      * @throws \Exception If the token is invalid in other ways
      */
-    public function getClientIdFromToken($accessToken)
+    public function getSubjectIdFromToken($accessToken)
     {
         $clientId = $this->getClaimForToken($accessToken, 'sub');
         if (empty($clientId)) {
