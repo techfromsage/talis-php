@@ -1,7 +1,7 @@
 {
   "name": "talis/talis-php",
   "description": "This is a php client library for talis APIs",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "keywords": [
     "persona",
     "echo",

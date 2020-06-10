@@ -1310,6 +1310,38 @@ class TokensTest extends TestBase
     }
 
     /**
+     * @covers Tokens::getSubjectIdFromToken
+     */
+    public function testGetSubjectIdFromTokenReturnsClientIdFromToken()
+    {
+        $mockClient = $this->getMockTokensClientWithFakeCertificate();
+
+        $fakeClientId = 'this-is-a-fake-client-id';
+        $accessToken = $this->getFakeJWT([
+            'sub' => $fakeClientId,
+            'scopes' => [$fakeClientId]
+        ]);
+
+        $clientIdFromToken = $mockClient->getSubjectIdFromToken($accessToken);
+        $this->assertEquals($fakeClientId, $clientIdFromToken);
+    }
+
+    /**
+     * @covers Tokens::getSubjectIdFromToken
+     */
+    public function testGetSubjectIdFromTokenThrowsExceptionIfTokenContainsNoSubClaim()
+    {
+        $mockClient = $this->getMockTokensClientWithFakeCertificate();
+
+        $accessToken = $this->getFakeJWT([
+            'sub' => null
+        ]);
+
+        $this->setExpectedException(InvalidTokenException::class);
+        $mockClient->getSubjectIdFromToken($accessToken);
+    }
+
+    /**
      * Gets the client with mocked HTTP responses.
      *
      * @param \GuzzleHttp\Psr7\Response[] $responses The responses
@@ -1322,5 +1354,55 @@ class TokensTest extends TestBase
         $httpClient = new \GuzzleHttp\Client(['handler' => $handlerStack]);
 
         return $httpClient;
+    }
+
+    /**
+     * Create a mock `Tokens` client, with the cache backend and certificate defined in instance variables
+     * for this class.
+     * @return \Talis\Persona\Client\Tokens
+     */
+    private function getMockTokensClientWithFakeCertificate()
+    {
+        /** @var \Talis\Persona\Client\Tokens|\PHPUnit_Framework_MockObject_MockObject $mockClient */
+        $mockClient = $this->getMock(
+            \Talis\Persona\Client\Tokens::class,
+            ['retrieveJWTCertificate'],
+            [
+                [
+                    'userAgent' => 'unittest',
+                    'persona_host' => 'localhost',
+                    'cacheBackend' => $this->cacheBackend,
+                ]
+            ]
+        );
+
+        $mockClient->expects($this->once())
+            ->method('retrieveJWTCertificate')
+            ->willReturn($this->publicKey);
+
+        return $mockClient;
+    }
+
+    /**
+     * Creates a fake JWT with realistic-looking claim data.
+     *
+     * @param array $claims An array of JWT claims.
+     * @return string An encoded JWT encapsulating the specified claims
+     */
+    private function getFakeJWT(array $claims = [])
+    {
+        $now = time();
+        $fakeSubjectClientId = "fake-sub-client-id-{$now}";
+        $fakeAudienceClientId = "fake-aud-client-id-{$now}";
+        $defaultClaims = [
+            'aud' => $fakeAudienceClientId,
+            'exp' => $now + 100,
+            'iat' => $now,
+            'jti' => $now,
+            'scopes' => [$fakeSubjectClientId],
+            'sub' => $fakeSubjectClientId
+        ];
+        $claimsWithDefaults = array_merge($defaultClaims, $claims);
+        return JWT::encode($claimsWithDefaults, $this->privateKey, 'RS256');
     }
 }

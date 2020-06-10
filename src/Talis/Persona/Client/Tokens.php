@@ -288,6 +288,51 @@ class Tokens extends Base
     }
 
     /**
+     * Extract the client ID for the Subject (the `sub` claim) from a token.
+     * @param string $accessToken An access token (JWT)
+     * @return string The client ID
+     *
+     * @throws TokenValidationException If the token is not a string
+     * @throws InvalidTokenException If the token is valid, but contains no client ID
+     * @throws \Exception If the token is invalid in other ways
+     */
+    public function getSubjectIdFromToken($accessToken)
+    {
+        $clientId = $this->getClaimForToken($accessToken, 'sub');
+        if (empty($clientId)) {
+            throw new InvalidTokenException('Decoded token contains no client ID');
+        }
+        return $clientId;
+    }
+
+    /**
+     * Extract a named claim from a token.
+     * @param string $accessToken An access token (JWT)
+     * @param string $claim A claim identifier
+     * @return string|null The claim value from the token, or `null` if unavailable.
+     *
+     * @throws TokenValidationException If the token is not a string
+     * @throws \InvalidArgumentException If the claim identifier is not a string
+     * @throws \Exception If the token is invalid in other ways
+     */
+    public function getClaimForToken($accessToken, $claim)
+    {
+        if (!is_string($accessToken)) {
+            throw new TokenValidationException('Access token is not a string');
+        }
+        if (!is_string($claim)) {
+            throw new \InvalidArgumentException('Claim is not a string');
+        }
+
+        $decodedToken = $this->decodeToken($accessToken, $this->retrieveJWTCertificate());
+
+        if (isset($decodedToken[$claim]) && is_string($decodedToken[$claim])) {
+            return $decodedToken[$claim];
+        }
+        return null;
+    }
+
+    /**
      * Checks the supplied config, verifies that all required parameters are present and
      * contain a non null value;
      *
