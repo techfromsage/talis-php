@@ -8,8 +8,8 @@ x-common-values: &common-values
     network: host
   environment:
     PERSONA_TEST_HOST: ${PERSONA_TEST_HOST:-http://persona.talis.local}
-    PERSONA_TEST_OAUTH_CLIENT: ${PERSONA_OAUTH_CLIENT:?required}
-    PERSONA_TEST_OAUTH_SECRET: ${PERSONA_OAUTH_SECRET:?required}
+    PERSONA_TEST_OAUTH_CLIENT: ${PERSONA_TEST_OAUTH_CLIENT:-primate}
+    PERSONA_TEST_OAUTH_SECRET: ${PERSONA_TEST_OAUTH_SECRET:-bananas}
   volumes:
     - ".:/var/talis-php"
 

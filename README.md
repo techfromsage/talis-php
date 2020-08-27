@@ -1,6 +1,6 @@
 talis-php [![build status](https://travis-ci.org/talis/talis-php.svg?branch=master)](https://travis-ci.org/talis/talis-php)
 
-=========
+---
 
 # Development Version - Not For General Use
 
@@ -42,39 +42,45 @@ Manually run persona locally:
 ./docker-compose-dev.sh persona-server
 ```
 
-## Create an OAuth Client and Secret
+## Custom OAuth Client and Secret
 
-To run talis-php tests, you need to specify an oauth client and secret to use. This client should have `su` scope. It's not possible to create a client with `su` scope via the API.
+If you are running Persona using the instructions above you can skip this step. If you want to create you own OAuth client, read on.
 
-Create an `.env` file with required environment variables:
+To run talis-php tests, the OAuth client must have `su` scope. It's not possible to create a client with `su` scope via the API.
 
-```bash
-cat > .env <<EOL
-PERSONA_TEST_HOST=http://persona.talis.local
-PERSONA_OAUTH_CLIENT=primate
-PERSONA_OAUTH_SECRET=bananas
-EOL
-```
+1. Create a client:
 
-If you want to use your own Client and Secret see below.
+    ```bash
+    curl -H "Authorization: Bearer $(persona-token)" -d "{\"scope\":[\"su@test\"]}" http://persona.talis.local/clients
+    ```
 
-### Custom Client and Secret
+    This will return a client, e.g.:
 
-Create a client:
+    ```json
+    {"client_id":"BXLmKR79","client_secret":"zdlbESLEFGvxBw8k"}
+    ```
+2. Connect to the mongo database the local persona is using and manually give the client `su` scope.
 
-```bash
-curl -H "Authorization: Bearer $(persona-token)" -d "{\"scope\":[\"su@test\"]}" http://persona.talis.local/clients
-```
+    ```bash
+    cd $DEVELOPMENT_WORK_DIR/infra
+    docker-compose exec mongo32 mongo
+    # in mongo shell
+    use persona
+    db.oauth_clients.updateOne({ client_id: "<client_id>" }, { $addToSet: { scope: "su" } })
+    db.oauth_clients.find({ client_id: "<client_id>" }).pretty()
+    ```
+3. Create an `.env` file with required environment variables:
 
-This will return a client:
+    ```bash
+    cd $DEVELOPMENT_WORK_DIR/talis-php
+    cat > .env <<EOL
+    PERSONA_TEST_HOST=http://persona.talis.local
+    PERSONA_TEST_OAUTH_CLIENT=<client_id>
+    PERSONA_TEST_OAUTH_SECRET=<client_secret>
+    EOL
+    ```
 
-```json
-{"client_id":"BXLmKR79","client_secret":"zdlbESLEFGvxBw8k"}
-```
-
-Then connect to the mongo database the local persona is using and manually give the client `su` scope.
-
-Finally, update `PERSONA_OAUTH_CLIENT` and `PERSONA_OAUTH_SECRET` with `client_id` and `client_secret` respectively.
+    Remember to replace `PERSONA_OAUTH_CLIENT` and `PERSONA_OAUTH_SECRET` with values of `client_id` and `client_secret` respectively.
 
 ## Install dependencies and build the Docker image
 
