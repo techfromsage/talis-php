@@ -1,53 +1,54 @@
-version: '2'
+version: "3.7"
+
+x-common-values: &common-values
+  image: talis/talis-php
+  network_mode: host
+  build:
+    context: .
+    network: host
+  environment:
+    PERSONA_TEST_HOST: ${PERSONA_TEST_HOST:-http://persona.talis.local}
+    PERSONA_TEST_OAUTH_CLIENT: ${PERSONA_TEST_OAUTH_CLIENT:-primate}
+    PERSONA_TEST_OAUTH_SECRET: ${PERSONA_TEST_OAUTH_SECRET:-bananas}
+  volumes:
+    - ".:/var/talis-php"
 
 services:
   init:
-    image: talis/talis-php
-    volumes:
-      - ".:/var/talis-php"
-    command: /bin/bash -c "service redis-server start && source /etc/profile.d/* && ant init"
+    <<: *common-values
+    command: "ant init"
+
   lint:
-    image: talis/talis-php
-    volumes:
-      - ".:/var/talis-php"
-    command: /bin/bash -c "service redis-server start && source /etc/profile.d/* && ant lint"
-  lint-stan:
-    image: phpstan/phpstan
-    volumes:
-      - ".:/app"
-    command: 'analyse /app'
-  codecheck:
-    image: talis/talis-php
-    volumes:
-      - ".:/var/talis-php"
-    command: /bin/bash -c "service redis-server start && source /etc/profile.d/* && ant code-check"
+    <<: *common-values
+    command: "ant lint"
+
+  code-check:
+    <<: *common-values
+    command: "ant code-check"
+
   test:
-    image: talis/talis-php
-    network_mode: host
-    volumes:
-      - ".:/var/talis-php"
-    command: /bin/bash -c "service redis-server start && source /etc/profile.d/* && ant test"
+    <<: *common-values
+    command: "ant test"
+
   unittest:
-    image: talis/talis-php
-    network_mode: host
-    volumes:
-      - ".:/var/talis-php"
-    command: /bin/bash -c "service redis-server start && source /etc/profile.d/* && ant unittest"
+    <<: *common-values
+    command: "ant unittest"
+
   integrationtest:
-    image: talis/talis-php
-    network_mode: host
-    volumes:
-      - ".:/var/talis-php"
-    command: /bin/bash -c "service redis-server start && source /etc/profile.d/* && ant integrationtest"
+    <<: *common-values
+    command: "ant integrationtest"
+
   local-dev:
-    image: talis/talis-php
-    network_mode: host
-    volumes:
-      - ".:/var/talis-php"
-    command: /bin/bash
+    <<: *common-values
+    command: "/bin/bash"
+
   coverage:
-    image: talis/talis-php
-    network_mode: host
+    <<: *common-values
+    command: "ant coverage"
+
+  analyse:
+    image: phpstan/phpstan:0.12.40
     volumes:
       - ".:/var/talis-php"
-    command: /bin/bash -c "service redis-server start && source /etc/profile.d/* && ant coverage"
+    working_dir: /var/talis-php
+    command: "analyse src"

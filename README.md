@@ -1,6 +1,6 @@
 talis-php [![build status](https://travis-ci.org/talis/talis-php.svg?branch=master)](https://travis-ci.org/talis/talis-php)
 
-=========
+---
 
 # Development Version - Not For General Use
 
@@ -21,7 +21,7 @@ See issue: https://github.com/talis/talis-php/issues/2 and Milestone: https://gi
 A Dockerfile is provided to make it easy to get a local development environment
 up and running to develop and test changes. Follow these steps:
 
-# Build the development image
+# Set up
 
 Clone the repo locally:
 
@@ -30,7 +30,7 @@ git clone https://github.com/talis/talis-php.git
 cd talis-php
 ```
 
-# Run Persona Locally
+## Run Persona Locally
 
 Integration tests run locally will make requests to Persona at `http://persona.talis.local`.
 
@@ -42,69 +42,86 @@ Manually run persona locally:
 ./docker-compose-dev.sh persona-server
 ```
 
-# Create an OAuth Client and Secret
+## Custom OAuth Client and Secret
 
-To build the talis-php docker container, you need to specify an oauth client and secret to use. This client should have `su` scope. It's not possible to create a client with `su` scope via the API.
+If you are running Persona using the instructions above you can skip this step. If you want to create you own OAuth client, read on.
 
-First - create a client:
+To run talis-php tests, the OAuth client must have `su` scope. It's not possible to create a client with `su` scope via the API.
+
+1. Create a client:
+
+    ```bash
+    curl -H "Authorization: Bearer $(persona-token)" -d "{\"scope\":[\"su@test\"]}" http://persona.talis.local/clients
+    ```
+
+    This will return a client, e.g.:
+
+    ```json
+    {"client_id":"BXLmKR79","client_secret":"zdlbESLEFGvxBw8k"}
+    ```
+2. Connect to the mongo database the local persona is using and manually give the client `su` scope.
+
+    ```bash
+    cd $DEVELOPMENT_WORK_DIR/infra
+    docker-compose exec mongo32 mongo
+    # in mongo shell
+    use persona
+    db.oauth_clients.updateOne({ client_id: "<client_id>" }, { $addToSet: { scope: "su" } })
+    db.oauth_clients.find({ client_id: "<client_id>" }).pretty()
+    ```
+3. Create an `.env` file with required environment variables:
+
+    ```bash
+    cd $DEVELOPMENT_WORK_DIR/talis-php
+    cat > .env <<EOL
+    PERSONA_TEST_HOST=http://persona.talis.local
+    PERSONA_TEST_OAUTH_CLIENT=<client_id>
+    PERSONA_TEST_OAUTH_SECRET=<client_secret>
+    EOL
+    ```
+
+    Remember to replace `PERSONA_OAUTH_CLIENT` and `PERSONA_OAUTH_SECRET` with values of `client_id` and `client_secret` respectively.
+
+## Install dependencies and build the Docker image
+
+Run the following command which should build the Docker image (if it's missing) and will download the required libraries:
 
 ```bash
-curl -v -H "Authorization:Bearer $LOCAL_TOKEN" -d "{\"scope\":[\"su@test\"]}" http://persona.talis.local/clients
+docker-compose run --rm init
 ```
 
-This will return a client:
-
-```json
-{"client_id":"BXLmKR79","client_secret":"zdlbESLEFGvxBw8k"}
-```
-
-Then connect to the mongo database the local persona is using and manually give the client `su` scope.
-
-# Build talis-php Docker Container
-
-Manually run a docker build:
+If you want to rebuild the Docker image at any point, run:
 
 ```bash
-docker build -t "talis/talis-php" --network=host --build-arg persona_oauth_client=<persona-user-goes-here> --build-arg persona_oauth_secret=<persona-secret-goes-here> .
+docker-compose build
 ```
 
-`persona_oauth_client` = the persona user you want to use, "BXLmKR79" from the above example.
-
-`persona_oauth_secret` =  the password to the user specified, "zdlbESLEFGvxBw8k" from the above example.
-
-Initialise the environment. Run the following command which will download the required libraries.
-
-```bash
-docker-compose run init
-```
-
-# When the above has built you can run the tests
+# Running tests
 
 Available test commands:
 
 ```bash
-docker-compose run lint
-docker-compose run codecheck
-docker-compose run test
-docker-compose run unittest
-docker-compose run integrationtest
+docker-compose run --rm lint
+docker-compose run --rm test
+docker-compose run --rm unittest
+docker-compose run --rm integrationtest
 ```
 
 To create a docker container where you can run commands directly, for example to run individual tests:
 
 ```bash
-docker-compose run local-dev
-```
-
-When connected run:
-
-```bash
-service redis-server start
-source /etc/profile.d/*
+docker-compose run --rm local-dev
 ```
 
 You can then run ant commands individually or run individual tests:
 
 ```bash
 /vendor/bin/phpunit --filter testCreateUserThenPatchOAuthClientAddScope test/integration/
+```
+
+Additionally we provide tools to run static analysis on the code base:
+
+```bash
+docker-compose run --rm code-check
+docker-compose run --rm analyse
 ```
