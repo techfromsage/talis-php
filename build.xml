@@ -21,9 +21,6 @@
         <delete dir="${build.dir}"/>
         <mkdir dir="${build.dir}"/>
         <mkdir dir="${coverage.dir}"/>
-        <exec executable="redis-cli" failonerror="true">
-            <arg line="-n 2 flushdb"/>
-        </exec>
     </target>
 
     <target name="init" depends="install-composer"
@@ -87,26 +84,8 @@
 
     <target name="integrationtest" depends="clean">
         <exec executable="${vendor.dir}/bin/phpunit" failonerror="true">
-            <env key="PERSONA_TEST_HOST" value="${env.PERSONA_TEST_HOST}" />
-            <env key="PERSONA_TEST_OAUTH_CLIENT" value="${env.PERSONA_TEST_OAUTH_CLIENT}" />
-            <env key="PERSONA_TEST_OAUTH_SECRET" value="${env.PERSONA_TEST_OAUTH_SECRET}" />
             <arg line="${integration.test.dir}"/>
             <arg line="--log-junit ${build.dir}/integrationtest-report.xml"/>
-        </exec>
-    </target>
-
-    <target name="build">
-        <exec executable="/usr/bin/docker" failonerror="true">
-            <arg value="build" />
-            <arg value="-t" />
-            <arg value="talis/talis-php" />
-            <arg value="--build-arg" />
-            <arg value="git_oauth_token=${env.git_oauth_token}" />
-            <arg value="--build-arg" />
-            <arg value="persona_oauth_client=${env.persona_oauth_client}" />
-            <arg value="--build-arg" />
-            <arg value="persona_oauth_secret=${env.persona_oauth_secret}" />
-            <arg value="." />
         </exec>
     </target>
 </project>
