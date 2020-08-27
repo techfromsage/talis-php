@@ -148,7 +148,7 @@ class Client
         );
 
         return [
-            'Content-Type' => 'application/json',
+            'Content-Type' => 'application/x-www-form-urlencoded; charset=utf-8',
             'Authorization' => "Bearer {$token['access_token']}",
         ];
     }
