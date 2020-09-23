@@ -81,19 +81,19 @@ class Login extends Base
 
         if (!isset($_SESSION[self::LOGIN_PREFIX . ':loginState'])) {
             $this->getLogger()->error('Login state not found on Session');
-            throw new \Exception('Login state does not match (LS01)');
+            throw new \Exception('Login state does not match');
         }
 
         if (!isset($payload['state'])) {
             $this->getLogger()->error('Payload does not contain login state');
             unset($_SESSION[self::LOGIN_PREFIX . ':loginState']);
-            throw new \Exception('Login state does not match (LS02)');
+            throw new \Exception('Login state does not match');
         }
 
         if ($payload['state'] !== $_SESSION[self::LOGIN_PREFIX . ':loginState']) {
             $this->getLogger()->error('Session login state does not match payload state');
             unset($_SESSION[self::LOGIN_PREFIX . ':loginState']);
-            throw new \Exception('Login state does not match (LS03)');
+            throw new \Exception('Login state does not match');
         }
 
         $signature = hash_hmac(

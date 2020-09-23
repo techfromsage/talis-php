@@ -190,7 +190,7 @@ class LoginTest extends TestBase
 
     public function testValidateAuthThrowsExceptionWhenPayloadIsMissingState()
     {
-        $this->setExpectedException('Exception', 'Login state does not match (LS02)');
+        $this->setExpectedException('Exception', 'Login state does not match');
         $personaClient = new Login(
             [
                 'userAgent' => 'unittest',
@@ -206,7 +206,7 @@ class LoginTest extends TestBase
 
     public function testValidateAuthThrowsExceptionWhenSessionIsMissingState()
     {
-        $this->setExpectedException('Exception', 'Login state does not match (LS01)');
+        $this->setExpectedException('Exception', 'Login state does not match');
         $personaClient = new Login(
             [
                 'userAgent' => 'unittest',
@@ -225,7 +225,7 @@ class LoginTest extends TestBase
 
     public function testValidateAuthThrowsExceptionWhenSessionStateDoNotMatchPayloadState()
     {
-        $this->setExpectedException('Exception', 'Login state does not match (LS03)');
+        $this->setExpectedException('Exception', 'Login state does not match');
         $personaClient = new Login(
             [
                 'userAgent' => 'unittest',
