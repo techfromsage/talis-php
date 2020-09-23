@@ -214,6 +214,7 @@ class LoginTest extends TestBase
                 'cacheBackend' => $this->cacheBackend,
             ]
         );
+
         $_SESSION = [];
         $_POST['persona:signature'] = 'DummySignature';
         $_POST['persona:payload'] = base64_encode(json_encode([
