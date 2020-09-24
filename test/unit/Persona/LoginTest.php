@@ -204,6 +204,44 @@ class LoginTest extends TestBase
         $personaClient->validateAuth();
     }
 
+    public function testValidateAuthThrowsExceptionWhenSessionIsMissingState()
+    {
+        $this->setExpectedException('Exception', 'Login state does not match');
+        $personaClient = new Login(
+            [
+                'userAgent' => 'unittest',
+                'persona_host' => 'localhost',
+                'cacheBackend' => $this->cacheBackend,
+            ]
+        );
+        $_SESSION = [];
+        $_POST['persona:signature'] = 'DummySignature';
+        $_POST['persona:payload'] = base64_encode(json_encode([
+            'test' => 'YouShallNotPass',
+            'state' => 'Tennessee'
+        ]));
+        $personaClient->validateAuth();
+    }
+
+    public function testValidateAuthThrowsExceptionWhenSessionStateDoNotMatchPayloadState()
+    {
+        $this->setExpectedException('Exception', 'Login state does not match');
+        $personaClient = new Login(
+            [
+                'userAgent' => 'unittest',
+                'persona_host' => 'localhost',
+                'cacheBackend' => $this->cacheBackend,
+            ]
+        );
+        $_SESSION[Login::LOGIN_PREFIX . ':loginState'] = 'Alabama';
+        $_POST['persona:signature'] = 'DummySignature';
+        $_POST['persona:payload'] = base64_encode(json_encode([
+            'test' => 'YouShallNotPass',
+            'state' => 'Tennessee'
+        ]));
+        $personaClient->validateAuth();
+    }
+
     public function testValidateAuthPayloadMismatchingSignature()
     {
         $this->setExpectedException('Exception', 'Signature does not match');
