@@ -1,4 +1,4 @@
-<phpunit bootstrap="test/bootstrap.php">
+<phpunit bootstrap="test/bootstrap.php" colors = "true">
     <php>
         <ini name="memory_limit" value="512M"/>
     </php>

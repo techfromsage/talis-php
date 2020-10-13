@@ -2,11 +2,13 @@
 
 namespace test\unit\EchoClient;
 
+use test\TestBase;
+
 /**
  * Unit tests for EchoClient.
  * @runTestsInSeparateProcesses
  */
-class EventTest extends \PHPUnit_Framework_TestCase
+class EventTest extends TestBase
 {
     public function setUp()
     {

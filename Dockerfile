@@ -15,7 +15,6 @@ RUN apt-get update \
         php5-curl \
         php5-json \
         php-pear \
-        ant \
         git \
         unzip \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*

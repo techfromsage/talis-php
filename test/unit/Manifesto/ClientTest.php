@@ -211,9 +211,11 @@ class ClientTest extends TestBase
 
         $httpClient = new \GuzzleHttp\Client(['handler' => $handlerStack]);
 
+        /** @var \Talis\Persona\Client\Tokens|\PHPUnit_Framework_MockObject_MockObject $stubPersonaClient */
         $stubPersonaClient = $this->getMock(\Talis\Persona\Client\Tokens::class, [], [], '', false);
         $stubPersonaClient->method('obtainNewToken')
             ->willReturn(['access_token' => 'some-token']);
+        $stubPersonaClient->setLogger(new \Psr\Log\NullLogger());
 
         $manifestoClient = $this->getMockBuilder(\Talis\Manifesto\Client::class)
             ->setConstructorArgs([$manifestoBaseUrl, $personaConnectValues])

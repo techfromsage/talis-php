@@ -14,7 +14,7 @@ abstract class Base
     /**
      * Get the current Logger instance.
      *
-     * @return \Monolog\Logger
+     * @return \Psr\Log\LoggerInterface
      */
     protected function getLogger()
     {
@@ -36,9 +36,9 @@ abstract class Base
     /**
      * Allow the calling project to use its own instance of a MonoLog Logger class.
      *
-     * @param \Monolog\Logger $logger logger
+     * @param \Psr\Log\LoggerInterface $logger logger
      */
-    public static function setLogger(Logger $logger)
+    public static function setLogger(\Psr\Log\LoggerInterface $logger)
     {
         self::$logger = $logger;
     }

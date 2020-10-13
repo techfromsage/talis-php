@@ -3,10 +3,10 @@
 namespace Talis\Persona\Client;
 
 use Monolog\Logger;
-use Predis\Response\ResponseInterface;
+use Psr\Log\LoggerAwareInterface;
 use Talis\Persona\Client\ClientVersionCache;
 
-abstract class Base
+abstract class Base implements LoggerAwareInterface
 {
     use ClientVersionCache;
 
@@ -100,6 +100,11 @@ abstract class Base
         }
     }
 
+    public function setLogger(\Psr\Log\LoggerInterface $logger)
+    {
+        $this->logger = $logger;
+    }
+
     /**
      * @return \Psr\Log\LoggerInterface
      */
@@ -114,8 +119,6 @@ abstract class Base
 
     /**
      * Returns a unique id for tracing this request.
-     * If there is already a value set as a header it uses that, otherwise it
-     * generates a new one and sets that on $_SERVER
      * @return string
      */
     protected function getRequestId()
@@ -123,6 +126,9 @@ abstract class Base
         $requestId = null;
         if (array_key_exists('HTTP_X_REQUEST_ID', $_SERVER)) {
             $requestId = $_SERVER['HTTP_X_REQUEST_ID'];
+        }
+        if ($requestId === null && array_key_exists('xid', $_GET)) {
+            $requestId = $_GET['xid'];
         }
 
         return empty($requestId) ? uniqid() : $requestId;

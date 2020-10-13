@@ -63,9 +63,7 @@ class TokensTest extends TestBase
 
     public function testUseCacheFalseOnObtainToken()
     {
-        /** @var \Talis\Persona\Client\Tokens|\PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(
-            \Talis\Persona\Client\Tokens::class,
+        $mockClient = $this->getMockTokensClient(
             ['personaObtainNewToken'],
             [
                 [
@@ -93,9 +91,7 @@ class TokensTest extends TestBase
 
     public function testObtainToken()
     {
-        /** @var \Talis\Persona\Client\Tokens|\PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(
-            \Talis\Persona\Client\Tokens::class,
+        $mockClient = $this->getMockTokensClient(
             ['personaObtainNewToken'],
             [
                 [
@@ -128,9 +124,7 @@ class TokensTest extends TestBase
      */
     public function testPersonaFallbackOnJWTEmptyScopes()
     {
-        /** @var \Talis\Persona\Client\Tokens|\PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(
-            \Talis\Persona\Client\Tokens::class,
+        $mockClient = $this->getMockTokensClient(
             [
                 'getCacheClient',
                 'personaObtainNewToken',
@@ -179,9 +173,7 @@ class TokensTest extends TestBase
 
     public function testPersonaFallbackWhenUnableToGetPublicCert()
     {
-        /** @var \Talis\Persona\Client\Tokens|\PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(
-            \Talis\Persona\Client\Tokens::class,
+        $mockClient = $this->getMockTokensClient(
             [
                 'getCacheClient',
                 'personaObtainNewToken',
@@ -233,9 +225,7 @@ class TokensTest extends TestBase
      */
     public function testJWTExpiredToken()
     {
-        /** @var \Talis\Persona\Client\Tokens|\PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(
-            \Talis\Persona\Client\Tokens::class,
+        $mockClient = $this->getMockTokensClient(
             ['retrieveJWTCertificate'],
             [
                 [
@@ -278,9 +268,7 @@ class TokensTest extends TestBase
      */
     public function testJWTNotBeforeToken()
     {
-        /** @var \Talis\Persona\Client\Tokens|\PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(
-            \Talis\Persona\Client\Tokens::class,
+        $mockClient = $this->getMockTokensClient(
             ['retrieveJWTCertificate'],
             [
                 [
@@ -323,9 +311,7 @@ class TokensTest extends TestBase
      */
     public function testJWTInvalidPublicCert()
     {
-        /** @var \Talis\Persona\Client\Tokens|\PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(
-            \Talis\Persona\Client\Tokens::class,
+        $mockClient = $this->getMockTokensClient(
             ['retrieveJWTCertificate'],
             [
                 [
@@ -363,9 +349,7 @@ class TokensTest extends TestBase
      */
     public function testReturnUnexpectedStatusCode()
     {
-        /** @var \Talis\Persona\Client\Tokens|\PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(
-            \Talis\Persona\Client\Tokens::class,
+        $mockClient = $this->getMockTokensClient(
             ['getHTTPClient', 'validateTokenUsingJWT'],
             [
                 [
@@ -420,9 +404,7 @@ class TokensTest extends TestBase
      */
     public function testObtainCachedToken()
     {
-        /** @var \Talis\Persona\Client\Tokens|\PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(
-            \Talis\Persona\Client\Tokens::class,
+        $mockClient = $this->getMockTokensClient(
             ['getHTTPClient'],
             [
                 [
@@ -478,9 +460,7 @@ class TokensTest extends TestBase
 
     public function testRemoteValidationCallsUseSuScopeCheckForSu()
     {
-        /** @var \Talis\Persona\Client\Tokens|\PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(
-            \Talis\Persona\Client\Tokens::class,
+        $mockClient = $this->getMockTokensClient(
             ['validateTokenUsingJWT', 'makePersonaHttpRequest'],
             [
                 [
@@ -543,9 +523,7 @@ class TokensTest extends TestBase
 
     public function testRemoteValidationCallsMultipleScopes()
     {
-        /** @var \Talis\Persona\Client\Tokens|\PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(
-            \Talis\Persona\Client\Tokens::class,
+        $mockClient = $this->getMockTokensClient(
             ['validateTokenUsingJWT', 'makePersonaHttpRequest'],
             [
                 [
@@ -607,9 +585,7 @@ class TokensTest extends TestBase
 
     public function testRemoteValidationCallsMultipleScopesWithSu()
     {
-        /** @var \Talis\Persona\Client\Tokens|\PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(
-            \Talis\Persona\Client\Tokens::class,
+        $mockClient = $this->getMockTokensClient(
             ['validateTokenUsingJWT', 'makePersonaHttpRequest'],
             [
                 [
@@ -672,9 +648,7 @@ class TokensTest extends TestBase
 
     public function testLocalValidationCallsMultipleScopes()
     {
-        /** @var \Talis\Persona\Client\Tokens|\PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(
-            \Talis\Persona\Client\Tokens::class,
+        $mockClient = $this->getMockTokensClient(
             ['retrieveJWTCertificate'],
             [
                 [
@@ -713,9 +687,7 @@ class TokensTest extends TestBase
 
     public function testLocalValidationCallsMultipleScopesWithSu()
     {
-        /** @var \Talis\Persona\Client\Tokens|\PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(
-            \Talis\Persona\Client\Tokens::class,
+        $mockClient = $this->getMockTokensClient(
             ['retrieveJWTCertificate'],
             [
                 [
@@ -848,9 +820,7 @@ class TokensTest extends TestBase
 
     public function testListScopes()
     {
-        /** @var \Talis\Persona\Client\Tokens|\PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(
-            \Talis\Persona\Client\Tokens::class,
+        $mockClient = $this->getMockTokensClient(
             ['retrieveJWTCertificate'],
             [
                 [
@@ -885,9 +855,7 @@ class TokensTest extends TestBase
 
     public function testListScopesInvalidDomain()
     {
-        /** @var \Talis\Persona\Client\Tokens|\PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(
-            \Talis\Persona\Client\Tokens::class,
+        $mockClient = $this->getMockTokensClient(
             ['retrieveJWTCertificate'],
             [
                 [
@@ -922,9 +890,7 @@ class TokensTest extends TestBase
 
     public function testListScopesScopeCount()
     {
-        /** @var \Talis\Persona\Client\Tokens|\PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(
-            \Talis\Persona\Client\Tokens::class,
+        $mockClient = $this->getMockTokensClient(
             [
                 'retrieveJWTCertificate',
                 'makePersonaHttpRequest',
@@ -971,9 +937,7 @@ class TokensTest extends TestBase
 
     public function testListScopesScopeCountInvalidDomain()
     {
-        /** @var \Talis\Persona\Client\Tokens|\PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(
-            \Talis\Persona\Client\Tokens::class,
+        $mockClient = $this->getMockTokensClient(
             [
                 'retrieveJWTCertificate',
                 'makePersonaHttpRequest',
@@ -1032,9 +996,7 @@ class TokensTest extends TestBase
             ->method('doFetch')
             ->will($this->throwException(new \Exception('I failed')));
 
-        /** @var \Talis\Persona\Client\Tokens|\PHPUnit_Framework_MockObject_MockObject $tokens */
-        $tokens = $this->getMock(
-            \Talis\Persona\Client\Tokens::class,
+        $tokens = $this->getMockTokensClient(
             ['personaObtainNewToken'],
             [
                 [
@@ -1073,9 +1035,7 @@ class TokensTest extends TestBase
             ->method('doSave')
             ->will($this->throwException(new \Exception('cannot save')));
 
-        /** @var \Talis\Persona\Client\Tokens|\PHPUnit_Framework_MockObject_MockObject $tokens */
-        $tokens = $this->getMock(
-            \Talis\Persona\Client\Tokens::class,
+        $tokens = $this->getMockTokensClient(
             ['personaObtainNewToken'],
             [
                 [
@@ -1110,9 +1070,7 @@ class TokensTest extends TestBase
             ->method('doFetch')
             ->will($this->throwException(new \Exception('I failed')));
 
-        /** @var \Talis\Persona\Client\Tokens|\PHPUnit_Framework_MockObject_MockObject $tokens */
-        $tokens = $this->getMock(
-            \Talis\Persona\Client\Tokens::class,
+        $tokens = $this->getMockTokensClient(
             ['retrievePublicKeyFromPersona'],
             [
                 [
@@ -1145,9 +1103,7 @@ class TokensTest extends TestBase
             ->method('doFetch')
             ->willReturn(null);
 
-        /** @var \Talis\Persona\Client\Tokens|\PHPUnit_Framework_MockObject_MockObject $tokens */
-        $tokens = $this->getMock(
-            \Talis\Persona\Client\Tokens::class,
+        $tokens = $this->getMockTokensClient(
             ['retrievePublicKeyFromPersona'],
             [
                 [
@@ -1187,9 +1143,7 @@ class TokensTest extends TestBase
             new \GuzzleHttp\Psr7\Response(200, [], 'cert'),
         ]);
 
-        /** @var \Talis\Persona\Client\Tokens|\PHPUnit_Framework_MockObject_MockObject $tokens */
-        $tokens = $this->getMock(
-            \Talis\Persona\Client\Tokens::class,
+        $tokens = $this->getMockTokensClient(
             ['getHTTPClient', 'getVersionFromComposeFile'],
             [
                 [
@@ -1239,9 +1193,7 @@ class TokensTest extends TestBase
             new \GuzzleHttp\Psr7\Response(200, [], 'cert'),
         ]);
 
-        /** @var \Talis\Persona\Client\Tokens|\PHPUnit_Framework_MockObject_MockObject $tokens */
-        $tokens = $this->getMock(
-            \Talis\Persona\Client\Tokens::class,
+        $tokens = $this->getMockTokensClient(
             ['getHTTPClient', 'getVersionFromComposeFile'],
             [
                 [
@@ -1285,9 +1237,7 @@ class TokensTest extends TestBase
             new \GuzzleHttp\Psr7\Response(200, [], 'cert'),
         ]);
 
-        /** @var \Talis\Persona\Client\Tokens|\PHPUnit_Framework_MockObject_MockObject $tokens */
-        $tokens = $this->getMock(
-            \Talis\Persona\Client\Tokens::class,
+        $tokens = $this->getMockTokensClient(
             ['getHTTPClient', 'getVersionFromComposeFile'],
             [
                 [
@@ -1310,7 +1260,7 @@ class TokensTest extends TestBase
     }
 
     /**
-     * @covers Tokens::getSubjectIdFromToken
+     * @covers \Talis\Persona\Client\Tokens::getSubjectIdFromToken
      */
     public function testGetSubjectIdFromTokenReturnsClientIdFromToken()
     {
@@ -1327,7 +1277,7 @@ class TokensTest extends TestBase
     }
 
     /**
-     * @covers Tokens::getSubjectIdFromToken
+     * @covers \Talis\Persona\Client\Tokens::getSubjectIdFromToken
      */
     public function testGetSubjectIdFromTokenThrowsExceptionIfTokenContainsNoSubClaim()
     {
@@ -1363,9 +1313,7 @@ class TokensTest extends TestBase
      */
     private function getMockTokensClientWithFakeCertificate()
     {
-        /** @var \Talis\Persona\Client\Tokens|\PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(
-            \Talis\Persona\Client\Tokens::class,
+        $mockClient = $this->getMockTokensClient(
             ['retrieveJWTCertificate'],
             [
                 [
@@ -1379,6 +1327,25 @@ class TokensTest extends TestBase
         $mockClient->expects($this->once())
             ->method('retrieveJWTCertificate')
             ->willReturn($this->publicKey);
+
+        return $mockClient;
+    }
+
+    /**
+     * @param string[] $methods
+     * @param array $arguments
+     * @return \Talis\Persona\Client\Tokens|\PHPUnit_Framework_MockObject_MockObject
+     */
+    private function getMockTokensClient(array $methods, array $arguments)
+    {
+        /** @var \Talis\Persona\Client\Tokens|\PHPUnit_Framework_MockObject_MockObject $mockClient */
+        $mockClient = $this->getMock(
+            \Talis\Persona\Client\Tokens::class,
+            $methods,
+            $arguments
+        );
+
+        $mockClient->setLogger(new \Psr\Log\NullLogger());
 
         return $mockClient;
     }

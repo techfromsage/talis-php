@@ -3,6 +3,7 @@ composer.lock
 composer.phar
 .idea
 build
+coverage
 vendor
 docker-compose.override.yml
 .env

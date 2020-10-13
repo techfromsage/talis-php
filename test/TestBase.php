@@ -43,15 +43,22 @@ abstract class TestBase extends \PHPUnit_Framework_TestCase
         ];
     }
 
+    /**
+     * @before
+     */
+    protected function printName()
+    {
+        $className = get_class($this);
+        $testName = $this->getName();
+        echo " Test: {$className}->{$testName}\n";
+    }
+
     protected function setUp()
     {
         $this->removeCacheFolder();
         $this->cacheBackend = new FilesystemCache(
             sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'personaCache'
         );
-        $className = get_class($this);
-        $testName = $this->getName();
-        echo " Test: {$className}->{$testName}\n";
     }
 
     /**

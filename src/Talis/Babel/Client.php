@@ -4,6 +4,7 @@ namespace Talis\Babel;
 
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
+use Psr\Log\LoggerAwareInterface;
 
 /**
  * Babel client.
@@ -12,7 +13,7 @@ use Monolog\Logger;
  *
  * @package Talis\Babel
  */
-class Client
+class Client implements LoggerAwareInterface
 {
     /**
      * @var string

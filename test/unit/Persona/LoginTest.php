@@ -11,7 +11,7 @@ class LoginTest extends TestBase
     {
         $this->setExpectedException('InvalidArgumentException', 'Invalid provider');
 
-        $personaClient = new Login(
+        $personaClient = $this->newLogin(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -25,7 +25,7 @@ class LoginTest extends TestBase
     {
         $this->setExpectedException('InvalidArgumentException', 'Invalid appId');
 
-        $personaClient = new Login(
+        $personaClient = $this->newLogin(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -39,7 +39,7 @@ class LoginTest extends TestBase
     {
         $this->setExpectedException('InvalidArgumentException', 'Invalid appSecret');
 
-        $personaClient = new Login(
+        $personaClient = $this->newLogin(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -51,6 +51,7 @@ class LoginTest extends TestBase
 
     public function testRequireAuthNoRedirectUri()
     {
+        /** @var \Talis\Persona\Client\Login|\PHPUnit_Framework_MockObject_MockObject $mockClient */
         $mockClient = $this->getMock(\Talis\Persona\Client\Login::class, ['login'], [
             [
                 'userAgent' => 'unittest',
@@ -72,7 +73,7 @@ class LoginTest extends TestBase
     {
         $this->setExpectedException('InvalidArgumentException', 'Invalid redirectUri');
 
-        $personaClient = new Login(
+        $personaClient = $this->newLogin(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -84,6 +85,7 @@ class LoginTest extends TestBase
 
     public function testRequireAuthWithRedirectUri()
     {
+        /** @var \Talis\Persona\Client\Login|\PHPUnit_Framework_MockObject_MockObject $mockClient */
         $mockClient = $this->getMock(\Talis\Persona\Client\Login::class, ['login'], [
             [
                 'userAgent' => 'unittest',
@@ -104,6 +106,7 @@ class LoginTest extends TestBase
 
     public function testRequireAuthAlreadyLoggedIn()
     {
+        /** @var \Talis\Persona\Client\Login|\PHPUnit_Framework_MockObject_MockObject $mockClient */
         $mockClient = $this->getMock(\Talis\Persona\Client\Login::class, ['isLoggedIn', 'login'], [
             [
                 'userAgent' => 'unittest',
@@ -123,6 +126,7 @@ class LoginTest extends TestBase
 
     public function testRequireAuthNotAlreadyLoggedIn()
     {
+        /** @var \Talis\Persona\Client\Login|\PHPUnit_Framework_MockObject_MockObject $mockClient */
         $mockClient = $this->getMock(\Talis\Persona\Client\Login::class, ['isLoggedIn', 'login'], [
             [
                 'userAgent' => 'unittest',
@@ -148,7 +152,7 @@ class LoginTest extends TestBase
     public function testValidateAuthThrowsExceptionWhenPayloadDoesNotContainSignature()
     {
         $this->setExpectedException('Exception', 'Signature not set');
-        $personaClient = new Login(
+        $personaClient = $this->newLogin(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -162,7 +166,7 @@ class LoginTest extends TestBase
     public function testValidateAuthThrowsExceptionWhenPayloadDoesNotExist()
     {
         $this->setExpectedException('Exception', 'Payload not set');
-        $personaClient = new Login(
+        $personaClient = $this->newLogin(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -176,7 +180,7 @@ class LoginTest extends TestBase
     public function testValidateAuthThrowsExceptionWhenPayloadIsAString()
     {
         $this->setExpectedException('Exception', 'Payload not json');
-        $personaClient = new Login(
+        $personaClient = $this->newLogin(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -191,7 +195,7 @@ class LoginTest extends TestBase
     public function testValidateAuthThrowsExceptionWhenPayloadIsMissingState()
     {
         $this->setExpectedException('Exception', 'Login state does not match');
-        $personaClient = new Login(
+        $personaClient = $this->newLogin(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -207,7 +211,7 @@ class LoginTest extends TestBase
     public function testValidateAuthThrowsExceptionWhenSessionIsMissingState()
     {
         $this->setExpectedException('Exception', 'Login state does not match');
-        $personaClient = new Login(
+        $personaClient = $this->newLogin(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -226,7 +230,7 @@ class LoginTest extends TestBase
     public function testValidateAuthThrowsExceptionWhenSessionStateDoNotMatchPayloadState()
     {
         $this->setExpectedException('Exception', 'Login state does not match');
-        $personaClient = new Login(
+        $personaClient = $this->newLogin(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -245,7 +249,7 @@ class LoginTest extends TestBase
     public function testValidateAuthPayloadMismatchingSignature()
     {
         $this->setExpectedException('Exception', 'Signature does not match');
-        $personaClient = new Login(
+        $personaClient = $this->newLogin(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -268,7 +272,7 @@ class LoginTest extends TestBase
 
     public function testValidateAuthPayloadContainsStateAndSignatureNoOtherPayload()
     {
-        $personaClient = new Login(
+        $personaClient = $this->newLogin(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -300,7 +304,7 @@ class LoginTest extends TestBase
 
     public function testValidateAuthPayloadContainsStateAndSignatureFullPayload()
     {
-        $personaClient = new Login(
+        $personaClient = $this->newLogin(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -353,6 +357,7 @@ class LoginTest extends TestBase
 
     public function testValidateAuthPayloadContainsStateAndSignatureFullPayloadCheckLoginIsCalled()
     {
+        /** @var \Talis\Persona\Client\Login|\PHPUnit_Framework_MockObject_MockObject $mockClient */
         $mockClient = $this->getMock(\Talis\Persona\Client\Login::class, ['isLoggedIn'], [
             [
                 'userAgent' => 'unittest',
@@ -396,6 +401,7 @@ class LoginTest extends TestBase
 
     public function testValidateAuthAfterRequireAuth()
     {
+        /** @var \Talis\Persona\Client\Login|\PHPUnit_Framework_MockObject_MockObject $mockClient */
         $mockClient = $this->getMock(\Talis\Persona\Client\Login::class, ['isLoggedIn', 'login'], [
             [
                 'userAgent' => 'unittest',
@@ -450,7 +456,7 @@ class LoginTest extends TestBase
     // getRedirectUrl tests
     public function testGetRedirectUrlNoSession()
     {
-        $personaClient = new Login(
+        $personaClient = $this->newLogin(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -462,7 +468,7 @@ class LoginTest extends TestBase
 
     public function testGetRedirectUrlNoRedirectInSession()
     {
-        $personaClient = new Login(
+        $personaClient = $this->newLogin(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -475,7 +481,7 @@ class LoginTest extends TestBase
 
     public function testGetRedirectUrlFoundRedirectInSession()
     {
-        $personaClient = new Login(
+        $personaClient = $this->newLogin(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -489,7 +495,7 @@ class LoginTest extends TestBase
     // getScopes tests
     public function testGetScopesUserNoSession()
     {
-        $personaClient = new Login(
+        $personaClient = $this->newLogin(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -501,7 +507,7 @@ class LoginTest extends TestBase
 
     public function testGetScopesNoProfileInSession()
     {
-        $personaClient = new Login(
+        $personaClient = $this->newLogin(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -514,7 +520,7 @@ class LoginTest extends TestBase
 
     public function testGetScopes()
     {
-        $personaClient = new Login(
+        $personaClient = $this->newLogin(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -527,7 +533,7 @@ class LoginTest extends TestBase
 
     public function testGetProfileNoSession()
     {
-        $personaClient = new Login(
+        $personaClient = $this->newLogin(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -539,7 +545,7 @@ class LoginTest extends TestBase
 
     public function testGetProfileNoProfileInSession()
     {
-        $personaClient = new Login(
+        $personaClient = $this->newLogin(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -552,7 +558,7 @@ class LoginTest extends TestBase
 
     public function testGetProfile()
     {
-        $personaClient = new Login(
+        $personaClient = $this->newLogin(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -574,6 +580,7 @@ class LoginTest extends TestBase
             ]
         ];
 
+        /** @var \Talis\Persona\Client\Login|\PHPUnit_Framework_MockObject_MockObject $client */
         $client = $this->getMock(
             \Talis\Persona\Client\Login::class,
             ['redirect', 'getLoginState'],
@@ -602,5 +609,12 @@ class LoginTest extends TestBase
             'http://example.com',
             ['require' => 'profile']
         );
+    }
+
+    private function newLogin(array $config)
+    {
+        $login = new Login($config);
+        $login->setLogger(new \Psr\Log\NullLogger());
+        return $login;
     }
 }
