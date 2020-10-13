@@ -3,10 +3,10 @@
 namespace Talis\Persona\Client;
 
 use Monolog\Logger;
-use Predis\Response\ResponseInterface;
+use Psr\Log\LoggerAwareInterface;
 use Talis\Persona\Client\ClientVersionCache;
 
-abstract class Base
+abstract class Base implements LoggerAwareInterface
 {
     use ClientVersionCache;
 
@@ -98,6 +98,11 @@ abstract class Base
                 );
             }
         }
+    }
+
+    public function setLogger(\Psr\Log\LoggerInterface $logger)
+    {
+        $this->logger = $logger;
     }
 
     /**

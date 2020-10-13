@@ -34,6 +34,7 @@ class UsersIntegerationTest extends TestBase
                 'cacheBackend' => $this->cacheBackend,
             ]
         );
+        $this->personaClientUser->setLogger(new \Psr\Log\NullLogger());
 
         $this->personaClientTokens = new Tokens(
             [
@@ -42,6 +43,7 @@ class UsersIntegerationTest extends TestBase
                 'cacheBackend' => $this->cacheBackend,
             ]
         );
+        $this->personaClientTokens->setLogger(new \Psr\Log\NullLogger());
     }
 
     public function testCreateUserThenGetUserByGupid()

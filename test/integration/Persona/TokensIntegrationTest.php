@@ -31,6 +31,7 @@ class TokensIntegrationTest extends TestBase
                 'cacheBackend' => $this->personaCache,
             ]
         );
+        $this->personaClient->setLogger(new \Psr\Log\NullLogger());
     }
 
     public function testObtainNewToken()

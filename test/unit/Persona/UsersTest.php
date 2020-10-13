@@ -10,7 +10,7 @@ class UsersTest extends TestBase
     public function testGetUserByGupidEmptyGupidThrowsException()
     {
         $this->setExpectedException('InvalidArgumentException', 'Invalid gupid');
-        $personaClient = new Users(
+        $personaClient = $this->newUsers(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -23,7 +23,7 @@ class UsersTest extends TestBase
     public function testGetUserByGupidEmptyTokenThrowsException()
     {
         $this->setExpectedException('InvalidArgumentException', 'Invalid token');
-        $personaClient = new Users(
+        $personaClient = $this->newUsers(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -36,7 +36,7 @@ class UsersTest extends TestBase
     public function testGetUserByGupidThrowsExceptionWhenGupidNotFound()
     {
         $this->setExpectedException('Exception', 'Did not retrieve successful response code');
-        $mockClient = $this->getMock(\Talis\Persona\Client\Users::class, ['performRequest'], [
+        $mockClient = $this->getMockUsersClient(['performRequest'], [
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -52,7 +52,7 @@ class UsersTest extends TestBase
 
     public function testGetUserByGupidReturnsUserWhenGupidFound()
     {
-        $mockClient = $this->getMock(\Talis\Persona\Client\Users::class, ['performRequest'], [
+        $mockClient = $this->getMockUsersClient(['performRequest'], [
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -85,7 +85,7 @@ class UsersTest extends TestBase
     public function testGetUserByGuidsEmptyTokenThrowsException()
     {
         $this->setExpectedException('InvalidArgumentException', 'Invalid token');
-        $personaClient = new Users(
+        $personaClient = $this->newUsers(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -98,7 +98,7 @@ class UsersTest extends TestBase
     public function testGetUserByGuidsThrowsExceptionWhenGuidsNotFound()
     {
         $this->setExpectedException('Exception', 'Error finding user profiles: Could not retrieve OAuth response code');
-        $mockClient = $this->getMock(\Talis\Persona\Client\Users::class, ['performRequest'], [
+        $mockClient = $this->getMockUsersClient(['performRequest'], [
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -114,7 +114,7 @@ class UsersTest extends TestBase
 
     public function testGetUserByGuidsReturnsUserWhenGuidsFound()
     {
-        $mockClient = $this->getMock(\Talis\Persona\Client\Users::class, ['performRequest'], [
+        $mockClient = $this->getMockUsersClient(['performRequest'], [
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -150,7 +150,7 @@ class UsersTest extends TestBase
     public function testCreateUserEmptyGupid()
     {
         $this->setExpectedException('InvalidArgumentException', 'Invalid gupid');
-        $personaClient = new Users(
+        $personaClient = $this->newUsers(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -163,7 +163,7 @@ class UsersTest extends TestBase
     public function testCreateUserInvalidGupid()
     {
         $this->setExpectedException('InvalidArgumentException', 'Invalid gupid');
-        $personaClient = new Users(
+        $personaClient = $this->newUsers(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -175,7 +175,7 @@ class UsersTest extends TestBase
 
     public function testCreateUserEmptyProfile()
     {
-        $mockClient = $this->getMock(\Talis\Persona\Client\Users::class, ['performRequest'], [
+        $mockClient = $this->getMockUsersClient(['performRequest'], [
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -192,7 +192,7 @@ class UsersTest extends TestBase
     public function testCreateUserEmptyToken()
     {
         $this->setExpectedException('InvalidArgumentException', 'Invalid token');
-        $personaClient = new Users(
+        $personaClient = $this->newUsers(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -205,7 +205,7 @@ class UsersTest extends TestBase
     public function testCreateUserInvalidToken()
     {
         $this->setExpectedException('InvalidArgumentException', 'Invalid token');
-        $personaClient = new Users(
+        $personaClient = $this->newUsers(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -218,7 +218,7 @@ class UsersTest extends TestBase
     public function testCreateUserPostFails()
     {
         $this->setExpectedException('Exception', 'Error creating user: Could not retrieve OAuth response code');
-        $mockClient = $this->getMock(\Talis\Persona\Client\Users::class, ['performRequest'], [
+        $mockClient = $this->getMockUsersClient(['performRequest'], [
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -233,7 +233,7 @@ class UsersTest extends TestBase
 
     public function testCreateUserPostSucceeds()
     {
-        $mockClient = $this->getMock(\Talis\Persona\Client\Users::class, ['performRequest'], [
+        $mockClient = $this->getMockUsersClient(['performRequest'], [
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -250,7 +250,7 @@ class UsersTest extends TestBase
     public function testUpdateUserEmptyGuid()
     {
         $this->setExpectedException('Exception', 'Invalid guid');
-        $personaClient = new Users(
+        $personaClient = $this->newUsers(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -263,7 +263,7 @@ class UsersTest extends TestBase
     public function testUpdateUserInvalidGuid()
     {
         $this->setExpectedException('Exception', 'Invalid guid');
-        $personaClient = new Users(
+        $personaClient = $this->newUsers(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -276,7 +276,7 @@ class UsersTest extends TestBase
     public function testUpdateUserEmptyProfile()
     {
         $this->setExpectedException('Exception', 'Invalid profile');
-        $personaClient = new Users(
+        $personaClient = $this->newUsers(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -289,7 +289,7 @@ class UsersTest extends TestBase
     public function testUpdateUserInvalidProfile()
     {
         $this->setExpectedException('Exception', 'Invalid profile');
-        $personaClient = new Users(
+        $personaClient = $this->newUsers(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -302,7 +302,7 @@ class UsersTest extends TestBase
     public function testUpdateUserEmptyToken()
     {
         $this->setExpectedException('Exception', 'Invalid token');
-        $personaClient = new Users(
+        $personaClient = $this->newUsers(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -315,7 +315,7 @@ class UsersTest extends TestBase
     public function testUpdateUserInvalidToken()
     {
         $this->setExpectedException('Exception', 'Invalid token');
-        $personaClient = new Users(
+        $personaClient = $this->newUsers(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -328,7 +328,7 @@ class UsersTest extends TestBase
     public function testUpdateUserPutFails()
     {
         $this->setExpectedException('Exception', 'Error updating user: Could not retrieve OAuth response code');
-        $mockClient = $this->getMock(\Talis\Persona\Client\Users::class, ['performRequest'], [
+        $mockClient = $this->getMockUsersClient(['performRequest'], [
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -343,7 +343,7 @@ class UsersTest extends TestBase
 
     public function testUpdateUserPutSucceeds()
     {
-        $mockClient = $this->getMock(\Talis\Persona\Client\Users::class, ['performRequest'], [
+        $mockClient = $this->getMockUsersClient(['performRequest'], [
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -360,7 +360,7 @@ class UsersTest extends TestBase
     public function testAddGupidToUserInvalidGuid()
     {
         $this->setExpectedException('Exception', 'Invalid guid');
-        $personaClient = new Users(
+        $personaClient = $this->newUsers(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -373,7 +373,7 @@ class UsersTest extends TestBase
     public function testAddGupidToUserInvalidGupid()
     {
         $this->setExpectedException('Exception', 'Invalid gupid');
-        $personaClient = new Users(
+        $personaClient = $this->newUsers(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -386,7 +386,7 @@ class UsersTest extends TestBase
     public function testAddGupidToUserEmptyToken()
     {
         $this->setExpectedException('Exception', 'Invalid token');
-        $personaClient = new Users(
+        $personaClient = $this->newUsers(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -399,7 +399,7 @@ class UsersTest extends TestBase
     public function testAddGupidToUserInvalidToken()
     {
         $this->setExpectedException('Exception', 'Invalid token');
-        $personaClient = new Users(
+        $personaClient = $this->newUsers(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -412,7 +412,7 @@ class UsersTest extends TestBase
     public function testAddGupidToUserPatchFails()
     {
         $this->setExpectedException('Exception', 'Error adding gupid to user: Could not retrieve OAuth response code');
-        $mockClient = $this->getMock(\Talis\Persona\Client\Users::class, ['performRequest'], [
+        $mockClient = $this->getMockUsersClient(['performRequest'], [
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -427,7 +427,7 @@ class UsersTest extends TestBase
 
     public function testAddGupidToUserPutSucceeds()
     {
-        $mockClient = $this->getMock(\Talis\Persona\Client\Users::class, ['performRequest'], [
+        $mockClient = $this->getMockUsersClient(['performRequest'], [
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -444,7 +444,7 @@ class UsersTest extends TestBase
     public function testMergeUsersInvalidOldGuid()
     {
         $this->setExpectedException('Exception', 'Invalid oldGuid');
-        $personaClient = new Users(
+        $personaClient = $this->newUsers(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -457,7 +457,7 @@ class UsersTest extends TestBase
     public function testMergeUsersInvalidNewGuid()
     {
         $this->setExpectedException('Exception', 'Invalid newGuid');
-        $personaClient = new Users(
+        $personaClient = $this->newUsers(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -470,7 +470,7 @@ class UsersTest extends TestBase
     public function testMergeUsersEmptyToken()
     {
         $this->setExpectedException('Exception', 'Invalid token');
-        $personaClient = new Users(
+        $personaClient = $this->newUsers(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -483,7 +483,7 @@ class UsersTest extends TestBase
     public function testMergeUsersInvalidToken()
     {
         $this->setExpectedException('Exception', 'Invalid token');
-        $personaClient = new Users(
+        $personaClient = $this->newUsers(
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -496,7 +496,7 @@ class UsersTest extends TestBase
     public function testMergeUsersPostFails()
     {
         $this->setExpectedException('Exception', 'Error merging users: Could not retrieve OAuth response code');
-        $mockClient = $this->getMock(\Talis\Persona\Client\Users::class, ['performRequest'], [
+        $mockClient = $this->getMockUsersClient(['performRequest'], [
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -511,7 +511,7 @@ class UsersTest extends TestBase
 
     public function testMergeUsersPostSucceeds()
     {
-        $mockClient = $this->getMock(\Talis\Persona\Client\Users::class, ['performRequest'], [
+        $mockClient = $this->getMockUsersClient(['performRequest'], [
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
@@ -523,5 +523,31 @@ class UsersTest extends TestBase
             ->method('performRequest')
             ->will($this->returnValue($expectedResponse));
         $this->assertEquals($expectedResponse, $mockClient->mergeUsers('123', '456', '987'));
+    }
+
+    private function newUsers(array $config)
+    {
+        $users = new Users($config);
+        $users->setLogger(new \Psr\Log\NullLogger());
+        return $users;
+    }
+
+    /**
+     * @param string[] $methods
+     * @param array $arguments
+     * @return \Talis\Persona\Client\Users|\PHPUnit_Framework_MockObject_MockObject
+     */
+    private function getMockUsersClient(array $methods, array $arguments)
+    {
+        /** @var \Talis\Persona\Client\Users|\PHPUnit_Framework_MockObject_MockObject $mockClient */
+        $mockClient = $this->getMock(
+            \Talis\Persona\Client\Users::class,
+            $methods,
+            $arguments
+        );
+
+        $mockClient->setLogger(new \Psr\Log\NullLogger());
+
+        return $mockClient;
     }
 }
