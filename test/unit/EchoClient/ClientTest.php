@@ -2,11 +2,13 @@
 
 namespace test\unit\EchoClient;
 
+use test\TestBase;
+
 /**
  * Unit tests for Echo Client.
  * @runTestsInSeparateProcesses
  */
-class ClientTest extends \PHPUnit_Framework_TestCase
+class ClientTest extends TestBase
 {
     private $arrMandatoryDefines = [
         'OAUTH_USER',

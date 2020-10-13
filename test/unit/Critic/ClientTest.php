@@ -2,10 +2,12 @@
 
 namespace test\unit\Critic;
 
+use test\TestBase;
+
 /**
  * Unit tests for CriticClient
  */
-class ClientTest extends \PHPUnit_Framework_TestCase
+class ClientTest extends TestBase
 {
     private $criticBaseUrl;
     private $postFields;

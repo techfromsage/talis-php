@@ -2,13 +2,15 @@
 
 namespace test\unit\Babel;
 
+use test\TestBase;
+
 /**
  * Travis-CI runs against the unit tests but can only test certain things.
  *
  * You should run the integration tests locally, with a running local Babel server setup, as the
  * integration tests actually prove that this client library can read/write to Babel correctly.
  */
-class ClientTest extends \PHPUnit_Framework_TestCase
+class ClientTest extends TestBase
 {
     private $babelClient;
     private $baseCreateAnnotationData;
