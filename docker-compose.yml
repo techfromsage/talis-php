@@ -16,27 +16,27 @@ x-common-values: &common-values
 services:
   init:
     <<: *common-values
-    command: "ant init"
+    command: "bash -c 'test -f composer.phar || (curl -sS https://getcomposer.org/installer | php); php composer.phar install'"
 
   lint:
     <<: *common-values
-    command: "ant lint"
+    command: "php composer.phar lint"
 
   code-check:
     <<: *common-values
-    command: "ant code-check"
+    command: "php composer.phar code-check"
 
   test:
     <<: *common-values
-    command: "ant test"
+    command: "php composer.phar test"
 
   unittest:
     <<: *common-values
-    command: "ant unittest"
+    command: "php composer.phar unittest"
 
   integrationtest:
     <<: *common-values
-    command: "ant integrationtest"
+    command: "php composer.phar integrationtest"
 
   local-dev:
     <<: *common-values
@@ -44,7 +44,7 @@ services:
 
   coverage:
     <<: *common-values
-    command: "ant coverage"
+    command: "php composer.phar coverage"
 
   analyse:
     image: phpstan/phpstan:0.12.40

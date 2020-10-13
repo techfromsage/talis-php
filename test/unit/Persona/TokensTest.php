@@ -1260,7 +1260,7 @@ class TokensTest extends TestBase
     }
 
     /**
-     * @covers Tokens::getSubjectIdFromToken
+     * @covers \Talis\Persona\Client\Tokens::getSubjectIdFromToken
      */
     public function testGetSubjectIdFromTokenReturnsClientIdFromToken()
     {
@@ -1277,7 +1277,7 @@ class TokensTest extends TestBase
     }
 
     /**
-     * @covers Tokens::getSubjectIdFromToken
+     * @covers \Talis\Persona\Client\Tokens::getSubjectIdFromToken
      */
     public function testGetSubjectIdFromTokenThrowsExceptionIfTokenContainsNoSubClaim()
     {

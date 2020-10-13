@@ -45,5 +45,28 @@
     "psr-4": {
       "test\\": "test/"
     }
+  },
+  "scripts": {
+    "code-check": "phpmd src text codesize,unusedcode,naming",
+    "lint": [
+      "@phplint",
+      "phpcs"
+    ],
+    "phplint": "phplint --exclude=vendor --no-cache .",
+    "test": "phpunit",
+    "clean-build": "rm -rf build; mkdir build",
+    "clean-coverage": "rm -rf coverage; mkdir coverage",
+    "coverage": [
+      "@clean-coverage",
+      "phpunit --coverage-text --coverage-html coverage"
+    ],
+    "unittest": [
+      "@clean-build",
+      "phpunit test/unit --log-junit build/unittest-report.xml"
+    ],
+    "integrationtest": [
+      "@clean-build",
+      "phpunit test/integration --log-junit build/integrationtest-report.xml"
+    ]
   }
 }
