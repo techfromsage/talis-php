@@ -16,7 +16,7 @@ x-common-values: &common-values
 services:
   init:
     <<: *common-values
-    command: "bash -c 'test -f composer.phar || (curl -sS https://getcomposer.org/installer | php); php composer.phar install'"
+    command: "bash -c 'test -f composer.phar || (curl -sS https://getcomposer.org/installer | php -- --version 1.10.17); php composer.phar install'"
 
   lint:
     <<: *common-values
