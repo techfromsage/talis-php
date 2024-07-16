@@ -2,6 +2,8 @@
 
 namespace test\integration\Persona;
 
+use Doctrine\Common\Cache\ArrayCache;
+use Exception;
 use Talis\Persona\Client\OAuthClients;
 use Talis\Persona\Client\Tokens;
 use Talis\Persona\Client\Users;
@@ -9,6 +11,7 @@ use test\TestBase;
 
 class OAuthClientsIntegrationTest extends TestBase
 {
+    private $cacheBackend;
     /**
      * @var Talis\Persona\Client\OAuthClients
      */
@@ -25,9 +28,12 @@ class OAuthClientsIntegrationTest extends TestBase
     private $clientId;
     private $clientSecret;
 
-    public function setUp()
+    /**
+     * @before
+     */
+    protected function initializeClient()
     {
-        parent::setUp();
+        $this->cacheBackend = new ArrayCache();
         $personaConf = $this->getPersonaConfig();
         $this->clientId = $personaConf['oauthClient'];
         $this->clientSecret = $personaConf['oauthSecret'];
@@ -162,14 +168,16 @@ class OAuthClientsIntegrationTest extends TestBase
     public function testGetOAuthClientInvalidTokenThrowsException()
     {
         $this->setExpectedException(
-            'Exception',
+            Exception::class,
             'Did not retrieve successful response code'
         );
+
+        $personaConf = $this->getPersonaConfig();
 
         $personaClient = new OAuthClients(
             [
                 'userAgent' => 'integrationtest',
-                'persona_host' => 'persona',
+                'persona_host' => $personaConf['host'],
                 'cacheBackend' => $this->cacheBackend,
             ]
         );

@@ -2,15 +2,28 @@
 
 namespace test\unit\Persona;
 
+use Doctrine\Common\Cache\ArrayCache;
+use InvalidArgumentException;
 use Talis\Persona\Client\Signing;
+use test\CompatAssert;
 use test\TestBase;
 
 class SigningTest extends TestBase
 {
+    private $cacheBackend;
+
+    /**
+     * @before
+     */
+    public function initializeCache()
+    {
+        $this->cacheBackend = new ArrayCache();
+    }
+
     public function testMissingUrlThrowsException()
     {
         $this->setExpectedException(
-            'InvalidArgumentException',
+            InvalidArgumentException::class,
             'invalid url or secret'
         );
         $personaClient = new Signing(
@@ -28,7 +41,7 @@ class SigningTest extends TestBase
     public function testMissingSecretThrowsException()
     {
         $this->setExpectedException(
-            'InvalidArgumentException',
+            InvalidArgumentException::class,
             'invalid url or secret'
         );
         $personaClient = new Signing(
@@ -60,7 +73,7 @@ class SigningTest extends TestBase
             null
         );
 
-        $this->assertContains('?expires=', $signedUrl);
+        CompatAssert::assertStringContainsString('?expires=', $signedUrl);
     }
 
     public function testPresignUrlNoExpiryAnchor()
@@ -83,7 +96,7 @@ class SigningTest extends TestBase
         // assert ?expiry comes before #
         $pieces = explode('#', $signedUrl);
         $this->assertTrue(count($pieces) == 2);
-        $this->assertContains('?expires=', $pieces[0]);
+        CompatAssert::assertStringContainsString('?expires=', $pieces[0]);
     }
 
     public function testPresignUrlNoExpiryExistingQueryString()
@@ -103,7 +116,7 @@ class SigningTest extends TestBase
             null
         );
 
-        $this->assertContains('?myparam=foo&expires=', $signedUrl);
+        CompatAssert::assertStringContainsString('?myparam=foo&expires=', $signedUrl);
     }
 
     public function testPresignUrlNoExpiryAnchorExistingQueryString()
@@ -126,7 +139,7 @@ class SigningTest extends TestBase
         // assert ?expiry comes before #
         $pieces = explode('#', $signedUrl);
         $this->assertTrue(count($pieces) == 2);
-        $this->assertContains('?myparam=foo&expires=', $pieces[0]);
+        CompatAssert::assertStringContainsString('?myparam=foo&expires=', $pieces[0]);
     }
 
     public function testPresignUrlWithExpiry()

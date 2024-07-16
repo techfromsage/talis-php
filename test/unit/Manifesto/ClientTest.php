@@ -2,6 +2,7 @@
 
 namespace test\unit\Manifesto;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use test\TestBase;
 
 class ClientTest extends TestBase
@@ -194,7 +195,7 @@ class ClientTest extends TestBase
      * Gets the client with mocked HTTP responses.
      *
      * @param \GuzzleHttp\Psr7\Response[] $responses The responses
-     * @return \Talis\Manifesto\Client|\PHPUnit_Framework_MockObject_MockObject The client.
+     * @return \Talis\Manifesto\Client|\MockObject The client.
      */
     private function getClientWithMockResponses(array $responses = [])
     {
@@ -211,12 +212,15 @@ class ClientTest extends TestBase
 
         $httpClient = new \GuzzleHttp\Client(['handler' => $handlerStack]);
 
-        /** @var \Talis\Persona\Client\Tokens|\PHPUnit_Framework_MockObject_MockObject $stubPersonaClient */
-        $stubPersonaClient = $this->getMock(\Talis\Persona\Client\Tokens::class, [], [], '', false);
+        /** @var MockObject&\Talis\Persona\Client\Tokens */
+        $stubPersonaClient = $this->getMockBuilder(\Talis\Persona\Client\Tokens::class)
+            ->disableOriginalConstructor()
+            ->getMock();
         $stubPersonaClient->method('obtainNewToken')
             ->willReturn(['access_token' => 'some-token']);
         $stubPersonaClient->setLogger(new \Psr\Log\NullLogger());
 
+        /** @var MockObject&\Talis\Manifesto\Client */
         $manifestoClient = $this->getMockBuilder(\Talis\Manifesto\Client::class)
             ->setConstructorArgs([$manifestoBaseUrl, $personaConnectValues])
             ->setMethods(['getHTTPClient', 'getPersonaClient'])

@@ -2,32 +2,31 @@
 
 namespace test;
 
-use Doctrine\Common\Cache\FilesystemCache;
+use PHPUnit\Framework\TestCase;
 
-abstract class TestBase extends \PHPUnit_Framework_TestCase
+abstract class TestBase extends TestCase
 {
-    protected $cacheBackend = null;
-
-    protected function removeCacheFolder()
+    /**
+     * Backward-compatible way of setting exception expectations.
+     *
+     * @param mixed  $exceptionName
+     * @param string $exceptionMessage
+     * @param int    $exceptionCode
+     * @return void
+     */
+    public function setExpectedException($exceptionName, $exceptionMessage = '', $exceptionCode = null)
     {
-        $dir = '/tmp/personaCache';
-
-        if (!file_exists($dir)) {
-            return;
-        }
-
-        $it = new \RecursiveDirectoryIterator($dir, \RecursiveDirectoryIterator::SKIP_DOTS);
-        $files = new \RecursiveIteratorIterator($it, \RecursiveIteratorIterator::CHILD_FIRST);
-
-        foreach ($files as $file) {
-            if ($file->isDir()) {
-                rmdir($file->getRealPath());
-            } else {
-                unlink($file->getRealPath());
+        if (method_exists($this, 'expectException')) {
+            $this->expectException($exceptionName);
+            if ($exceptionMessage !== '') {
+                $this->expectExceptionMessage($exceptionMessage);
             }
+            if ($exceptionCode !== null) {
+                $this->expectExceptionCode($exceptionCode);
+            }
+        } else {
+            parent::setExpectedException($exceptionName, $exceptionMessage, $exceptionCode);
         }
-
-        rmdir($dir);
     }
 
     /**
@@ -51,14 +50,6 @@ abstract class TestBase extends \PHPUnit_Framework_TestCase
         $className = get_class($this);
         $testName = $this->getName();
         echo " Test: {$className}->{$testName}\n";
-    }
-
-    protected function setUp()
-    {
-        $this->removeCacheFolder();
-        $this->cacheBackend = new FilesystemCache(
-            sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'personaCache'
-        );
     }
 
     /**

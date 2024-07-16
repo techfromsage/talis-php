@@ -1,6 +1,6 @@
 FROM talis/ubuntu:1404-latest
 
-ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 
 ENV COMPOSER_ALLOW_SUPERUSER=1
 ENV COMPOSER_HOME=/tmp

@@ -2,6 +2,8 @@
 
 namespace test\unit\EchoClient;
 
+use Exception;
+use PHPUnit\Framework\MockObject\MockObject;
 use test\TestBase;
 
 /**
@@ -30,7 +32,7 @@ class ClientTest extends TestBase
     {
         $this->setRequiredDefines($requiredDefineToTest);
 
-        $this->setExpectedException('\Exception', 'Missing define: ' . $requiredDefineToTest);
+        $this->setExpectedException(Exception::class, 'Missing define: ' . $requiredDefineToTest);
         new \Talis\EchoClient\Client();
     }
 
@@ -136,12 +138,13 @@ class ClientTest extends TestBase
         $this->assertEquals($expectedEventJson, (string) $request->getBody());
     }
 
-    /**
-     * @expectedException \Talis\EchoClient\TooManyEventsInBatchException
-     * @expectedExceptionMessage Batch of events exceeds the maximum allowed size
-     */
     public function testSendBatchEventsThrowsExceptionIfBatchContainsTooManyEvents()
     {
+        $this->setExpectedException(
+            \Talis\EchoClient\TooManyEventsInBatchException::class,
+            'Batch of events exceeds the maximum allowed size'
+        );
+
         $this->setRequiredDefines();
 
         $events = [];
@@ -153,12 +156,13 @@ class ClientTest extends TestBase
         $echoClient->sendBatchEvents($events);
     }
 
-    /**
-     * @expectedException \Talis\EchoClient\BadEventDataException
-     * @expectedExceptionMessage Batch must only contain Echo Event objects
-     */
     public function testSendBatchEventsThrowsExceptionIfBatchContainsNonEchoEvents()
     {
+        $this->setExpectedException(
+            \Talis\EchoClient\BadEventDataException::class,
+            'Batch must only contain Echo Event objects'
+        );
+
         $this->setRequiredDefines();
 
         $events = [];
@@ -168,12 +172,13 @@ class ClientTest extends TestBase
         $echoClient->sendBatchEvents($events);
     }
 
-    /**
-     * @expectedException \Talis\EchoClient\PayloadTooLargeException
-     * @expectedExceptionMessage Batch must be less than 1mb in size
-     */
     public function testSendBatchEventsThrowsExceptionIfBatchIsGreaterThanMaxBytesAllowed()
     {
+        $this->setExpectedException(
+            \Talis\EchoClient\PayloadTooLargeException::class,
+            'Batch must be less than 1mb in size'
+        );
+
         $this->setRequiredDefines();
 
         $echoClient = new \Talis\EchoClient\Client();
@@ -428,7 +433,10 @@ class ClientTest extends TestBase
     {
         $this->setRequiredDefines();
 
-        $echoClient = $this->getMock(\Talis\EchoClient\Client::class, ['getAnalytics']);
+        /** @var MockObject&\Talis\EchoClient\Client */
+        $echoClient = $this->getMockBuilder(\Talis\EchoClient\Client::class)
+            ->setMethods(['getAnalytics'])
+            ->getMock();
         $echoClient->expects($this->once())->method('getAnalytics')->with('some.class', $expectedType);
 
         call_user_func([$echoClient, $method], 'some.class');
@@ -464,7 +472,7 @@ class ClientTest extends TestBase
      *
      * @param \GuzzleHttp\Psr7\Response[] $responses The responses
      * @param array $history History middleware container
-     * @return \Talis\EchoClient\Client|\PHPUnit_Framework_MockObject_MockObject The client.
+     * @return \Talis\EchoClient\Client|\MockObject The client.
      */
     private function getClientWithMockResponses(array $responses = [], array &$history = null)
     {
@@ -477,10 +485,14 @@ class ClientTest extends TestBase
 
         $httpClient = new \GuzzleHttp\Client(['handler' => $handlerStack]);
 
-        $stubPersonaClient = $this->getMock(\Talis\Persona\Client\Tokens::class, [], [], '', false);
+        /** @var MockObject&\Talis\Persona\Client\Tokens */
+        $stubPersonaClient = $this->getMockBuilder(\Talis\Persona\Client\Tokens::class)
+            ->disableOriginalConstructor()
+            ->getMock();
         $stubPersonaClient->method('obtainNewToken')
             ->willReturn(['access_token' => 'some-token']);
 
+        /** @var MockObject&\Talis\EchoClient\Client */
         $echoClient = $this->getMockBuilder(\Talis\EchoClient\Client::class)
             ->setMethods(['getHTTPClient', 'getPersonaClient'])
             ->getMock();

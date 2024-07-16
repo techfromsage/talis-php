@@ -1,14 +1,22 @@
-<phpunit bootstrap="test/bootstrap.php" colors = "true">
-    <php>
-        <ini name="memory_limit" value="512M"/>
-    </php>
-
-    <filter>
-        <whitelist addUncoveredFilesFromWhitelist="true">
+<?xml version="1.0"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd"
+    bootstrap="test/bootstrap.php"
+    backupGlobals="true"
+    beStrictAboutTestsThatDoNotTestAnything="false"
+    colors="true"
+    failOnWarning="false"
+>
+    <coverage includeUncoveredFiles="true">
+        <include>
             <directory suffix=".php">src</directory>
-        </whitelist>
-    </filter>
-
+        </include>
+    </coverage>
+    <php>
+        <ini name="display_errors" value="On"/>
+        <ini name="display_startup_errors" value="On"/>
+        <ini name="memory_limit" value="512M"/>
+        <ini name="date.timezone" value="Europe/London"/>
+    </php>
     <testsuites>
         <testsuite name="unit tests">
             <directory>test/unit</directory>

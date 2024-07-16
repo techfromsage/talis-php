@@ -2,12 +2,15 @@
 
 namespace test\integration\Persona;
 
+use Doctrine\Common\Cache\ArrayCache;
+use Exception;
 use Talis\Persona\Client\Users;
 use Talis\Persona\Client\Tokens;
 use test\TestBase;
 
 class UsersIntegerationTest extends TestBase
 {
+    private $cacheBackend;
     /**
      * @var Talis\Persona\Client\Users
      */
@@ -20,9 +23,12 @@ class UsersIntegerationTest extends TestBase
     private $clientId;
     private $clientSecret;
 
-    public function setUp()
+    /**
+     * @before
+     */
+    protected function initializeClient()
     {
-        parent::setUp();
+        $this->cacheBackend = new ArrayCache();
         $personaConf = $this->getPersonaConfig();
         $this->clientId = $personaConf['oauthClient'];
         $this->clientSecret = $personaConf['oauthSecret'];
@@ -185,14 +191,16 @@ class UsersIntegerationTest extends TestBase
     public function testGetUserByGupidInvalidTokenThrowsException()
     {
         $this->setExpectedException(
-            'Exception',
+            Exception::class,
             'Did not retrieve successful response code'
         );
+
+        $personaConf = $this->getPersonaConfig();
 
         $personaClient = new Users(
             [
                 'userAgent' => 'integrationtest',
-                'persona_host' => 'persona',
+                'persona_host' => $personaConf['host'],
                 'cacheBackend' => $this->cacheBackend,
             ]
         );
@@ -202,7 +210,7 @@ class UsersIntegerationTest extends TestBase
 
     public function testGetUserByGupidThrowsNotFoundExceptionWhenUserNotFound()
     {
-        $this->setExpectedException('Talis\Persona\Client\NotFoundException');
+        $this->setExpectedException(\Talis\Persona\Client\NotFoundException::class);
 
         $tokenDetails = $this->personaClientTokens->obtainNewToken(
             $this->clientId,
@@ -219,7 +227,7 @@ class UsersIntegerationTest extends TestBase
     public function testGetUserByGuidsInvalidTokenThrowsException()
     {
         $this->setExpectedException(
-            'Exception',
+            Exception::class,
             'Error finding user profiles: Did not retrieve successful ' .
                 'response code from persona: 401'
         );

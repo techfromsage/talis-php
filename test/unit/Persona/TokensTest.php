@@ -9,18 +9,32 @@ use Talis\Persona\Client\ScopesNotDefinedException;
 use Talis\Persona\Client\TokenValidationException;
 use Talis\Persona\Client\InvalidTokenException;
 use Doctrine\Common\Cache\ArrayCache;
+use Doctrine\Common\Cache\FilesystemCache;
+use InvalidArgumentException;
+use PHPUnit\Framework\MockObject\MockObject;
 use test\TestBase;
 
 class TokensTest extends TestBase
 {
+    private $wrongPrivateKey;
     private $privateKey;
     private $publicKey;
+    private $cacheBackend;
 
-    public function setUp()
+    /**
+     * @before
+     */
+    public function initializeCache()
     {
-        parent::setUp();
+        $this->cacheBackend = new ArrayCache();
+    }
 
-        $this->_wrongPrivateKey = file_get_contents(APPROOT . '/test/keys/wrong_private_key.pem');
+    /**
+     * @before
+     */
+    public function initializeKeys()
+    {
+        $this->wrongPrivateKey = file_get_contents(APPROOT . '/test/keys/wrong_private_key.pem');
         $this->privateKey = file_get_contents(APPROOT . '/test/keys/private_key.pem');
         $this->publicKey = file_get_contents(APPROOT . '/test/keys/public_key.pem');
     }
@@ -28,7 +42,7 @@ class TokensTest extends TestBase
     public function testEmptyConfigThrowsException()
     {
         $this->setExpectedException(
-            'InvalidArgumentException',
+            InvalidArgumentException::class,
             'invalid configuration'
         );
         $personaClient = new Tokens([]);
@@ -37,7 +51,7 @@ class TokensTest extends TestBase
     public function testMissingRequiredConfigParamsThrowsException()
     {
         $this->setExpectedException(
-            'InvalidArgumentException',
+            InvalidArgumentException::class,
             'invalid configuration'
         );
         $personaClient = new Tokens(
@@ -330,7 +344,7 @@ class TokensTest extends TestBase
                 'audience' => 'standard_user',
                 'scopes' => ['su'],
             ],
-            $this->_wrongPrivateKey,
+            $this->wrongPrivateKey,
             'RS256'
         );
 
@@ -738,7 +752,7 @@ class TokensTest extends TestBase
     public function testUserAgentFailsWithDoubleSpace()
     {
         $this->setExpectedException(
-            'InvalidArgumentException',
+            InvalidArgumentException::class,
             'user agent format is not valid'
         );
 
@@ -987,7 +1001,8 @@ class TokensTest extends TestBase
      */
     public function testCachedTokenFailure()
     {
-        $cacheBackend = $this->getMockBuilder('Doctrine\Common\Cache\FilesystemCache')
+        /** @var MockObject&FilesystemCache */
+        $cacheBackend = $this->getMockBuilder(FilesystemCache::class)
             ->disableOriginalConstructor()
             ->setMethods(['doFetch'])
             ->getMock();
@@ -1022,7 +1037,8 @@ class TokensTest extends TestBase
 
     public function testCachingTokenFailure()
     {
-        $cacheBackend = $this->getMockBuilder('Doctrine\Common\Cache\FilesystemCache')
+        /** @var MockObject&FilesystemCache */
+        $cacheBackend = $this->getMockBuilder(FilesystemCache::class)
             ->disableOriginalConstructor()
             ->setMethods(['doFetch', 'doSave'])
             ->getMock();
@@ -1061,7 +1077,8 @@ class TokensTest extends TestBase
 
     public function testCachedCertificateFailure()
     {
-        $cacheBackend = $this->getMockBuilder('Doctrine\Common\Cache\FilesystemCache')
+        /** @var MockObject&FilesystemCache */
+        $cacheBackend = $this->getMockBuilder(FilesystemCache::class)
             ->disableOriginalConstructor()
             ->setMethods(['doFetch'])
             ->getMock();
@@ -1090,7 +1107,8 @@ class TokensTest extends TestBase
 
     public function testCachingCertificateFailure()
     {
-        $cacheBackend = $this->getMockBuilder('Doctrine\Common\Cache\FilesystemCache')
+        /** @var MockObject&FilesystemCache */
+        $cacheBackend = $this->getMockBuilder(FilesystemCache::class)
             ->disableOriginalConstructor()
             ->setMethods(['doSave', 'doFetch'])
             ->getMock();
@@ -1123,7 +1141,8 @@ class TokensTest extends TestBase
 
     public function testRetrieveJWTCertificateCaching()
     {
-        $cacheBackend = $this->getMockBuilder('Doctrine\Common\Cache\FilesystemCache')
+        /** @var MockObject&FilesystemCache */
+        $cacheBackend = $this->getMockBuilder(FilesystemCache::class)
             ->disableOriginalConstructor()
             ->setMethods(['doFetch', 'doSave'])
             ->getMock();
@@ -1167,7 +1186,8 @@ class TokensTest extends TestBase
 
     public function testRetrieveJWTCertificateCachingFetchingFailure()
     {
-        $cacheBackend = $this->getMockBuilder('Doctrine\Common\Cache\FilesystemCache')
+        /** @var MockObject&FilesystemCache */
+        $cacheBackend = $this->getMockBuilder(FilesystemCache::class)
             ->disableOriginalConstructor()
             ->setMethods(['doFetch', 'doSave'])
             ->getMock();
@@ -1217,7 +1237,8 @@ class TokensTest extends TestBase
 
     public function testRetrieveJWTCertificateCachingSaveFailure()
     {
-        $cacheBackend = $this->getMockBuilder('Doctrine\Common\Cache\FilesystemCache')
+        /** @var MockObject&FilesystemCache */
+        $cacheBackend = $this->getMockBuilder(FilesystemCache::class)
             ->disableOriginalConstructor()
             ->setMethods(['doFetch', 'doSave'])
             ->getMock();
@@ -1334,16 +1355,15 @@ class TokensTest extends TestBase
     /**
      * @param string[] $methods
      * @param array $arguments
-     * @return \Talis\Persona\Client\Tokens|\PHPUnit_Framework_MockObject_MockObject
+     * @return MockObject&\Talis\Persona\Client\Tokens
      */
     private function getMockTokensClient(array $methods, array $arguments)
     {
-        /** @var \Talis\Persona\Client\Tokens|\PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(
-            \Talis\Persona\Client\Tokens::class,
-            $methods,
-            $arguments
-        );
+        /** @var MockObject&\Talis\Persona\Client\Tokens */
+        $mockClient = $this->getMockBuilder(\Talis\Persona\Client\Tokens::class)
+            ->setMethods($methods)
+            ->setConstructorArgs($arguments)
+            ->getMock();
 
         $mockClient->setLogger(new \Psr\Log\NullLogger());
 

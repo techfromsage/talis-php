@@ -2,6 +2,7 @@
 
 namespace test\unit\Babel;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use test\TestBase;
 
 /**
@@ -15,7 +16,10 @@ class ClientTest extends TestBase
     private $babelClient;
     private $baseCreateAnnotationData;
 
-    protected function setUp()
+    /**
+     * @before
+     */
+    protected function initializeClient()
     {
         $this->babelClient = new \Talis\Babel\Client('http://someHost', '3001');
 
@@ -31,12 +35,13 @@ class ClientTest extends TestBase
         ];
     }
 
-    /**
-     * @expectedException \Talis\Babel\ClientException
-     * @expectedExceptionMessage host must be specified
-     */
     public function testConstructorFailure()
     {
+        $this->setExpectedException(
+            \Talis\Babel\ClientException::class,
+            'host must be specified'
+        );
+
         $client = new \Talis\Babel\Client(null, null);
 
         $target = null;
@@ -45,45 +50,49 @@ class ClientTest extends TestBase
         $client->getTargetFeed($target, $token);
     }
 
-    /**
-     * @expectedException \Talis\Babel\ClientException
-     * @expectedExceptionMessage Missing target
-     */
     public function testGetTargetWithNoTarget()
     {
+        $this->setExpectedException(
+            \Talis\Babel\ClientException::class,
+            'Missing target'
+        );
+
         $target = null;
         $token = 'personaToken';
 
         $this->babelClient->getTargetFeed($target, $token);
     }
 
-    /**
-     * @expectedException \Talis\Babel\ClientException
-     * @expectedExceptionMessage Missing target or token
-     */
     public function testGetTargetFeedWithNoToken()
     {
+        $this->setExpectedException(
+            \Talis\Babel\ClientException::class,
+            'Missing target or token'
+        );
+
         $this->babelClient->getTargetFeed('target', null);
     }
 
-    /**
-     * @expectedException \Talis\Babel\InvalidPersonaTokenException
-     * @expectedExceptionMessage No persona token specified
-     */
     public function testCreateAnnotationMissingToken()
     {
+        $this->setExpectedException(
+            \Talis\Babel\InvalidPersonaTokenException::class,
+            'No persona token specified'
+        );
+
         $this->babelClient->createAnnotation(
             null,
             $this->baseCreateAnnotationData
         );
     }
 
-    /**
-     * @expectedException \Talis\Babel\ClientException
-     * @expectedExceptionMessage Missing hasBody in data array
-     */
     public function testCreateAnnotationMissingHasBody()
     {
+        $this->setExpectedException(
+            \Talis\Babel\ClientException::class,
+            'Missing hasBody in data array'
+        );
+
         unset($this->baseCreateAnnotationData['hasBody']);
         $this->babelClient->createAnnotation(
             'someToken',
@@ -91,12 +100,13 @@ class ClientTest extends TestBase
         );
     }
 
-    /**
-     * @expectedException \Talis\Babel\ClientException
-     * @expectedExceptionMessage hasBody must be an array containing format and type
-     */
     public function testCreateAnnotationHasBodyNotArray()
     {
+        $this->setExpectedException(
+            \Talis\Babel\ClientException::class,
+            'hasBody must be an array containing format and type'
+        );
+
         $this->baseCreateAnnotationData['hasBody'] = 'foo';
         $this->babelClient->createAnnotation(
             'someToken',
@@ -104,12 +114,13 @@ class ClientTest extends TestBase
         );
     }
 
-    /**
-     * @expectedException \Talis\Babel\ClientException
-     * @expectedExceptionMessage Missing format in data array
-     */
     public function testCreateAnnotationMissingHasBodyFormat()
     {
+        $this->setExpectedException(
+            \Talis\Babel\ClientException::class,
+            'Missing format in data array'
+        );
+
         unset($this->baseCreateAnnotationData['hasBody']['format']);
         $this->babelClient->createAnnotation(
             'someToken',
@@ -117,12 +128,13 @@ class ClientTest extends TestBase
         );
     }
 
-    /**
-     * @expectedException \Talis\Babel\ClientException
-     * @expectedExceptionMessage Missing type in data array
-     */
     public function testCreateAnnotationMissingHasBodyType()
     {
+        $this->setExpectedException(
+            \Talis\Babel\ClientException::class,
+            'Missing type in data array'
+        );
+
         unset($this->baseCreateAnnotationData['hasBody']['type']);
         $this->babelClient->createAnnotation(
             'someToken',
@@ -130,12 +142,13 @@ class ClientTest extends TestBase
         );
     }
 
-    /**
-     * @expectedException \Talis\Babel\ClientException
-     * @expectedExceptionMessage Missing annotatedBy in data array
-     */
     public function testCreateAnnotationMissingAnnotatedBy()
     {
+        $this->setExpectedException(
+            \Talis\Babel\ClientException::class,
+            'Missing annotatedBy in data array'
+        );
+
         unset($this->baseCreateAnnotationData['annotatedBy']);
         $this->babelClient->createAnnotation(
             'someToken',
@@ -143,12 +156,13 @@ class ClientTest extends TestBase
         );
     }
 
-    /**
-     * @expectedException \Talis\Babel\ClientException
-     * @expectedExceptionMessage Missing hasTarget in data array
-     */
     public function testCreateAnnotationMissingHasTarget()
     {
+        $this->setExpectedException(
+            \Talis\Babel\ClientException::class,
+            'Missing hasTarget in data array'
+        );
+
         unset($this->baseCreateAnnotationData['hasTarget']);
         $this->babelClient->createAnnotation(
             'someToken',
@@ -156,12 +170,13 @@ class ClientTest extends TestBase
         );
     }
 
-    /**
-     * @expectedException \Talis\Babel\ClientException
-     * @expectedExceptionMessage hasTarget must be an array containing uri
-     */
     public function testCreateAnnotationHasTargetIsNotArray()
     {
+        $this->setExpectedException(
+            \Talis\Babel\ClientException::class,
+            'hasTarget must be an array containing uri'
+        );
+
         $this->baseCreateAnnotationData['hasTarget'] = 'foo';
         $this->babelClient->createAnnotation(
             'someToken',
@@ -177,7 +192,7 @@ class ClientTest extends TestBase
         ]);
 
         $this->setExpectedException(
-            'Talis\Babel\ClientException',
+            \Talis\Babel\ClientException::class,
             "Error 400 for /annotations: {$responseBody['message']}"
         );
 
@@ -309,7 +324,7 @@ class ClientTest extends TestBase
         ]);
 
         $this->setExpectedException(
-            'Talis\Babel\ClientException',
+            \Talis\Babel\ClientException::class,
             'Error 400 for ' . $path . ': ' . $responseBody['message']
         );
 
@@ -323,7 +338,7 @@ class ClientTest extends TestBase
         ]);
 
         $this->setExpectedException(
-            'Talis\Babel\ClientException',
+            \Talis\Babel\ClientException::class,
             'Failed to decode JSON response: {"garbage"}'
         );
 
@@ -349,7 +364,7 @@ class ClientTest extends TestBase
         ]);
 
         $this->setExpectedException(
-            'Talis\Babel\ClientException',
+            \Talis\Babel\ClientException::class,
             'Error 500 for ' . $path
         );
 
@@ -364,7 +379,7 @@ class ClientTest extends TestBase
         ]);
 
         $this->setExpectedException(
-            'Talis\Babel\ClientException',
+            \Talis\Babel\ClientException::class,
             'Unexpected amount of X-Feed-New-Items headers returned'
         );
 
@@ -379,7 +394,7 @@ class ClientTest extends TestBase
         ]);
 
         $this->setExpectedException(
-            'Talis\Babel\ClientException',
+            \Talis\Babel\ClientException::class,
             'Unexpected amount of X-Feed-New-Items headers returned'
         );
 
@@ -415,7 +430,7 @@ class ClientTest extends TestBase
      *
      * @param \GuzzleHttp\Psr7\Response[] $responses The responses
      * @param array $history History middleware container
-     * @return \Talis\Babel\Client|\PHPUnit_Framework_MockObject_MockObject The client.
+     * @return \Talis\Babel\Client|\MockObject The client.
      */
     private function getClientWithMockResponses(array $responses, array &$history = null)
     {
@@ -428,6 +443,7 @@ class ClientTest extends TestBase
 
         $httpClient = new \GuzzleHttp\Client(['handler' => $handlerStack]);
 
+        /** @var MockObject&\Talis\Babel\Client */
         $babelClient = $this->getMockBuilder(\Talis\Babel\Client::class)
             ->setMethods(['getHTTPClient'])
             ->setConstructorArgs(['http://someHost', '3001'])
