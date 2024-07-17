@@ -4,11 +4,13 @@ namespace Talis\Persona\Client;
 
 use Monolog\Logger;
 use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
 use Talis\Persona\Client\ClientVersionCache;
 
 abstract class Base implements LoggerAwareInterface
 {
     use ClientVersionCache;
+    use LoggerAwareTrait;
 
     const LOGGER_NAME = 'PERSONA';
     const PERSONA_API_VERSION = '3';
@@ -18,11 +20,6 @@ abstract class Base implements LoggerAwareInterface
      * @var Array
      */
     protected $config = null;
-
-    /**
-     * @var \Psr\Log\LoggerInterface
-     */
-    private $logger;
 
     /**
      * @var \Doctrine\Common\Cache\CacheProvider
@@ -98,11 +95,6 @@ abstract class Base implements LoggerAwareInterface
                 );
             }
         }
-    }
-
-    public function setLogger(\Psr\Log\LoggerInterface $logger)
-    {
-        $this->logger = $logger;
     }
 
     /**

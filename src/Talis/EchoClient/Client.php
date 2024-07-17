@@ -2,9 +2,6 @@
 
 namespace Talis\EchoClient;
 
-use Monolog\Handler\StreamHandler;
-use Monolog\Logger;
-use Talis\EchoClient\Event;
 use Talis\EchoClient\Base;
 
 /**

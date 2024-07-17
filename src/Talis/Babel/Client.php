@@ -5,6 +5,7 @@ namespace Talis\Babel;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
 
 /**
  * Babel client.
@@ -15,6 +16,8 @@ use Psr\Log\LoggerAwareInterface;
  */
 class Client implements LoggerAwareInterface
 {
+    use LoggerAwareTrait;
+
     /**
      * @var string
      */
@@ -29,11 +32,6 @@ class Client implements LoggerAwareInterface
      * @var \GuzzleHttp\Client
      */
     private $httpClient = null;
-
-    /**
-     * @var \Psr\Log\LoggerInterface
-     */
-    private $logger = null;
 
     /**
      * Babel client must be created with a host/port to connect to Babel.
@@ -56,15 +54,6 @@ class Client implements LoggerAwareInterface
 
         $this->babelHost = $host;
         $this->babelPort = $port;
-    }
-
-    /**
-     * Specify an instance of MonoLog Logger for the Babel client to use.
-     * @param \Psr\Log\LoggerInterface $logger logger to use
-     */
-    public function setLogger(\Psr\Log\LoggerInterface $logger)
-    {
-        $this->logger = $logger;
     }
 
     /**
@@ -388,8 +377,10 @@ class Client implements LoggerAwareInterface
     protected function getLogger()
     {
         if ($this->logger == null) {
-            $this->logger = new Logger('BabelClient');
-            $this->logger->pushHandler(new StreamHandler('php://stderr', Logger::DEBUG));
+            $logger = new Logger('BabelClient');
+            $logger->pushHandler(new StreamHandler('php://stderr', Logger::DEBUG));
+
+            $this->logger = $logger;
         }
 
         return $this->logger;

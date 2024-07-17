@@ -3,6 +3,7 @@
 namespace test\integration\Persona;
 
 use Doctrine\Common\Cache\ArrayCache;
+use Exception;
 use Talis\Persona\Client\Tokens;
 use Talis\Persona\Client\ValidationResults;
 use test\TestBase;
@@ -13,12 +14,18 @@ class TokensIntegrationTest extends TestBase
      * @var Talis\Persona\Client\Tokens
      */
     private $personaClient;
+    /**
+     * @var ArrayCache
+     */
+    private $personaCache;
     private $clientId;
     private $clientSecret;
 
-    public function setUp()
+    /**
+     * @before
+     */
+    protected function initializeClient()
     {
-        parent::setUp();
         $personaConf = $this->getPersonaConfig();
         $this->clientId = $personaConf['oauthClient'];
         $this->clientSecret = $personaConf['oauthSecret'];
@@ -74,7 +81,7 @@ class TokensIntegrationTest extends TestBase
     public function testObtainNewTokenThrowsExceptionIfNoCredentials()
     {
         $this->setExpectedException(
-            'Exception',
+            Exception::class,
             'You must specify clientId, and clientSecret to obtain a new token'
         );
 
@@ -89,7 +96,7 @@ class TokensIntegrationTest extends TestBase
     {
         // Should throw exception if you dont pass in a token to validate
         // AND it cant find a token on $_SERVER, $_GET or $_POST
-        $this->setExpectedException('Exception', 'No OAuth token supplied');
+        $this->setExpectedException(Exception::class, 'No OAuth token supplied');
         $this->personaClient->validateToken();
     }
 

@@ -2,14 +2,28 @@
 
 namespace test\unit\Persona;
 
+use Doctrine\Common\Cache\ArrayCache;
+use Exception;
+use InvalidArgumentException;
+use PHPUnit\Framework\MockObject\MockObject;
 use Talis\Persona\Client\Login;
 use test\TestBase;
 
 class LoginTest extends TestBase
 {
+    private $cacheBackend;
+
+    /**
+     * @before
+     */
+    public function initializeCache()
+    {
+        $this->cacheBackend = new ArrayCache();
+    }
+
     public function testRequireAuthInvalidProvider()
     {
-        $this->setExpectedException('InvalidArgumentException', 'Invalid provider');
+        $this->setExpectedException(InvalidArgumentException::class, 'Invalid provider');
 
         $personaClient = $this->newLogin(
             [
@@ -23,7 +37,7 @@ class LoginTest extends TestBase
 
     public function testRequireAuthInvalidAppId()
     {
-        $this->setExpectedException('InvalidArgumentException', 'Invalid appId');
+        $this->setExpectedException(InvalidArgumentException::class, 'Invalid appId');
 
         $personaClient = $this->newLogin(
             [
@@ -37,7 +51,7 @@ class LoginTest extends TestBase
 
     public function testRequireAuthInvalidAppSecret()
     {
-        $this->setExpectedException('InvalidArgumentException', 'Invalid appSecret');
+        $this->setExpectedException(InvalidArgumentException::class, 'Invalid appSecret');
 
         $personaClient = $this->newLogin(
             [
@@ -51,14 +65,17 @@ class LoginTest extends TestBase
 
     public function testRequireAuthNoRedirectUri()
     {
-        /** @var \Talis\Persona\Client\Login|\PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(\Talis\Persona\Client\Login::class, ['login'], [
-            [
-                'userAgent' => 'unittest',
-                'persona_host' => 'localhost',
-                'cacheBackend' => $this->cacheBackend,
-            ]
-        ]);
+        /** @var MockObject&\Talis\Persona\Client\Login */
+        $mockClient = $this->getMockBuilder(\Talis\Persona\Client\Login::class)
+            ->setMethods(['login'])
+            ->setConstructorArgs([
+                [
+                    'userAgent' => 'unittest',
+                    'persona_host' => 'localhost',
+                    'cacheBackend' => $this->cacheBackend,
+                ]
+            ])
+            ->getMock();
         $mockClient->expects($this->once())
             ->method('login')
             ->will($this->returnValue(null));
@@ -71,7 +88,7 @@ class LoginTest extends TestBase
 
     public function testRequireAuthInvalidRedirectUri()
     {
-        $this->setExpectedException('InvalidArgumentException', 'Invalid redirectUri');
+        $this->setExpectedException(InvalidArgumentException::class, 'Invalid redirectUri');
 
         $personaClient = $this->newLogin(
             [
@@ -85,14 +102,17 @@ class LoginTest extends TestBase
 
     public function testRequireAuthWithRedirectUri()
     {
-        /** @var \Talis\Persona\Client\Login|\PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(\Talis\Persona\Client\Login::class, ['login'], [
+        /** @var MockObject&\Talis\Persona\Client\Login */
+        $mockClient = $this->getMockBuilder(\Talis\Persona\Client\Login::class)
+            ->setMethods(['login'])
+            ->setConstructorArgs([
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
                 'cacheBackend' => $this->cacheBackend,
             ]
-        ]);
+        ])
+            ->getMock();
         $mockClient->expects($this->once())
             ->method('login')
             ->will($this->returnValue(null));
@@ -106,14 +126,17 @@ class LoginTest extends TestBase
 
     public function testRequireAuthAlreadyLoggedIn()
     {
-        /** @var \Talis\Persona\Client\Login|\PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(\Talis\Persona\Client\Login::class, ['isLoggedIn', 'login'], [
+        /** @var MockObject&\Talis\Persona\Client\Login */
+        $mockClient = $this->getMockBuilder(\Talis\Persona\Client\Login::class)
+            ->setMethods(['isLoggedIn', 'login'])
+            ->setConstructorArgs([
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
                 'cacheBackend' => $this->cacheBackend,
             ]
-        ]);
+        ])
+            ->getMock();
         $mockClient->expects($this->once())
             ->method('isLoggedIn')
             ->will($this->returnValue(true));
@@ -126,14 +149,17 @@ class LoginTest extends TestBase
 
     public function testRequireAuthNotAlreadyLoggedIn()
     {
-        /** @var \Talis\Persona\Client\Login|\PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(\Talis\Persona\Client\Login::class, ['isLoggedIn', 'login'], [
+        /** @var MockObject&\Talis\Persona\Client\Login */
+        $mockClient = $this->getMockBuilder(\Talis\Persona\Client\Login::class)
+            ->setMethods(['isLoggedIn', 'login'])
+            ->setConstructorArgs([
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
                 'cacheBackend' => $this->cacheBackend,
             ]
-        ]);
+        ])
+            ->getMock();
         $mockClient->expects($this->once())
             ->method('isLoggedIn')
             ->will($this->returnValue(false));
@@ -151,7 +177,7 @@ class LoginTest extends TestBase
     // validateAuth tests
     public function testValidateAuthThrowsExceptionWhenPayloadDoesNotContainSignature()
     {
-        $this->setExpectedException('Exception', 'Signature not set');
+        $this->setExpectedException(Exception::class, 'Signature not set');
         $personaClient = $this->newLogin(
             [
                 'userAgent' => 'unittest',
@@ -165,7 +191,7 @@ class LoginTest extends TestBase
 
     public function testValidateAuthThrowsExceptionWhenPayloadDoesNotExist()
     {
-        $this->setExpectedException('Exception', 'Payload not set');
+        $this->setExpectedException(Exception::class, 'Payload not set');
         $personaClient = $this->newLogin(
             [
                 'userAgent' => 'unittest',
@@ -179,7 +205,7 @@ class LoginTest extends TestBase
 
     public function testValidateAuthThrowsExceptionWhenPayloadIsAString()
     {
-        $this->setExpectedException('Exception', 'Payload not json');
+        $this->setExpectedException(Exception::class, 'Payload not json');
         $personaClient = $this->newLogin(
             [
                 'userAgent' => 'unittest',
@@ -194,7 +220,7 @@ class LoginTest extends TestBase
 
     public function testValidateAuthThrowsExceptionWhenPayloadIsMissingState()
     {
-        $this->setExpectedException('Exception', 'Login state does not match');
+        $this->setExpectedException(Exception::class, 'Login state does not match');
         $personaClient = $this->newLogin(
             [
                 'userAgent' => 'unittest',
@@ -210,7 +236,7 @@ class LoginTest extends TestBase
 
     public function testValidateAuthThrowsExceptionWhenSessionIsMissingState()
     {
-        $this->setExpectedException('Exception', 'Login state does not match');
+        $this->setExpectedException(Exception::class, 'Login state does not match');
         $personaClient = $this->newLogin(
             [
                 'userAgent' => 'unittest',
@@ -229,7 +255,7 @@ class LoginTest extends TestBase
 
     public function testValidateAuthThrowsExceptionWhenSessionStateDoNotMatchPayloadState()
     {
-        $this->setExpectedException('Exception', 'Login state does not match');
+        $this->setExpectedException(Exception::class, 'Login state does not match');
         $personaClient = $this->newLogin(
             [
                 'userAgent' => 'unittest',
@@ -248,7 +274,7 @@ class LoginTest extends TestBase
 
     public function testValidateAuthPayloadMismatchingSignature()
     {
-        $this->setExpectedException('Exception', 'Signature does not match');
+        $this->setExpectedException(Exception::class, 'Signature does not match');
         $personaClient = $this->newLogin(
             [
                 'userAgent' => 'unittest',
@@ -357,14 +383,17 @@ class LoginTest extends TestBase
 
     public function testValidateAuthPayloadContainsStateAndSignatureFullPayloadCheckLoginIsCalled()
     {
-        /** @var \Talis\Persona\Client\Login|\PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(\Talis\Persona\Client\Login::class, ['isLoggedIn'], [
+        /** @var MockObject&\Talis\Persona\Client\Login */
+        $mockClient = $this->getMockBuilder(\Talis\Persona\Client\Login::class)
+            ->setMethods(['isLoggedIn'])
+            ->setConstructorArgs([
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
                 'cacheBackend' => $this->cacheBackend,
             ]
-        ]);
+        ])
+            ->getMock();
         $mockClient->expects($this->once())
             ->method('isLoggedIn')
             ->will($this->returnValue(true));
@@ -401,14 +430,17 @@ class LoginTest extends TestBase
 
     public function testValidateAuthAfterRequireAuth()
     {
-        /** @var \Talis\Persona\Client\Login|\PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(\Talis\Persona\Client\Login::class, ['isLoggedIn', 'login'], [
+        /** @var MockObject&\Talis\Persona\Client\Login */
+        $mockClient = $this->getMockBuilder(\Talis\Persona\Client\Login::class)
+            ->setMethods(['isLoggedIn', 'login'])
+            ->setConstructorArgs([
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
                 'cacheBackend' => $this->cacheBackend,
             ]
-        ]);
+        ])
+            ->getMock();
         $mockClient->expects($this->exactly(2))
             ->method('isLoggedIn')
             ->will($this->onConsecutiveCalls(false, true));
@@ -580,12 +612,11 @@ class LoginTest extends TestBase
             ]
         ];
 
-        /** @var \Talis\Persona\Client\Login|\PHPUnit_Framework_MockObject_MockObject $client */
-        $client = $this->getMock(
-            \Talis\Persona\Client\Login::class,
-            ['redirect', 'getLoginState'],
-            $arguments
-        );
+        /** @var MockObject&\Talis\Persona\Client\Login */
+        $client = $this->getMockBuilder(\Talis\Persona\Client\Login::class)
+            ->setMethods(['redirect', 'getLoginState'])
+            ->setConstructorArgs($arguments)
+            ->getMock();
 
         $client->expects($this->once())
             ->method('getLoginState')

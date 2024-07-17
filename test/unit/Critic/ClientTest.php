@@ -2,6 +2,8 @@
 
 namespace test\unit\Critic;
 
+use PHPUnit\Framework\MockObject\MockObject;
+use test\CompatAssert;
 use test\TestBase;
 
 /**
@@ -12,7 +14,10 @@ class ClientTest extends TestBase
     private $criticBaseUrl;
     private $postFields;
 
-    protected function setUp()
+    /**
+     * @before
+     */
+    protected function initializeFields()
     {
         $this->criticBaseUrl = 'http://listreviews.talis.com/test/reviews';
         $this->postFields = ['listUri' => 'http://somelist'];
@@ -28,13 +33,10 @@ class ClientTest extends TestBase
         $this->assertEquals($id, $criticClient->createReview($this->postFields, '', ''));
     }
 
-    /**
-     * Exception thrown when response code is 200
-     *
-     * @expectedException \Talis\Critic\Exceptions\ReviewException
-     */
     public function testCreateReviewException()
     {
+        $this->setExpectedException(\Talis\Critic\Exceptions\ReviewException::class);
+
         $criticClient = $this->getClientWithMockResponses([
             new \GuzzleHttp\Psr7\Response(200, [], json_encode(['id' => '1234'])),
         ]);
@@ -42,13 +44,10 @@ class ClientTest extends TestBase
         $criticClient->createReview($this->postFields, '', '');
     }
 
-    /**
-     * 401 response triggers UnauthorisedAccessException
-     *
-     * @expectedException \Talis\Critic\Exceptions\UnauthorisedAccessException
-     */
     public function testCreateReviewGuzzleException()
     {
+        $this->setExpectedException(\Talis\Critic\Exceptions\UnauthorisedAccessException::class);
+
         $criticClient = $this->getClientWithMockResponses([
             new \GuzzleHttp\Psr7\Response(401, [], json_encode([])),
         ]);
@@ -60,17 +59,19 @@ class ClientTest extends TestBase
         );
     }
 
-    /**
-     * @expectedException \Exception
-     * @expectedExceptionMessage Did not retrieve successful response code from persona: -1
-     */
     public function testCreateReviewWithInvalidPersonaConfigFails()
     {
+        $this->setExpectedException(
+            \Exception::class,
+            'Did not retrieve successful response code from persona'
+        );
+
+        $personaConf = $this->getPersonaConfig();
+
         $criticClient = new \Talis\Critic\Client($this->criticBaseUrl);
         $criticClient->setPersonaConnectValues([
             'userAgent' => 'userAgentVal',
-            'persona_host' => 'persona_host_val',
-            'persona_oauth_route' => 'persona_oauth_route_val',
+            'persona_host' => $personaConf['host'],
             'persona_oauth_route' => 'persona_oauth_route_val',
             'cacheBackend' => new \Doctrine\Common\Cache\ArrayCache(),
         ]);
@@ -95,7 +96,7 @@ class ClientTest extends TestBase
         $this->assertTrue($request->hasHeader('Content-Type'), 'Content-Type header is missing');
         $this->assertStringStartsWith('application/x-www-form-urlencoded', $request->getHeader('Content-Type')[0]);
         parse_str((string) $request->getBody(), $body);
-        $this->assertInternalType('array', $body);
+        CompatAssert::assertIsArray($body);
         $this->assertEquals($this->postFields, $body);
     }
 
@@ -104,7 +105,7 @@ class ClientTest extends TestBase
      *
      * @param \GuzzleHttp\Psr7\Response[] $responses The responses
      * @param array $history History middleware container
-     * @return \Talis\Critic\Client|\PHPUnit_Framework_MockObject_MockObject The client.
+     * @return \Talis\Critic\Client|MockObject The client.
      */
     private function getClientWithMockResponses(array $responses, array &$history = null)
     {
@@ -117,6 +118,7 @@ class ClientTest extends TestBase
 
         $httpClient = new \GuzzleHttp\Client(['handler' => $handlerStack]);
 
+        /** @var MockObject&\Talis\Persona\Client\Tokens */
         $tokenClient = $this->getMockBuilder(\Talis\Persona\Client\Tokens::class)
             ->disableOriginalConstructor()
             ->setMethods(['obtainNewToken'])
@@ -124,7 +126,7 @@ class ClientTest extends TestBase
         $tokenClient->method('obtainNewToken')
             ->willReturn(['access_token' => 'TOKEN']);
 
-        /** @var \Talis\Critic\Client|\PHPUnit_Framework_MockObject_MockObject */
+        /** @var MockObject&\Talis\Critic\Client */
         $criticClient = $this->getMockBuilder(\Talis\Critic\Client::class)
             ->setMethods(['getHTTPClient', 'getTokenClient'])
             ->setConstructorArgs([$this->criticBaseUrl])

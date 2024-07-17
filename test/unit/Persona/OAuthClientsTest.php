@@ -2,16 +2,30 @@
 
 namespace test\unit\Persona;
 
+use Doctrine\Common\Cache\ArrayCache;
+use Exception;
+use InvalidArgumentException;
 use Talis\Persona\Client\OAuthClients;
+use PHPUnit\Framework\MockObject\MockObject;
 use Talis\Persona\Client\InvalidPayloadException;
 use test\TestBase;
 
 class OAuthClientsTest extends TestBase
 {
+    private $cacheBackend;
+
+    /**
+     * @before
+     */
+    public function initializeCache()
+    {
+        $this->cacheBackend = new ArrayCache();
+    }
+
     // Get oauth client tests
     public function testGetOAuthClientEmptyClientIdThrowsException()
     {
-        $this->setExpectedException('InvalidArgumentException', 'Invalid clientId');
+        $this->setExpectedException(InvalidArgumentException::class, 'Invalid clientId');
         $personaClient = $this->newOAuthClients(
             [
                 'userAgent' => 'unittest',
@@ -24,7 +38,7 @@ class OAuthClientsTest extends TestBase
 
     public function testGetOAuthClientEmptyTokenThrowsException()
     {
-        $this->setExpectedException('InvalidArgumentException', 'Invalid token');
+        $this->setExpectedException(InvalidArgumentException::class, 'Invalid token');
         $personaClient = $this->newOAuthClients(
             [
                 'userAgent' => 'unittest',
@@ -37,15 +51,18 @@ class OAuthClientsTest extends TestBase
 
     public function testGetOAuthClientThrowsExceptionWhenClientNotFound()
     {
-        $this->setExpectedException('Exception', 'Did not retrieve successful response code');
-        /** @var \Talis\Persona\Client\OAuthClients|\PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(\Talis\Persona\Client\OAuthClients::class, ['personaGetOAuthClient'], [
-            [
-                'userAgent' => 'unittest',
-                'persona_host' => 'localhost',
-                'cacheBackend' => $this->cacheBackend,
-            ]
-        ]);
+        $this->setExpectedException(Exception::class, 'Did not retrieve successful response code');
+        /** @var MockObject&OAuthClients */
+        $mockClient = $this->getMockBuilder(OAuthClients::class)
+            ->setMethods(['personaGetOAuthClient'])
+            ->setConstructorArgs([
+                [
+                    'userAgent' => 'unittest',
+                    'persona_host' => 'localhost',
+                    'cacheBackend' => $this->cacheBackend,
+                ]
+            ])
+            ->getMock();
         $mockClient->expects($this->once())
             ->method('personaGetOAuthClient')
             ->will($this->throwException(new \Exception('Did not retrieve successful response code')));
@@ -55,14 +72,17 @@ class OAuthClientsTest extends TestBase
 
     public function testGetOAuthClientReturnsClientWhenGupidFound()
     {
-        /** @var \Talis\Persona\Client\OAuthClients|\PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(\Talis\Persona\Client\OAuthClients::class, ['personaGetOAuthClient'], [
+        /** @var MockObject&OAuthClients */
+        $mockClient = $this->getMockBuilder(OAuthClients::class)
+            ->setMethods(['personaGetOAuthClient'])
+            ->setConstructorArgs([
             [
                 'userAgent' => 'unittest',
                 'persona_host' => 'localhost',
                 'cacheBackend' => $this->cacheBackend,
             ]
-        ]);
+        ])
+            ->getMock();
         $expectedResponse = [
             'rate_limit' => 1000,
             'rate_duration' => 1800,
@@ -86,7 +106,7 @@ class OAuthClientsTest extends TestBase
 
     public function testUpdateOAuthClientEmptyGuid()
     {
-        $this->setExpectedException('Exception', 'Invalid guid');
+        $this->setExpectedException(Exception::class, 'Invalid guid');
         $personaClient = $this->newOAuthClients(
             [
                 'userAgent' => 'unittest',
@@ -99,7 +119,7 @@ class OAuthClientsTest extends TestBase
 
     public function testUpdateOAuthClientInvalidGuid()
     {
-        $this->setExpectedException('Exception', 'Invalid guid');
+        $this->setExpectedException(Exception::class, 'Invalid guid');
         $personaClient = $this->newOAuthClients(
             [
                 'userAgent' => 'unittest',
@@ -112,7 +132,7 @@ class OAuthClientsTest extends TestBase
 
     public function testUpdateOAuthClientEmptyProperties()
     {
-        $this->setExpectedException('Exception', 'Invalid properties');
+        $this->setExpectedException(Exception::class, 'Invalid properties');
         $personaClient = $this->newOAuthClients(
             [
                 'userAgent' => 'unittest',
@@ -125,7 +145,7 @@ class OAuthClientsTest extends TestBase
 
     public function testUpdateOAuthClientInvalidPropertiesKeys()
     {
-        $this->setExpectedException('Exception', 'Invalid properties');
+        $this->setExpectedException(Exception::class, 'Invalid properties');
         $personaClient = $this->newOAuthClients(
             [
                 'userAgent' => 'unittest',
@@ -138,7 +158,7 @@ class OAuthClientsTest extends TestBase
 
     public function testUpdateOAuthClientInvalidPropertiesScopeKeys1()
     {
-        $this->setExpectedException('Exception', 'Invalid properties');
+        $this->setExpectedException(Exception::class, 'Invalid properties');
         $personaClient = $this->newOAuthClients(
             [
                 'userAgent' => 'unittest',
@@ -151,7 +171,7 @@ class OAuthClientsTest extends TestBase
 
     public function testUpdateOAuthClientInvalidPropertiesScopeKeys2()
     {
-        $this->setExpectedException('Exception', 'Invalid properties');
+        $this->setExpectedException(Exception::class, 'Invalid properties');
         $personaClient = $this->newOAuthClients(
             [
                 'userAgent' => 'unittest',
@@ -164,7 +184,7 @@ class OAuthClientsTest extends TestBase
 
     public function testUpdateOAuthClientInvalidPropertiesScopeKeys3()
     {
-        $this->setExpectedException('Exception', 'Invalid properties');
+        $this->setExpectedException(Exception::class, 'Invalid properties');
         $personaClient = $this->newOAuthClients(
             [
                 'userAgent' => 'unittest',
@@ -177,7 +197,7 @@ class OAuthClientsTest extends TestBase
 
     public function testUpdateOAuthClientInvalidPropertiesScopeKeys4()
     {
-        $this->setExpectedException('Exception', 'Invalid properties');
+        $this->setExpectedException(Exception::class, 'Invalid properties');
         $personaClient = $this->newOAuthClients(
             [
                 'userAgent' => 'unittest',
@@ -200,7 +220,7 @@ class OAuthClientsTest extends TestBase
 
     public function testUpdateOAuthClientsEmptyToken()
     {
-        $this->setExpectedException('Exception', 'Invalid token');
+        $this->setExpectedException(Exception::class, 'Invalid token');
         $personaClient = $this->newOAuthClients(
             [
                 'userAgent' => 'unittest',
@@ -213,7 +233,7 @@ class OAuthClientsTest extends TestBase
 
     public function testUpdateOAuthClientsInvalidToken()
     {
-        $this->setExpectedException('Exception', 'Invalid token');
+        $this->setExpectedException(Exception::class, 'Invalid token');
         $personaClient = $this->newOAuthClients(
             [
                 'userAgent' => 'unittest',
@@ -226,15 +246,18 @@ class OAuthClientsTest extends TestBase
 
     public function testUpdateOAuthClientPutFails()
     {
-        $this->setExpectedException('Exception', 'Could not retrieve OAuth response code');
-        /** @var \Talis\Persona\Client\OAuthClients|\PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(\Talis\Persona\Client\OAuthClients::class, ['personaPatchOAuthClient'], [
-            [
-                'userAgent' => 'unittest',
-                'persona_host' => 'localhost',
-                'cacheBackend' => $this->cacheBackend,
-            ]
-        ]);
+        $this->setExpectedException(Exception::class, 'Could not retrieve OAuth response code');
+        /** @var MockObject&OAuthClients */
+        $mockClient = $this->getMockBuilder(OAuthClients::class)
+            ->setMethods(['personaPatchOAuthClient'])
+            ->setConstructorArgs([
+                [
+                    'userAgent' => 'unittest',
+                    'persona_host' => 'localhost',
+                    'cacheBackend' => $this->cacheBackend,
+                ]
+            ])
+            ->getMock();
         $mockClient->expects($this->once())
             ->method('personaPatchOAuthClient')
             ->will($this->throwException(new \Exception('Could not retrieve OAuth response code')));
@@ -244,14 +267,17 @@ class OAuthClientsTest extends TestBase
 
     public function testUpdateOAuthClientPutSucceeds()
     {
-        /** @var \Talis\Persona\Client\OAuthClients|\PHPUnit_Framework_MockObject_MockObject $mockClient */
-        $mockClient = $this->getMock(\Talis\Persona\Client\OAuthClients::class, ['personaPatchOAuthClient'], [
-            [
-                'userAgent' => 'unittest',
-                'persona_host' => 'localhost',
-                'cacheBackend' => $this->cacheBackend,
-            ]
-        ]);
+        /** @var MockObject&OAuthClients */
+        $mockClient = $this->getMockBuilder(OAuthClients::class)
+            ->setMethods(['personaPatchOAuthClient'])
+            ->setConstructorArgs([
+                [
+                    'userAgent' => 'unittest',
+                    'persona_host' => 'localhost',
+                    'cacheBackend' => $this->cacheBackend,
+                ]
+            ])
+            ->getMock();
 
         $expectedResponse = []; // 204 has no content
         $mockClient->expects($this->once())
@@ -270,19 +296,18 @@ class OAuthClientsTest extends TestBase
 
     public function testRegenerateSecretNon200Exception()
     {
-        /** @var \Talis\Persona\Client\OAuthClients|\PHPUnit_Framework_MockObject_MockObject $oauthClient */
-        $oauthClient = $this->getMock(
-            \Talis\Persona\Client\OAuthClients::class,
-            ['performRequest'],
-            [
+        /** @var MockObject&OAuthClients */
+        $oauthClient = $this->getMockBuilder(OAuthClients::class)
+            ->setMethods(['performRequest'])
+            ->setConstructorArgs([
                 [
                     'userAgent' => 'unittest',
                     'persona_host' => 'localhost',
                     'persona_admin_host' => 'localhost',
                     'cacheBackend' => $this->cacheBackend,
                 ]
-            ]
-        );
+            ])
+            ->getMock();
 
         $oauthClient->expects($this->once())
             ->method('performRequest')
@@ -301,7 +326,7 @@ class OAuthClientsTest extends TestBase
             );
 
         $this->setExpectedException(
-            'Exception',
+            Exception::class,
             'Did not retrieve successful response code'
         );
         $oauthClient->regenerateSecret('clientId', 'token');
@@ -309,19 +334,18 @@ class OAuthClientsTest extends TestBase
 
     public function testRegenerateSecretInvalidResponsePayload()
     {
-        /** @var \Talis\Persona\Client\OAuthClients|\PHPUnit_Framework_MockObject_MockObject $oauthClient */
-        $oauthClient = $this->getMock(
-            \Talis\Persona\Client\OAuthClients::class,
-            ['performRequest'],
-            [
+        /** @var MockObject&OAuthClients */
+        $oauthClient = $this->getMockBuilder(OAuthClients::class)
+            ->setMethods(['performRequest'])
+            ->setConstructorArgs([
                 [
                     'userAgent' => 'unittest',
                     'persona_host' => 'localhost',
                     'persona_admin_host' => 'localhost',
                     'cacheBackend' => $this->cacheBackend,
                 ]
-            ]
-        );
+            ])
+            ->getMock();
 
         $oauthClient->setLogger(new \Psr\Log\NullLogger());
 
@@ -338,7 +362,7 @@ class OAuthClientsTest extends TestBase
             ->willReturn(['invalid' => 'body']);
 
         $this->setExpectedException(
-            'Talis\Persona\Client\InvalidPayloadException',
+            \Talis\Persona\Client\InvalidPayloadException::class,
             'invalid payload format from persona'
         );
         $oauthClient->regenerateSecret('clientId', 'token');
@@ -346,19 +370,18 @@ class OAuthClientsTest extends TestBase
 
     public function testRegenerateSecretHappyPath()
     {
-        /** @var \Talis\Persona\Client\OAuthClients|\PHPUnit_Framework_MockObject_MockObject $oauthClient */
-        $oauthClient = $this->getMock(
-            \Talis\Persona\Client\OAuthClients::class,
-            ['performRequest'],
-            [
+        /** @var MockObject&OAuthClients */
+        $oauthClient = $this->getMockBuilder(OAuthClients::class)
+            ->setMethods(['performRequest'])
+            ->setConstructorArgs([
                 [
                     'userAgent' => 'unittest',
                     'persona_host' => 'localhost',
                     'persona_admin_host' => 'localhost',
                     'cacheBackend' => $this->cacheBackend,
                 ]
-            ]
-        );
+            ])
+            ->getMock();
 
         $oauthClient->setLogger(new \Psr\Log\NullLogger());
 

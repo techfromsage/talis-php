@@ -2,6 +2,7 @@
 
 namespace test\unit\Manifesto;
 
+use InvalidArgumentException;
 use test\TestBase;
 
 class ManifestTest extends TestBase
@@ -34,7 +35,7 @@ class ManifestTest extends TestBase
     public function testValidateSetFormat()
     {
         $m = new \Talis\Manifesto\Manifest();
-        $this->setExpectedException('InvalidArgumentException', "'wibble' is not supported");
+        $this->setExpectedException(InvalidArgumentException::class, "'wibble' is not supported");
         $m->setFormat('wibble');
     }
 
@@ -48,7 +49,7 @@ class ManifestTest extends TestBase
     public function testValidateSetCallbackLocation()
     {
         $m = new \Talis\Manifesto\Manifest();
-        $this->setExpectedException('InvalidArgumentException', 'Callback location must be an http or https url');
+        $this->setExpectedException(InvalidArgumentException::class, 'Callback location must be an http or https url');
         $m->setCallbackLocation('telnet://wibble');
     }
 
@@ -65,7 +66,7 @@ class ManifestTest extends TestBase
     public function testValidateSetCallbackMethod()
     {
         $m = new \Talis\Manifesto\Manifest();
-        $this->setExpectedException('InvalidArgumentException', 'Callback method must be GET or POST');
+        $this->setExpectedException(InvalidArgumentException::class, 'Callback method must be GET or POST');
         $m->setCallbackMethod('PUT');
     }
 
@@ -91,28 +92,28 @@ class ManifestTest extends TestBase
     public function testValidateAddFileWithNoFileKey()
     {
         $m = new \Talis\Manifesto\Manifest();
-        $this->setExpectedException('InvalidArgumentException', 'Files must contain a file key and value');
+        $this->setExpectedException(InvalidArgumentException::class, 'Files must contain a file key and value');
         $m->addFile(['type' => FILE_TYPE_S3, 'container' => 'myBucket', 'destinationPath' => 'foobar.txt']);
     }
 
     public function testValidateAddFileWithNoFileValue()
     {
         $m = new \Talis\Manifesto\Manifest();
-        $this->setExpectedException('InvalidArgumentException', 'Files must contain a file key and value');
+        $this->setExpectedException(InvalidArgumentException::class, 'Files must contain a file key and value');
         $m->addFile(['type' => FILE_TYPE_S3, 'container' => 'myBucket', 'file' => null, 'destinationPath' => 'foobar.txt']);
     }
 
     public function testValidateAddFileWithUnsupportedFileType()
     {
         $m = new \Talis\Manifesto\Manifest();
-        $this->setExpectedException('InvalidArgumentException', "Unsupported file 'type'");
+        $this->setExpectedException(InvalidArgumentException::class, "Unsupported file 'type'");
         $m->addFile(['type' => 'MY_FOO_CLOUD', 'container' => 'myBucket', 'file' => '/path/to/file.txt', 'destinationPath' => 'foobar.txt']);
     }
 
     public function testGenerateManifestNoFiles()
     {
         $m = new \Talis\Manifesto\Manifest();
-        $this->setExpectedException('Talis\Manifesto\Exceptions\ManifestValidationException', 'No files have been added to manifest');
+        $this->setExpectedException(\Talis\Manifesto\Exceptions\ManifestValidationException::class, 'No files have been added to manifest');
         $m->generateManifest();
     }
 
@@ -120,7 +121,7 @@ class ManifestTest extends TestBase
     {
         $m = new \Talis\Manifesto\Manifest();
         $m->addFile(['file' => '/path/to/file1.txt']);
-        $this->setExpectedException('Talis\Manifesto\Exceptions\ManifestValidationException', 'Output format has not been set');
+        $this->setExpectedException(\Talis\Manifesto\Exceptions\ManifestValidationException::class, 'Output format has not been set');
         $m->generateManifest();
     }
 
@@ -129,7 +130,7 @@ class ManifestTest extends TestBase
         $m = new \Talis\Manifesto\Manifest(true);
         $m->addFile(['file' => '/path/to/file1.txt']);
         $m->setFormat(FORMAT_TARBZ);
-        $this->setExpectedException('Talis\Manifesto\Exceptions\ManifestValidationException', 'File count must be set in safe mode');
+        $this->setExpectedException(\Talis\Manifesto\Exceptions\ManifestValidationException::class, 'File count must be set in safe mode');
         $m->generateManifest();
     }
 
@@ -139,7 +140,7 @@ class ManifestTest extends TestBase
         $m->addFile(['file' => '/path/to/file1.txt']);
         $m->setFormat(FORMAT_TARBZ);
         $m->setFileCount(3);
-        $this->setExpectedException('Talis\Manifesto\Exceptions\ManifestValidationException', 'Number of files does not equal fileCount');
+        $this->setExpectedException(\Talis\Manifesto\Exceptions\ManifestValidationException::class, 'Number of files does not equal fileCount');
         $m->generateManifest();
     }
 

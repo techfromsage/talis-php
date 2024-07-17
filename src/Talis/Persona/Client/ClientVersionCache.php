@@ -4,7 +4,6 @@ namespace Talis\Persona\Client;
 
 trait ClientVersionCache
 {
-
     /**
      * Retrieve the Persona client version
      * @return string Persona client version

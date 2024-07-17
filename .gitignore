@@ -7,3 +7,4 @@ coverage
 vendor
 docker-compose.override.yml
 .env
+.phpunit.result.cache

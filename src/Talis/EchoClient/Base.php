@@ -71,7 +71,7 @@ abstract class Base
      */
     protected function getStringSizeInBytes($input)
     {
-        return strlen(utf8_decode($input));
+        return strlen($input);
     }
 
     /**

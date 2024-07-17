@@ -2,6 +2,7 @@
 
 namespace test\unit\EchoClient;
 
+use InvalidArgumentException;
 use test\TestBase;
 
 /**
@@ -10,7 +11,10 @@ use test\TestBase;
  */
 class EventTest extends TestBase
 {
-    public function setUp()
+    /**
+     * @before
+     */
+    protected function definePrefix()
     {
         define('ECHO_CLASS_PREFIX', 'test.');
     }
@@ -27,7 +31,7 @@ class EventTest extends TestBase
         $timestamp,
         $expectedErrorMessage
     ) {
-        $this->setExpectedException('InvalidArgumentException', $expectedErrorMessage);
+        $this->setExpectedException(InvalidArgumentException::class, $expectedErrorMessage);
         $e = new \Talis\EchoClient\Event($class, $source, $props, $userId, $timestamp);
     }
 
