@@ -63,7 +63,7 @@ To run talis-php tests, the OAuth client must have `su` scope. It's not possible
 
     ```bash
     cd $DEVELOPMENT_WORK_DIR/infra
-    docker-compose exec mongo32 mongo
+    docker compose exec mongo32 mongo
     # in mongo shell
     use persona
     db.oauth_clients.updateOne({ client_id: "<client_id>" }, { $addToSet: { scope: "su" } })
@@ -87,13 +87,13 @@ To run talis-php tests, the OAuth client must have `su` scope. It's not possible
 Run the following command which should build the Docker image (if it's missing) and will download the required libraries:
 
 ```bash
-docker-compose run --rm init
+docker compose run --rm init
 ```
 
 If you want to rebuild the Docker image at any point, run:
 
 ```bash
-docker-compose build
+docker compose build
 ```
 
 # Running tests
@@ -101,16 +101,16 @@ docker-compose build
 Available test commands:
 
 ```bash
-docker-compose run --rm lint
-docker-compose run --rm test
-docker-compose run --rm unittest
-docker-compose run --rm integrationtest
+docker compose run --rm lint
+docker compose run --rm test
+docker compose run --rm unittest
+docker compose run --rm integrationtest
 ```
 
 To create a docker container where you can run commands directly, for example to run individual tests:
 
 ```bash
-docker-compose run --rm local-dev
+docker compose run --rm local-dev
 ```
 
 You can then run ant commands individually or run individual tests:
@@ -122,6 +122,6 @@ You can then run ant commands individually or run individual tests:
 Additionally we provide tools to run static analysis on the code base:
 
 ```bash
-docker-compose run --rm code-check
-docker-compose run --rm analyse
+docker compose run --rm code-check
+docker compose run --rm analyse
 ```
