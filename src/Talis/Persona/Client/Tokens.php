@@ -3,6 +3,7 @@
 namespace Talis\Persona\Client;
 
 use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 use Talis\Persona\Client\ScopesNotDefinedException;
 use Talis\Persona\Client\EmptyResponseException;
 use Talis\Persona\Client\InvalidPublicKeyException;
@@ -124,7 +125,7 @@ class Tokens extends Base
             $pubCert = openssl_pkey_get_public($rawPublicCert);
 
             if ($pubCert) {
-                return (array) JWT::decode($token, $pubCert, ['RS256']);
+                return (array) JWT::decode($token, new Key($pubCert, 'RS256'));
             }
 
             $this->getLogger()->error('Invalid public key');
