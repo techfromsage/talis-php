@@ -1,4 +1,4 @@
-FROM talis/ubuntu:1404-latest
+FROM ubuntu:trusty
 
 ENV DEBIAN_FRONTEND=noninteractive
 

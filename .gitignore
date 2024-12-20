@@ -1,5 +1,4 @@
 *.swp
-composer.lock
 composer.phar
 .idea
 build
