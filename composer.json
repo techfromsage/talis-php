@@ -1,7 +1,7 @@
 {
   "name": "talis/talis-php",
   "description": "This is a php client library for talis APIs",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "keywords": [
     "persona",
     "echo",
@@ -22,7 +22,7 @@
     "ext-hash": "*",
     "ext-openssl": "*",
     "doctrine/common": "^2.5",
-    "firebase/php-jwt": "^3.0",
+    "firebase/php-jwt": "^6.0",
     "guzzlehttp/guzzle": "^6.5.8 || ^7.4.5",
     "monolog/monolog": ">=1.13.1",
     "predis/predis": ">=0.8.5",
